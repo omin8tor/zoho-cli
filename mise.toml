@@ -1,0 +1,26 @@
+[tools]
+python = "3.14"
+uv = "latest"
+
+[env]
+_.file = ".env"
+
+[tasks.test]
+description = "Run tests (excluding slow)"
+run = "uv run pytest -m 'not slow'"
+
+[tasks."test:all"]
+description = "Run all tests including slow"
+run = "uv run pytest"
+
+[tasks.lint]
+description = "Run linter"
+run = "uv run ruff check src/"
+
+[tasks.fmt]
+description = "Format code"
+run = "uv run ruff format src/"
+
+[tasks.typecheck]
+description = "Run type checker"
+run = "uv run mypy src/"
