@@ -105,10 +105,65 @@ class TasksUpdate:
         output(data)
 
 
+@cappa.command(name="delete", help="Delete a task")
+@dataclass
+class TasksDelete:
+    task_id: Annotated[str, cappa.Arg(help="Task ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/tasks/{self.task_id}"
+        data = client.request("DELETE", url)
+        output(data)
+
+
+@cappa.command(name="subtasks", help="List subtasks of a task")
+@dataclass
+class TasksSubtasksList:
+    task_id: Annotated[str, cappa.Arg(help="Parent task ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/tasks/{self.task_id}/subtasks"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="add-subtask", help="Create a subtask")
+@dataclass
+class TasksSubtaskCreate:
+    name: Annotated[str, cappa.Arg(long="--name", help="Subtask name")]
+    task_id: Annotated[str, cappa.Arg(long="--parent", help="Parent task ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[
+        str | None, cappa.Arg(long="--json", default=None, help="Additional fields as JSON")
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        body: dict[str, Any] = {"name": self.name}
+        if self.json_data:
+            body.update(json.loads(self.json_data))
+        url = f"{_base(client, self.portal, self.project)}/tasks/{self.task_id}/subtasks"
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
 @cappa.command(name="tasks", help="Project task operations")
 @dataclass
 class Tasks:
-    subcommand: cappa.Subcommands[TasksList | TasksMy | TasksGet | TasksCreate | TasksUpdate]
+    subcommand: cappa.Subcommands[
+        TasksList
+        | TasksMy
+        | TasksGet
+        | TasksCreate
+        | TasksUpdate
+        | TasksDelete
+        | TasksSubtasksList
+        | TasksSubtaskCreate
+    ]
 
 
 @cappa.command(name="list", help="List issues in a project")
@@ -157,10 +212,83 @@ class IssuesUpdate:
         output(data)
 
 
+@cappa.command(name="get", help="Get a single issue")
+@dataclass
+class IssuesGet:
+    issue_id: Annotated[str, cappa.Arg(help="Issue ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/issues/{self.issue_id}"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="delete", help="Delete an issue")
+@dataclass
+class IssuesDelete:
+    issue_id: Annotated[str, cappa.Arg(help="Issue ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/issues/{self.issue_id}"
+        data = client.request("DELETE", url)
+        output(data)
+
+
+@cappa.command(name="defaults", help="Get issue default fields (statuses, severities, etc.)")
+@dataclass
+class IssuesDefaults:
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/issues/defaultfields"
+        data = client.request("GET", url)
+        output(data)
+
+
 @cappa.command(name="issues", help="Project issue operations")
 @dataclass
 class Issues:
-    subcommand: cappa.Subcommands[IssuesList | IssuesCreate | IssuesUpdate]
+    subcommand: cappa.Subcommands[
+        IssuesList | IssuesCreate | IssuesUpdate | IssuesGet | IssuesDelete | IssuesDefaults
+    ]
+
+
+@cappa.command(name="list", help="List issue comments")
+@dataclass
+class IssueCommentsList:
+    issue_id: Annotated[str, cappa.Arg(long="--issue", help="Issue ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/issues/{self.issue_id}/comments"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="add", help="Add an issue comment")
+@dataclass
+class IssueCommentsAdd:
+    comment: Annotated[str, cappa.Arg(long="--comment", help="Comment text")]
+    issue_id: Annotated[str, cappa.Arg(long="--issue", help="Issue ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/issues/{self.issue_id}/comments"
+        data = client.request("POST", url, json={"comment": self.comment})
+        output(data)
+
+
+@cappa.command(name="issue-comments", help="Issue comment operations")
+@dataclass
+class IssueComments:
+    subcommand: cappa.Subcommands[IssueCommentsList | IssueCommentsAdd]
 
 
 @cappa.command(name="list", help="List task comments")
@@ -190,10 +318,45 @@ class CommentsAdd:
         output(data)
 
 
+@cappa.command(name="update", help="Update a task comment")
+@dataclass
+class CommentsUpdate:
+    comment_id: Annotated[str, cappa.Arg(help="Comment ID")]
+    comment: Annotated[str, cappa.Arg(long="--comment", help="Updated comment text")]
+    task_id: Annotated[str, cappa.Arg(long="--task", help="Task ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = (
+            f"{_base(client, self.portal, self.project)}"
+            f"/tasks/{self.task_id}/comments/{self.comment_id}"
+        )
+        data = client.request("PATCH", url, json={"comment": self.comment})
+        output(data)
+
+
+@cappa.command(name="delete", help="Delete a task comment")
+@dataclass
+class CommentsDelete:
+    comment_id: Annotated[str, cappa.Arg(help="Comment ID")]
+    task_id: Annotated[str, cappa.Arg(long="--task", help="Task ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = (
+            f"{_base(client, self.portal, self.project)}"
+            f"/tasks/{self.task_id}/comments/{self.comment_id}"
+        )
+        data = client.request("DELETE", url)
+        output(data)
+
+
 @cappa.command(name="comments", help="Task comment operations")
 @dataclass
 class Comments:
-    subcommand: cappa.Subcommands[CommentsList | CommentsAdd]
+    subcommand: cappa.Subcommands[CommentsList | CommentsAdd | CommentsUpdate | CommentsDelete]
 
 
 @cappa.command(name="list", help="List tasklists")
@@ -208,10 +371,59 @@ class TasklistsList:
         output(tasklists)
 
 
+@cappa.command(name="create", help="Create a tasklist")
+@dataclass
+class TasklistsCreate:
+    name: Annotated[str, cappa.Arg(long="--name", help="Tasklist name")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[
+        str | None, cappa.Arg(long="--json", default=None, help="Additional fields as JSON")
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        body: dict[str, Any] = {"name": self.name}
+        if self.json_data:
+            body.update(json.loads(self.json_data))
+        url = f"{_base(client, self.portal, self.project)}/tasklists"
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
+@cappa.command(name="update", help="Update a tasklist")
+@dataclass
+class TasklistsUpdate:
+    tasklist_id: Annotated[str, cappa.Arg(help="Tasklist ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[str, cappa.Arg(long="--json", help="Fields to update as JSON")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        parsed = json.loads(self.json_data)
+        url = f"{_base(client, self.portal, self.project)}/tasklists/{self.tasklist_id}"
+        data = client.request("PATCH", url, json=parsed)
+        output(data)
+
+
+@cappa.command(name="delete", help="Delete a tasklist")
+@dataclass
+class TasklistsDelete:
+    tasklist_id: Annotated[str, cappa.Arg(help="Tasklist ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/tasklists/{self.tasklist_id}"
+        data = client.request("DELETE", url)
+        output(data)
+
+
 @cappa.command(name="tasklists", help="Project tasklist operations")
 @dataclass
 class Tasklists:
-    subcommand: cappa.Subcommands[TasklistsList]
+    subcommand: cappa.Subcommands[
+        TasklistsList | TasklistsCreate | TasklistsUpdate | TasklistsDelete
+    ]
 
 
 @cappa.command(name="list", help="List project timelogs")
@@ -326,6 +538,165 @@ class ProjectsSearch:
         output(data)
 
 
+@cappa.command(name="create", help="Create a project")
+@dataclass
+class ProjectsCreate:
+    name: Annotated[str, cappa.Arg(long="--name", help="Project name")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[
+        str | None, cappa.Arg(long="--json", default=None, help="Additional fields as JSON")
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        body: dict[str, Any] = {"name": self.name}
+        if self.json_data:
+            body.update(json.loads(self.json_data))
+        url = f"{client.projects_base}/portal/{self.portal}/projects"
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
+@cappa.command(name="update", help="Update a project")
+@dataclass
+class ProjectsUpdate:
+    project_id: Annotated[str, cappa.Arg(help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[str, cappa.Arg(long="--json", help="Fields to update as JSON")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        parsed = json.loads(self.json_data)
+        url = f"{client.projects_base}/portal/{self.portal}/projects/{self.project_id}"
+        data = client.request("PATCH", url, json=parsed)
+        output(data)
+
+
+@cappa.command(name="list", help="List milestones")
+@dataclass
+class MilestonesList:
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/milestones"
+        data = paginate_projects(client, url, "milestones")
+        output(data)
+
+
+@cappa.command(name="get", help="Get a milestone")
+@dataclass
+class MilestonesGet:
+    milestone_id: Annotated[str, cappa.Arg(help="Milestone ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/milestones/{self.milestone_id}"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="create", help="Create a milestone")
+@dataclass
+class MilestonesCreate:
+    name: Annotated[str, cappa.Arg(long="--name", help="Milestone name")]
+    start_date: Annotated[str, cappa.Arg(long="--start", help="Start date (YYYY-MM-DD)")]
+    end_date: Annotated[str, cappa.Arg(long="--end", help="End date (YYYY-MM-DD)")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[
+        str | None, cappa.Arg(long="--json", default=None, help="Additional fields as JSON")
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        body: dict[str, Any] = {
+            "name": self.name,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+        }
+        if self.json_data:
+            body.update(json.loads(self.json_data))
+        url = f"{_base(client, self.portal, self.project)}/milestones"
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
+@cappa.command(name="update", help="Update a milestone")
+@dataclass
+class MilestonesUpdate:
+    milestone_id: Annotated[str, cappa.Arg(help="Milestone ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    json_data: Annotated[str, cappa.Arg(long="--json", help="Fields to update as JSON")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        parsed = json.loads(self.json_data)
+        url = f"{_base(client, self.portal, self.project)}/milestones/{self.milestone_id}"
+        data = client.request("PATCH", url, json=parsed)
+        output(data)
+
+
+@cappa.command(name="delete", help="Delete a milestone")
+@dataclass
+class MilestonesDelete:
+    milestone_id: Annotated[str, cappa.Arg(help="Milestone ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/milestones/{self.milestone_id}"
+        data = client.request("DELETE", url)
+        output(data)
+
+
+@cappa.command(name="milestones", help="Project milestone operations")
+@dataclass
+class Milestones:
+    subcommand: cappa.Subcommands[
+        MilestonesList | MilestonesGet | MilestonesCreate | MilestonesUpdate | MilestonesDelete
+    ]
+
+
+@cappa.command(name="add", help="Add a task dependency")
+@dataclass
+class DependenciesAdd:
+    task_id: Annotated[str, cappa.Arg(help="Task ID")]
+    dependency_id: Annotated[str, cappa.Arg(long="--depends-on", help="Dependency task ID")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+    dep_type: Annotated[str, cappa.Arg(long="--type", default="FS", help="FS, SS, FF, or SF")] = (
+        "FS"
+    )
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{_base(client, self.portal, self.project)}/tasks/{self.task_id}/dependencies"
+        body: dict[str, Any] = {"predecessor": {"id": self.dependency_id, "type": self.dep_type}}
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
+@cappa.command(name="remove", help="Remove a task dependency")
+@dataclass
+class DependenciesRemove:
+    task_id: Annotated[str, cappa.Arg(help="Task ID")]
+    dependency_id: Annotated[str, cappa.Arg(help="Dependency ID to remove")]
+    project: Annotated[str, cappa.Arg(long="--project", help="Project ID")]
+    portal: Annotated[str, cappa.Arg(long="--portal", help="Portal ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = (
+            f"{_base(client, self.portal, self.project)}"
+            f"/tasks/{self.task_id}/dependencies/{self.dependency_id}"
+        )
+        data = client.request("DELETE", url)
+        output(data)
+
+
+@cappa.command(name="dependencies", help="Task dependency operations")
+@dataclass
+class Dependencies:
+    subcommand: cappa.Subcommands[DependenciesAdd | DependenciesRemove]
+
+
 @cappa.command(name="projects", help="Zoho Projects operations")
 @dataclass
 class Projects:
@@ -333,10 +704,15 @@ class Projects:
         ProjectsList
         | ProjectsGet
         | ProjectsSearch
+        | ProjectsCreate
+        | ProjectsUpdate
         | Tasks
         | Issues
+        | IssueComments
         | Comments
         | Tasklists
         | Timelogs
         | ProjectUsers
+        | Milestones
+        | Dependencies
     ]

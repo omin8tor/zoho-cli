@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Annotated, Any
 
 import cappa
@@ -41,10 +43,45 @@ class ModulesFields:
         output(data.get("fields", []))
 
 
+@cappa.command(name="related-lists", help="List related lists for a module")
+@dataclass
+class ModulesRelatedLists:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/settings/related_lists"
+        data = client.request("GET", url, params={"module": self.module})
+        output(data.get("related_lists", []))
+
+
+@cappa.command(name="layouts", help="List layouts for a module")
+@dataclass
+class ModulesLayouts:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/settings/layouts"
+        data = client.request("GET", url, params={"module": self.module})
+        output(data.get("layouts", []))
+
+
+@cappa.command(name="custom-views", help="List custom views for a module")
+@dataclass
+class ModulesCustomViews:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/settings/custom_views"
+        data = client.request("GET", url, params={"module": self.module})
+        output(data.get("custom_views", []))
+
+
 @cappa.command(name="modules", help="CRM module operations")
 @dataclass
 class Modules:
-    subcommand: cappa.Subcommands[ModulesList | ModulesFields]
+    subcommand: cappa.Subcommands[
+        ModulesList | ModulesFields | ModulesRelatedLists | ModulesLayouts | ModulesCustomViews
+    ]
 
 
 @cappa.command(name="list", help="List records in a module")
@@ -215,11 +252,58 @@ class RecordsSearch:
         output(data.get("data", []))
 
 
+@cappa.command(name="upsert", help="Upsert a record (insert or update)")
+@dataclass
+class RecordsUpsert:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    json_data: Annotated[str, cappa.Arg(long="--json", help="Record data as JSON string")]
+    duplicate_check_fields: Annotated[
+        str | None,
+        cappa.Arg(
+            long="--duplicate-check", default=None, help="Comma-separated duplicate check fields"
+        ),
+    ] = None
+    trigger: Annotated[
+        str | None,
+        cappa.Arg(long="--trigger", default=None, help="Comma-separated triggers"),
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        parsed = json.loads(self.json_data)
+        body: dict[str, Any] = {"data": [parsed]}
+        if self.duplicate_check_fields:
+            body["duplicate_check_fields"] = self.duplicate_check_fields.split(",")
+        if self.trigger:
+            body["trigger"] = self.trigger.split(",")
+        url = f"{client.crm_base}/{self.module}/upsert"
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
+@cappa.command(name="bulk-delete", help="Delete multiple records")
+@dataclass
+class RecordsBulkDelete:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    ids: Annotated[str, cappa.Arg(help="Comma-separated record IDs")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/{self.module}"
+        data = client.request("DELETE", url, params={"ids": self.ids})
+        output(data)
+
+
 @cappa.command(name="records", help="CRM record operations")
 @dataclass
 class Records:
     subcommand: cappa.Subcommands[
-        RecordsList | RecordsGet | RecordsCreate | RecordsUpdate | RecordsDelete | RecordsSearch
+        RecordsList
+        | RecordsGet
+        | RecordsCreate
+        | RecordsUpdate
+        | RecordsDelete
+        | RecordsSearch
+        | RecordsUpsert
+        | RecordsBulkDelete
     ]
 
 
@@ -369,7 +453,171 @@ class Owner:
     subcommand: cappa.Subcommands[OwnerChange]
 
 
+@cappa.command(name="coql", help="Run a COQL query")
+@dataclass
+class Coql:
+    query: Annotated[str, cappa.Arg(long="--query", help="COQL query string")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/coql"
+        data = client.request("POST", url, json={"select_query": self.query})
+        output(data)
+
+
+@cappa.command(name="search-global", help="Search across all CRM modules")
+@dataclass
+class SearchGlobal:
+    word: Annotated[str, cappa.Arg(help="Search keyword")]
+    page: Annotated[int, cappa.Arg(long="--page", default=1)] = 1
+    per_page: Annotated[int, cappa.Arg(long="--per-page", default=10)] = 10
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/search"
+        params: dict[str, str] = {
+            "word": self.word,
+            "page": str(self.page),
+            "per_page": str(min(self.per_page, 10)),
+        }
+        data = client.request("GET", url, params=params)
+        output(data)
+
+
+@cappa.command(name="list", help="List attachments on a record")
+@dataclass
+class AttachmentsList:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    record_id: Annotated[str, cappa.Arg(help="Record ID")]
+    page: Annotated[int, cappa.Arg(long="--page", default=1)] = 1
+    per_page: Annotated[int, cappa.Arg(long="--per-page", default=200)] = 200
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/{self.module}/{self.record_id}/Attachments"
+        params: dict[str, str] = {
+            "page": str(self.page),
+            "per_page": str(min(self.per_page, 200)),
+        }
+        data = client.request("GET", url, params=params)
+        output(data.get("data", []))
+
+
+@cappa.command(name="upload", help="Upload an attachment to a record")
+@dataclass
+class AttachmentsUpload:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    record_id: Annotated[str, cappa.Arg(help="Record ID")]
+    file_path: Annotated[str, cappa.Arg(help="Local file path")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        path = Path(self.file_path)
+        url = f"{client.crm_base}/{self.module}/{self.record_id}/Attachments"
+        data = client.request("POST", url, files={"file": (path.name, path.read_bytes())})
+        output(data)
+
+
+@cappa.command(name="download", help="Download an attachment")
+@dataclass
+class AttachmentsDownload:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    record_id: Annotated[str, cappa.Arg(help="Record ID")]
+    attachment_id: Annotated[str, cappa.Arg(help="Attachment ID")]
+    output_path: Annotated[
+        str | None, cappa.Arg(long="--output", default=None, help="Output file path")
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/{self.module}/{self.record_id}/Attachments/{self.attachment_id}"
+        resp = client.request_raw("GET", url)
+        if self.output_path:
+            Path(self.output_path).write_bytes(resp.content)
+            output({"ok": True, "path": self.output_path, "size": len(resp.content)})
+        else:
+            sys.stdout.buffer.write(resp.content)
+
+
+@cappa.command(name="delete", help="Delete an attachment")
+@dataclass
+class AttachmentsDelete:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    record_id: Annotated[str, cappa.Arg(help="Record ID")]
+    attachment_id: Annotated[str, cappa.Arg(help="Attachment ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/{self.module}/{self.record_id}/Attachments/{self.attachment_id}"
+        data = client.request("DELETE", url)
+        output(data)
+
+
+@cappa.command(name="attachments", help="CRM record attachments")
+@dataclass
+class Attachments:
+    subcommand: cappa.Subcommands[
+        AttachmentsList | AttachmentsUpload | AttachmentsDownload | AttachmentsDelete
+    ]
+
+
+@cappa.command(name="convert", help="Convert a lead to contact/account/deal")
+@dataclass
+class ConvertLead:
+    record_id: Annotated[str, cappa.Arg(help="Lead record ID")]
+    json_data: Annotated[
+        str | None,
+        cappa.Arg(long="--json", default=None, help="Conversion options as JSON"),
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/Leads/{self.record_id}/actions/convert"
+        body: dict[str, Any] = {"data": [json.loads(self.json_data) if self.json_data else {}]}
+        data = client.request("POST", url, json=body)
+        output(data)
+
+
+@cappa.command(name="add", help="Add tags to records")
+@dataclass
+class TagsAdd:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    ids: Annotated[str, cappa.Arg(long="--ids", help="Comma-separated record IDs")]
+    tags: Annotated[str, cappa.Arg(long="--tags", help="Comma-separated tag names")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/{self.module}/actions/add_tags"
+        params = {"ids": self.ids, "tag_names": self.tags}
+        data = client.request("POST", url, params=params)
+        output(data)
+
+
+@cappa.command(name="remove", help="Remove tags from records")
+@dataclass
+class TagsRemove:
+    module: Annotated[str, cappa.Arg(help="Module API name")]
+    ids: Annotated[str, cappa.Arg(long="--ids", help="Comma-separated record IDs")]
+    tags: Annotated[str, cappa.Arg(long="--tags", help="Comma-separated tag names")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.crm_base}/{self.module}/actions/remove_tags"
+        params = {"ids": self.ids, "tag_names": self.tags}
+        data = client.request("POST", url, params=params)
+        output(data)
+
+
+@cappa.command(name="tags", help="CRM tag operations")
+@dataclass
+class Tags:
+    subcommand: cappa.Subcommands[TagsAdd | TagsRemove]
+
+
 @cappa.command(name="crm", help="Zoho CRM operations")
 @dataclass
 class Crm:
-    subcommand: cappa.Subcommands[Modules | Records | Notes | Related | Users | Owner]
+    subcommand: cappa.Subcommands[
+        Modules
+        | Records
+        | Notes
+        | Related
+        | Users
+        | Owner
+        | Coql
+        | SearchGlobal
+        | Attachments
+        | ConvertLead
+        | Tags
+    ]

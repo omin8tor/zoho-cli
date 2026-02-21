@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,6 +44,77 @@ class WriterCreate:
             }
         }
         data = client.request("POST", url, json=body, headers={"Content-Type": _JSONAPI_CT})
+        output(data)
+
+
+@cappa.command(name="details", help="Get document metadata")
+@dataclass
+class WriterDetails:
+    doc_id: Annotated[str, cappa.Arg(help="Document ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.writer_base}/documents/{self.doc_id}"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="fields", help="List merge fields in a document")
+@dataclass
+class WriterFields:
+    doc_id: Annotated[str, cappa.Arg(help="Document ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.writer_base}/documents/{self.doc_id}/fields"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="merge", help="Merge data into a document template")
+@dataclass
+class WriterMerge:
+    doc_id: Annotated[str, cappa.Arg(help="Document/template ID")]
+    json_data: Annotated[str, cappa.Arg(long="--json", help="Merge data as JSON")]
+    output_format: Annotated[
+        str, cappa.Arg(long="--format", default="pdf", help="pdf, docx, or inline")
+    ] = "pdf"
+    output_path: Annotated[
+        str | None, cappa.Arg(long="--output", default=None, help="Output file path")
+    ] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.writer_base}/documents/{self.doc_id}/merge"
+        merge_data = json.loads(self.json_data)
+        body: dict[str, Any] = {
+            "merge_data": merge_data,
+            "output_format": self.output_format,
+        }
+        if self.output_format == "inline":
+            data = client.request("POST", url, json=body)
+            output(data)
+        else:
+            resp = client.request_raw(
+                "POST",
+                url,
+                params={
+                    "output_format": self.output_format,
+                    "merge_data": json.dumps(merge_data),
+                },
+            )
+            if self.output_path:
+                Path(self.output_path).write_bytes(resp.content)
+                output({"ok": True, "path": self.output_path, "size": len(resp.content)})
+            else:
+                sys.stdout.buffer.write(resp.content)
+
+
+@cappa.command(name="delete", help="Delete a document")
+@dataclass
+class WriterDelete:
+    doc_id: Annotated[str, cappa.Arg(help="Document ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.writer_base}/documents/{self.doc_id}"
+        data = client.request("DELETE", url)
         output(data)
 
 
@@ -98,4 +170,12 @@ class WriterDownload:
 @cappa.command(name="writer", help="Zoho Writer operations")
 @dataclass
 class Writer:
-    subcommand: cappa.Subcommands[WriterCreate | WriterRead | WriterDownload]
+    subcommand: cappa.Subcommands[
+        WriterCreate
+        | WriterDetails
+        | WriterFields
+        | WriterMerge
+        | WriterDelete
+        | WriterRead
+        | WriterDownload
+    ]

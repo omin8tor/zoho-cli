@@ -157,11 +157,76 @@ class FilesDelete:
         output(data)
 
 
+@cappa.command(name="move", help="Move a file to a different folder")
+@dataclass
+class FilesMove:
+    file_id: Annotated[str, cappa.Arg(help="File ID")]
+    to: Annotated[str, cappa.Arg(long="--to", help="Destination folder ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        body = _jsonapi_body({"parent_id": self.to})
+        data = client.request(
+            "PATCH",
+            f"{client.workdrive_base}/files/{self.file_id}",
+            json=body,
+            headers={"Content-Type": _JSONAPI_CT},
+        )
+        output(data)
+
+
+@cappa.command(name="restore", help="Restore a file from trash")
+@dataclass
+class FilesRestore:
+    file_id: Annotated[str, cappa.Arg(help="File ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        body = _jsonapi_body({"status": 1})
+        data = client.request(
+            "PATCH",
+            f"{client.workdrive_base}/files/{self.file_id}",
+            json=body,
+            headers={"Content-Type": _JSONAPI_CT},
+        )
+        output(data)
+
+
+@cappa.command(name="trash-list", help="List trashed files in a folder")
+@dataclass
+class FilesTrashList:
+    folder: Annotated[str, cappa.Arg(long="--folder", help="Folder ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/files/{self.folder}/files"
+        items = paginate_workdrive(client, url, params={"filter[status]": "51"})
+        output(items)
+
+
+@cappa.command(name="versions", help="List file versions")
+@dataclass
+class FilesVersions:
+    file_id: Annotated[str, cappa.Arg(help="File ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/files/{self.file_id}/versions"
+        data = client.request("GET", url)
+        output(data)
+
+
 @cappa.command(name="files", help="WorkDrive file operations")
 @dataclass
 class Files:
     subcommand: cappa.Subcommands[
-        FilesList | FilesGet | FilesSearch | FilesRename | FilesCopy | FilesTrash | FilesDelete
+        FilesList
+        | FilesGet
+        | FilesSearch
+        | FilesRename
+        | FilesCopy
+        | FilesMove
+        | FilesTrash
+        | FilesDelete
+        | FilesRestore
+        | FilesTrashList
+        | FilesVersions
     ]
 
 
@@ -267,6 +332,22 @@ class Upload:
         output(data)
 
 
+@cappa.command(name="upload-url", help="Upload a file from a URL")
+@dataclass
+class UploadUrl:
+    url_to_fetch: Annotated[str, cappa.Arg(help="URL of file to upload")]
+    folder: Annotated[str, cappa.Arg(long="--folder", help="Destination folder ID")]
+    name: Annotated[str | None, cappa.Arg(long="--name", default=None, help="File name")] = None
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/files/{self.folder}/remotefile"
+        body: dict[str, Any] = {"data": {"attributes": {"url": self.url_to_fetch}}}
+        if self.name:
+            body["data"]["attributes"]["name"] = self.name
+        data = client.request("POST", url, json=body, headers={"Content-Type": _JSONAPI_CT})
+        output(data)
+
+
 @cappa.command(name="permissions", help="List file permissions")
 @dataclass
 class SharePermissions:
@@ -313,6 +394,28 @@ class ShareRevoke:
         output({"ok": True, "revoked": self.permission_id})
 
 
+@cappa.command(name="links", help="List share links for a file")
+@dataclass
+class ShareLinksList:
+    file_id: Annotated[str, cappa.Arg(help="File ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/files/{self.file_id}/links"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="unlink", help="Delete a share link")
+@dataclass
+class ShareUnlink:
+    link_id: Annotated[str, cappa.Arg(help="Link ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/links/{self.link_id}"
+        client.request("DELETE", url)
+        output({"ok": True, "deleted": self.link_id})
+
+
 @cappa.command(name="link", help="Create/get share link")
 @dataclass
 class ShareLink:
@@ -354,10 +457,47 @@ class ShareLink:
 @cappa.command(name="share", help="File sharing operations")
 @dataclass
 class Share:
-    subcommand: cappa.Subcommands[SharePermissions | ShareAdd | ShareRevoke | ShareLink]
+    subcommand: cappa.Subcommands[
+        SharePermissions | ShareAdd | ShareRevoke | ShareLink | ShareLinksList | ShareUnlink
+    ]
+
+
+@cappa.command(name="me", help="Get current user info")
+@dataclass
+class TeamsMe:
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/users/me"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="list", help="List teams")
+@dataclass
+class TeamsList:
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/users/me/teams"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="members", help="List team members")
+@dataclass
+class TeamsMembers:
+    team: Annotated[str, cappa.Arg(help="Team ID")]
+
+    def __call__(self, client: Annotated[ZohoClient, cappa.Dep(get_client)]) -> None:
+        url = f"{client.workdrive_base}/teams/{self.team}/members"
+        data = client.request("GET", url)
+        output(data)
+
+
+@cappa.command(name="teams", help="WorkDrive team operations")
+@dataclass
+class Teams:
+    subcommand: cappa.Subcommands[TeamsMe | TeamsList | TeamsMembers]
 
 
 @cappa.command(name="drive", help="Zoho WorkDrive operations")
 @dataclass
 class Drive:
-    subcommand: cappa.Subcommands[Files | Folders | Download | Upload | Share]
+    subcommand: cappa.Subcommands[Files | Folders | Download | Upload | UploadUrl | Share | Teams]
