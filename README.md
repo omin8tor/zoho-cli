@@ -98,24 +98,6 @@ Run `zoho --help-all` to see every command and its flags.
 
 Single binary, no runtime dependencies. Builds for Linux, macOS, and Windows on amd64 and arm64.
 
-## What works well
-
-- **Pagination is handled for you.** CRM, Projects, and WorkDrive all paginate differently. The CLI abstracts that. Use `--all` on CRM list commands to auto-paginate everything.
-- **Token refresh is automatic.** Access tokens expire hourly. The CLI refreshes them transparently and caches them to avoid hitting Zoho's 10-refreshes-per-10-minutes rate limit.
-- **API quirks are absorbed.** CRM v8 requires a `fields` param on most endpoints or returns empty results. Projects pagination returns `has_next_page` as a string sometimes. WorkDrive needs JSON:API content types. You don't need to know any of this.
-- **Works well with LLM agents.** The original motivation. Install it in a sandbox, give the agent shell access, let it write `for` loops and `jq` pipelines instead of calling 50 tool functions.
-
-## What doesn't work / limitations
-
-- **No `--format` flag.** Output is always JSON. Use `jq` for formatting.
-- **Write operations are untested in production.** Read operations (list, get, search) have been integration-tested against a live Zoho account. Create/update/delete operations compile and have correct API signatures, but haven't been tested against live data beyond a few cases. If something is wrong, it's probably a minor field name issue.
-- **WorkDrive trash-list is broken on Zoho's end.** The `filter[status]=51` parameter that their docs say should work returns a 400. Not our bug.
-- **WorkDrive teams list/members may 400.** Depends on your account type and scopes. The endpoints exist and the code is correct, but Zoho returns "URL Rule is not configured" for some accounts.
-- **COQL requires a specific scope.** `ZohoCRM.coql.READ` is separate from the general CRM scopes. If you get a scope mismatch error, re-authorize with this scope included.
-- **Writer commands need a document ID.** There's no "list documents" endpoint in the Writer API. You get doc IDs from WorkDrive.
-- **No streaming/websocket support.** Everything is request-response.
-- **Zoho rate limits apply.** The CLI doesn't do any rate-limit handling beyond token refresh caching. If you hammer the API, you'll get 429s.
-
 ## Data centers
 
 Zoho runs in 9 data centers. Set via `--dc` flag on auth commands or `ZOHO_DC` env var:
