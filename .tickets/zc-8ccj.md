@@ -1,6 +1,6 @@
 ---
 id: zc-8ccj
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-21T14:57:20Z

@@ -1,6 +1,6 @@
 ---
 id: zc-v81z
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-21T14:57:40Z
