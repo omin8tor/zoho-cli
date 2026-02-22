@@ -702,21 +702,6 @@ func teamsCmd() *cli.Command {
 				},
 			},
 			{
-				Name:  "list",
-				Usage: "List teams",
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
-					if err != nil {
-						return err
-					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/users/me/teams", nil)
-					if err != nil {
-						return err
-					}
-					return output.JSONRaw(raw)
-				},
-			},
-			{
 				Name:      "members",
 				Usage:     "List team members",
 				ArgsUsage: "<team-id>",
