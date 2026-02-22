@@ -24,7 +24,9 @@ const DefaultScopes = "ZohoCliq.Webhooks.CREATE,ZohoCliq.Channels.ALL,ZohoCliq.M
 	"ZohoProjects.events.ALL,ZohoProjects.forums.ALL,ZohoProjects.milestones.ALL," +
 	"ZohoProjects.documents.ALL,ZohoProjects.users.ALL," +
 	"ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.ALL,ZohoCRM.org.ALL," +
-	"ZohoCRM.change_owner.CREATE"
+	"ZohoCRM.change_owner.CREATE," +
+	"ZohoExpense.fullaccess.ALL," +
+	"ZohoSheet.dataAPI.READ,ZohoSheet.dataAPI.UPDATE"
 
 var locationToDC = map[string]string{
 	"us": "com",
