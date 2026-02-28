@@ -373,6 +373,7 @@ func TestCRM(t *testing.T) {
 	var leadID string
 	var leadName string
 	var leadEmail string
+	var leadPhone string
 	var upsertLeadID string
 	var upsertName string
 	var upsertEmail string
@@ -397,18 +398,20 @@ func TestCRM(t *testing.T) {
 	t.Run("records/create", func(t *testing.T) {
 		leadName = testName(t)
 		leadEmail = strings.ToLower(leadName) + "@test.example.com"
+		leadPhone = fmt.Sprintf("555%07d", time.Now().UnixNano()%10000000)
 
-		data := fmt.Sprintf(`{"Last_Name":"%s","Company":"TestCorp","Email":"%s"}`,
-			leadName, leadEmail)
+		data := fmt.Sprintf(`{"Last_Name":"%s","Company":"TestCorp","Email":"%s","Phone":"%s"}`,
+			leadName, leadEmail, leadPhone)
 		out := zoho(t, "crm", "records", "create", "Leads", "--json", data)
 		leadID = extractID(t, out)
 		cleanup.trackLead(leadID)
 
-		rec := getRecord(t, "Leads", leadID, "id,Last_Name,Company,Email")
+		rec := getRecord(t, "Leads", leadID, "id,Last_Name,Company,Email,Phone")
 		assertEqual(t, fmt.Sprintf("%v", rec["id"]), leadID)
 		assertEqual(t, rec["Last_Name"], leadName)
 		assertEqual(t, rec["Company"], "TestCorp")
 		assertEqual(t, rec["Email"], leadEmail)
+		assertEqual(t, fmt.Sprintf("%v", rec["Phone"]), leadPhone)
 	})
 
 	t.Run("records/get", func(t *testing.T) {
@@ -449,6 +452,56 @@ func TestCRM(t *testing.T) {
 				default:
 					t.Errorf("unexpected field %q in response with --fields id,Last_Name,Created_Time", key)
 				}
+			}
+		}
+	})
+
+	t.Run("records/list-default-fields", func(t *testing.T) {
+		out := zoho(t, "crm", "records", "list", "Leads", "--per-page", "1")
+		arr := parseJSONArray(t, out)
+		assertNonEmpty(t, arr, "expected at least one lead")
+		rec := arr[0]
+		for _, want := range []string{"id", "Created_Time", "Modified_Time"} {
+			if _, ok := rec[want]; !ok {
+				t.Errorf("expected default field %q in response without --fields", want)
+			}
+		}
+	})
+
+	t.Run("records/list-all", func(t *testing.T) {
+		outAll := zoho(t, "crm", "records", "list", "Leads",
+			"--fields", "id", "--all")
+		all := parseJSONArray(t, outAll)
+		assertNonEmpty(t, all, "expected at least one lead with --all")
+
+		outOne := zoho(t, "crm", "records", "list", "Leads",
+			"--fields", "id", "--per-page", "1")
+		page1 := parseJSONArray(t, outOne)
+		if len(page1) != 1 {
+			t.Fatalf("expected 1 record with --per-page 1, got %d", len(page1))
+		}
+		if len(all) <= len(page1) {
+			t.Errorf("--all should return more than --per-page 1: all=%d page1=%d",
+				len(all), len(page1))
+		}
+	})
+
+	t.Run("records/list-page", func(t *testing.T) {
+		out1 := zoho(t, "crm", "records", "list", "Leads",
+			"--fields", "id", "--page", "1", "--per-page", "1")
+		page1 := parseJSONArray(t, out1)
+		if len(page1) != 1 {
+			t.Fatalf("expected 1 record on page 1, got %d", len(page1))
+		}
+		id1 := fmt.Sprintf("%v", page1[0]["id"])
+
+		out2 := zoho(t, "crm", "records", "list", "Leads",
+			"--fields", "id", "--page", "2", "--per-page", "1")
+		page2 := parseJSONArray(t, out2)
+		if len(page2) == 1 {
+			id2 := fmt.Sprintf("%v", page2[0]["id"])
+			if id2 == id1 {
+				t.Errorf("page 1 and page 2 returned same record %s", id1)
 			}
 		}
 	})
@@ -533,6 +586,24 @@ func TestCRM(t *testing.T) {
 				return false
 			}
 			return fmt.Sprintf("%v", rec["Email"]) == leadEmail
+		})
+	})
+
+	t.Run("records/search-by-phone", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		retryUntil(t, 30*time.Second, func() bool {
+			out, err := zohoMayFail(t, "crm", "records", "search", "Leads",
+				"--phone", leadPhone, "--fields", "id,Phone")
+			if err != nil {
+				return false
+			}
+			var arr []map[string]any
+			json.Unmarshal([]byte(out), &arr)
+			if len(arr) == 0 {
+				return false
+			}
+			_, found := findInArray(arr, leadID)
+			return found
 		})
 	})
 
@@ -691,6 +762,19 @@ func TestCRM(t *testing.T) {
 		if !bytes.Equal(downloaded, testFileContent) {
 			t.Errorf("downloaded content doesn't match: got %d bytes, want %d bytes",
 				len(downloaded), len(testFileContent))
+		}
+	})
+
+	t.Run("attachments/download-stdout", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		requireID(t, attachmentID, "attachments/upload must have succeeded")
+		r := runZoho(t, "crm", "attachments", "download", "Leads", leadID, attachmentID)
+		if r.ExitCode != 0 {
+			t.Fatalf("download to stdout failed (exit %d): %s", r.ExitCode, r.Stderr)
+		}
+		if !bytes.Equal([]byte(r.Stdout), testFileContent) {
+			t.Errorf("stdout content doesn't match: got %d bytes, want %d bytes",
+				len(r.Stdout), len(testFileContent))
 		}
 	})
 
