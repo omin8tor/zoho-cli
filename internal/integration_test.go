@@ -25,11 +25,39 @@ type Result struct {
 
 func runZoho(t *testing.T, args ...string) Result {
 	t.Helper()
+	return runZohoWithEnv(t, nil, args...)
+}
+
+func runZohoWithEnv(t *testing.T, env map[string]string, args ...string) Result {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "./zoho", args...)
 	cmd.Dir = ".."
-	cmd.Env = os.Environ()
+	baseEnv := os.Environ()
+	if len(env) > 0 {
+		overridden := make(map[string]bool)
+		for k := range env {
+			overridden[k] = true
+		}
+		merged := make([]string, 0, len(baseEnv)+len(env))
+		for _, e := range baseEnv {
+			key := e
+			if idx := strings.IndexByte(e, '='); idx >= 0 {
+				key = e[:idx]
+			}
+			if overridden[key] {
+				continue
+			}
+			merged = append(merged, e)
+		}
+		for k, v := range env {
+			merged = append(merged, k+"="+v)
+		}
+		cmd.Env = merged
+	} else {
+		cmd.Env = baseEnv
+	}
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -152,6 +180,30 @@ func assertEqual(t *testing.T, got any, want any) {
 	}
 }
 
+func assertStringField(t *testing.T, rec map[string]any, key, want string) {
+	t.Helper()
+	got, ok := rec[key]
+	if !ok {
+		t.Errorf("field %q: missing from record", key)
+		return
+	}
+	gotStr, ok := got.(string)
+	if !ok {
+		t.Errorf("field %q: expected string, got %T (%v)", key, got, got)
+		return
+	}
+	if gotStr != want {
+		t.Errorf("field %q: got %q, want %q", key, gotStr, want)
+	}
+}
+
+func assertExitCode(t *testing.T, r Result, want int) {
+	t.Helper()
+	if r.ExitCode != want {
+		t.Errorf("expected exit code %d, got %d\nstderr: %s", want, r.ExitCode, truncate(r.Stderr, 500))
+	}
+}
+
 func assertContains(t *testing.T, s, substr string) {
 	t.Helper()
 	if !strings.Contains(s, substr) {
@@ -173,7 +225,9 @@ func assertStatus(t *testing.T, out string, want string) {
 			Status string `json:"status"`
 		} `json:"data"`
 	}
-	json.Unmarshal([]byte(out), &resp)
+	if err := json.Unmarshal([]byte(out), &resp); err != nil {
+		t.Fatalf("failed to parse response: %v\nraw: %s", err, truncate(out, 500))
+	}
 	if len(resp.Data) == 0 || resp.Data[0].Status != want {
 		t.Errorf("expected status %q in response:\n%s", want, truncate(out, 500))
 	}
@@ -186,7 +240,9 @@ func assertAction(t *testing.T, out string, want string) {
 			Action string `json:"action"`
 		} `json:"data"`
 	}
-	json.Unmarshal([]byte(out), &resp)
+	if err := json.Unmarshal([]byte(out), &resp); err != nil {
+		t.Fatalf("failed to parse response: %v\nraw: %s", err, truncate(out, 500))
+	}
 	if len(resp.Data) == 0 || resp.Data[0].Action != want {
 		t.Errorf("expected action %q in response:\n%s", want, truncate(out, 500))
 	}
@@ -346,6 +402,17 @@ func TestCRMModules(t *testing.T) {
 		out := zoho(t, "crm", "modules", "fields", "Leads")
 		arr := parseJSONArray(t, out)
 		assertNonEmpty(t, arr, "expected fields for Leads")
+		names := make(map[string]bool)
+		for _, f := range arr {
+			if n, ok := f["api_name"].(string); ok {
+				names[n] = true
+			}
+		}
+		for _, want := range []string{"Last_Name", "Company", "Email"} {
+			if !names[want] {
+				t.Errorf("expected field %s in Leads fields list", want)
+			}
+		}
 	})
 
 	t.Run("related-lists", func(t *testing.T) {
@@ -408,10 +475,25 @@ func TestCRM(t *testing.T) {
 
 		rec := getRecord(t, "Leads", leadID, "id,Last_Name,Company,Email,Phone")
 		assertEqual(t, fmt.Sprintf("%v", rec["id"]), leadID)
-		assertEqual(t, rec["Last_Name"], leadName)
-		assertEqual(t, rec["Company"], "TestCorp")
-		assertEqual(t, rec["Email"], leadEmail)
+		assertStringField(t, rec, "Last_Name", leadName)
+		assertStringField(t, rec, "Company", "TestCorp")
+		assertStringField(t, rec, "Email", leadEmail)
 		assertEqual(t, fmt.Sprintf("%v", rec["Phone"]), leadPhone)
+
+		retryUntil(t, 10*time.Second, func() bool {
+			query := fmt.Sprintf("select id, Last_Name from Leads where id = '%s'", leadID)
+			coqlOut, coqlErr := zohoMayFail(t, "crm", "coql", "--query", query)
+			if coqlErr != nil {
+				return false
+			}
+			coqlParsed := parseJSON(t, coqlOut)
+			coqlData, ok := coqlParsed["data"].([]any)
+			if !ok || len(coqlData) == 0 {
+				return false
+			}
+			coqlRec, _ := coqlData[0].(map[string]any)
+			return fmt.Sprintf("%v", coqlRec["Last_Name"]) == leadName
+		})
 	})
 
 	t.Run("records/get", func(t *testing.T) {
@@ -518,9 +600,9 @@ func TestCRM(t *testing.T) {
 		assertStatus(t, out, "success")
 
 		after := getRecord(t, "Leads", leadID, "id,Last_Name,Company,Email")
-		assertEqual(t, after["Company"], "UpdatedCorp")
-		assertEqual(t, after["Last_Name"], leadName)
-		assertEqual(t, after["Email"], leadEmail)
+		assertStringField(t, after, "Company", "UpdatedCorp")
+		assertStringField(t, after, "Last_Name", leadName)
+		assertStringField(t, after, "Email", leadEmail)
 	})
 
 	t.Run("records/search-by-criteria", func(t *testing.T) {
@@ -618,9 +700,9 @@ func TestCRM(t *testing.T) {
 		assertAction(t, out, "insert")
 
 		rec := getRecord(t, "Leads", upsertLeadID, "id,Last_Name,Company,Email")
-		assertEqual(t, rec["Last_Name"], upsertName)
-		assertEqual(t, rec["Company"], "UpsertCorp")
-		assertEqual(t, rec["Email"], upsertEmail)
+		assertStringField(t, rec, "Last_Name", upsertName)
+		assertStringField(t, rec, "Company", "UpsertCorp")
+		assertStringField(t, rec, "Email", upsertEmail)
 	})
 
 	t.Run("records/upsert-update", func(t *testing.T) {
@@ -636,9 +718,9 @@ func TestCRM(t *testing.T) {
 
 		after := getRecord(t, "Leads", upsertLeadID, "id,Last_Name,Company,Email")
 		assertEqual(t, fmt.Sprintf("%v", after["id"]), upsertLeadID)
-		assertEqual(t, after["Last_Name"], "UpdatedViaUpsert")
-		assertEqual(t, after["Company"], "UpsertCorpV2")
-		assertEqual(t, after["Email"], upsertEmail)
+		assertStringField(t, after, "Last_Name", "UpdatedViaUpsert")
+		assertStringField(t, after, "Company", "UpsertCorpV2")
+		assertStringField(t, after, "Email", upsertEmail)
 	})
 
 	t.Run("notes/add", func(t *testing.T) {
@@ -654,8 +736,8 @@ func TestCRM(t *testing.T) {
 		if !found {
 			t.Fatalf("note %s not found on Zoho after add", noteID)
 		}
-		assertEqual(t, note["Note_Title"], "Test Note")
-		assertEqual(t, note["Note_Content"], "Integration test note content")
+		assertStringField(t, note, "Note_Title", "Test Note")
+		assertStringField(t, note, "Note_Content", "Integration test note content")
 	})
 
 	t.Run("notes/list", func(t *testing.T) {
@@ -668,8 +750,8 @@ func TestCRM(t *testing.T) {
 		if !found {
 			t.Fatalf("note %s not found in list", noteID)
 		}
-		assertEqual(t, note["Note_Title"], "Test Note")
-		assertEqual(t, note["Note_Content"], "Integration test note content")
+		assertStringField(t, note, "Note_Title", "Test Note")
+		assertStringField(t, note, "Note_Content", "Integration test note content")
 	})
 
 	t.Run("notes/update", func(t *testing.T) {
@@ -684,8 +766,8 @@ func TestCRM(t *testing.T) {
 		if !found {
 			t.Fatalf("note %s not found on Zoho after update", noteID)
 		}
-		assertEqual(t, note["Note_Title"], "Updated Note Title")
-		assertEqual(t, note["Note_Content"], "Updated note content")
+		assertStringField(t, note, "Note_Title", "Updated Note Title")
+		assertStringField(t, note, "Note_Content", "Updated note content")
 	})
 
 	t.Run("related/list", func(t *testing.T) {
@@ -732,7 +814,7 @@ func TestCRM(t *testing.T) {
 		if !found {
 			t.Fatalf("attachment %s not found on Zoho after upload", attachmentID)
 		}
-		assertEqual(t, att["File_Name"], "test-attachment.txt")
+		assertStringField(t, att, "File_Name", "test-attachment.txt")
 	})
 
 	t.Run("attachments/list", func(t *testing.T) {
@@ -745,7 +827,7 @@ func TestCRM(t *testing.T) {
 		if !found {
 			t.Fatalf("attachment %s not found in list", attachmentID)
 		}
-		assertEqual(t, att["File_Name"], "test-attachment.txt")
+		assertStringField(t, att, "File_Name", "test-attachment.txt")
 	})
 
 	t.Run("attachments/download", func(t *testing.T) {
@@ -836,7 +918,18 @@ func TestCRM(t *testing.T) {
 			if err != nil {
 				return false
 			}
-			return strings.Contains(out, leadName) && strings.Contains(out, leadID)
+			var envelope struct {
+				Data []map[string]any `json:"data"`
+			}
+			if jsonErr := json.Unmarshal([]byte(out), &envelope); jsonErr != nil {
+				return false
+			}
+			for _, r := range envelope.Data {
+				if fmt.Sprintf("%v", r["id"]) == leadID {
+					return true
+				}
+			}
+			return false
 		})
 	})
 
@@ -885,6 +978,52 @@ func TestCRM(t *testing.T) {
 		leadID = ""
 	})
 
+}
+
+func TestCRMErrors(t *testing.T) {
+	t.Run("bad-auth", func(t *testing.T) {
+		r := runZohoWithEnv(t, map[string]string{
+			"ZOHO_CLIENT_ID":     "bad_client_id",
+			"ZOHO_CLIENT_SECRET": "bad_client_secret",
+			"ZOHO_REFRESH_TOKEN": "bad_refresh_token",
+			"ZOHO_DC":            "com",
+		}, "crm", "records", "list", "Leads", "--fields", "id", "--per-page", "1")
+		assertExitCode(t, r, 2)
+		if !strings.Contains(r.Stderr, "invalid_client") && !strings.Contains(r.Stderr, "Token refresh") {
+			t.Errorf("expected auth error in stderr, got: %s", truncate(r.Stderr, 500))
+		}
+	})
+
+	t.Run("invalid-module", func(t *testing.T) {
+		r := runZoho(t, "crm", "records", "list", "FakeModule", "--fields", "id", "--per-page", "1")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "INVALID_MODULE")
+	})
+
+	t.Run("invalid-json", func(t *testing.T) {
+		r := runZoho(t, "crm", "records", "create", "Leads", "--json", "not json")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "INVALID_DATA")
+	})
+
+	t.Run("invalid-coql", func(t *testing.T) {
+		r := runZoho(t, "crm", "coql", "--query", "select broken")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "SYNTAX_ERROR")
+	})
+
+	t.Run("missing-required-flag", func(t *testing.T) {
+		r := runZoho(t, "crm", "records", "create", "Leads")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "Required flag")
+	})
+
+	t.Run("nonexistent-record", func(t *testing.T) {
+		_, err := getRecordMayFail(t, "Leads", "999999999999999999")
+		if err == nil {
+			t.Error("expected error for nonexistent record")
+		}
+	})
 }
 
 func TestCRMEmergencyCleanup(t *testing.T) {
