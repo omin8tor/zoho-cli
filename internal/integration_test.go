@@ -354,6 +354,74 @@ func (c *testCleanup) trackAttachment(module, recordID, attID string) {
 	})
 }
 
+func (c *testCleanup) trackContact(id string) {
+	c.add("delete contact "+id, func() {
+		zohoIgnoreError(c.t, "crm", "records", "delete", "Contacts", id)
+	})
+}
+
+func (c *testCleanup) trackAccount(id string) {
+	c.add("delete account "+id, func() {
+		zohoIgnoreError(c.t, "crm", "records", "delete", "Accounts", id)
+	})
+}
+
+type convertResult struct {
+	ContactID string
+	AccountID string
+	DealID    string
+}
+
+func extractConvertIDs(t *testing.T, out string) convertResult {
+	t.Helper()
+	var resp struct {
+		Data []struct {
+			Code    string `json:"code"`
+			Status  string `json:"status"`
+			Message string `json:"message"`
+			Details struct {
+				Contacts *struct {
+					ID   string `json:"id"`
+					Name string `json:"name"`
+				} `json:"Contacts"`
+				Accounts *struct {
+					ID   string `json:"id"`
+					Name string `json:"name"`
+				} `json:"Accounts"`
+				Deals *struct {
+					ID   string `json:"id"`
+					Name string `json:"name"`
+				} `json:"Deals"`
+			} `json:"details"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal([]byte(out), &resp); err != nil {
+		t.Fatalf("failed to parse convert response: %v\nraw: %s", err, truncate(out, 500))
+	}
+	if len(resp.Data) == 0 {
+		t.Fatalf("no data in convert response:\n%s", truncate(out, 500))
+	}
+	if resp.Data[0].Status != "success" {
+		t.Fatalf("convert not successful: code=%s message=%s\n%s",
+			resp.Data[0].Code, resp.Data[0].Message, truncate(out, 500))
+	}
+	d := resp.Data[0].Details
+	if d.Contacts == nil || d.Contacts.ID == "" {
+		t.Fatalf("no Contact ID in convert response:\n%s", truncate(out, 500))
+	}
+	if d.Accounts == nil || d.Accounts.ID == "" {
+		t.Fatalf("no Account ID in convert response:\n%s", truncate(out, 500))
+	}
+	result := convertResult{
+		ContactID: d.Contacts.ID,
+		AccountID: d.Accounts.ID,
+	}
+	if d.Deals != nil {
+		result.DealID = d.Deals.ID
+	}
+	return result
+}
+
 func randomSuffix(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, n)
@@ -419,18 +487,65 @@ func TestCRMModules(t *testing.T) {
 		out := zoho(t, "crm", "modules", "related-lists", "Leads")
 		arr := parseJSONArray(t, out)
 		assertNonEmpty(t, arr, "expected related lists for Leads")
+		names := make(map[string]bool)
+		for _, rl := range arr {
+			if _, ok := rl["id"]; !ok {
+				t.Errorf("related list missing 'id' key: %v", rl)
+			}
+			if n, ok := rl["api_name"].(string); ok {
+				names[n] = true
+			} else {
+				t.Errorf("related list missing 'api_name' key: %v", rl)
+			}
+		}
+		if !names["Notes"] {
+			t.Error("expected 'Notes' in related lists for Leads")
+		}
+		if !names["Attachments"] {
+			t.Error("expected 'Attachments' in related lists for Leads")
+		}
 	})
 
 	t.Run("layouts", func(t *testing.T) {
 		out := zoho(t, "crm", "modules", "layouts", "Leads")
 		arr := parseJSONArray(t, out)
 		assertNonEmpty(t, arr, "expected layouts for Leads")
+		foundStandard := false
+		for _, layout := range arr {
+			if _, ok := layout["id"]; !ok {
+				t.Errorf("layout missing 'id' key")
+			}
+			if _, ok := layout["name"]; !ok {
+				t.Errorf("layout missing 'name' key")
+			}
+			if fmt.Sprintf("%v", layout["name"]) == "Standard" {
+				foundStandard = true
+			}
+		}
+		if !foundStandard {
+			t.Error("expected 'Standard' layout for Leads")
+		}
 	})
 
 	t.Run("custom-views", func(t *testing.T) {
 		out := zoho(t, "crm", "modules", "custom-views", "Leads")
 		arr := parseJSONArray(t, out)
 		assertNonEmpty(t, arr, "expected custom views for Leads")
+		names := make(map[string]bool)
+		for _, cv := range arr {
+			if _, ok := cv["id"]; !ok {
+				t.Errorf("custom view missing 'id' key")
+			}
+			if _, ok := cv["display_value"]; !ok {
+				t.Errorf("custom view missing 'display_value' key")
+			}
+			if n, ok := cv["display_value"].(string); ok {
+				names[n] = true
+			}
+		}
+		if !names["All Leads"] {
+			t.Error("expected 'All Leads' custom view for Leads")
+		}
 	})
 }
 
@@ -860,6 +975,28 @@ func TestCRM(t *testing.T) {
 		}
 	})
 
+	t.Run("attachments/special-filename", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		tmpDir := t.TempDir()
+		testFile := tmpDir + "/test file (1).txt"
+		content := []byte("special filename test")
+		if err := os.WriteFile(testFile, content, 0644); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+		out := zoho(t, "crm", "attachments", "upload", "Leads", leadID, testFile)
+		attID := extractID(t, out)
+
+		atts := getAttachments(t, "Leads", leadID)
+		att, found := findInArray(atts, attID)
+		if !found {
+			t.Fatalf("attachment %s not found after upload", attID)
+		}
+		assertStringField(t, att, "File_Name", "test file (1).txt")
+
+		delOut := zoho(t, "crm", "attachments", "delete", "Leads", leadID, attID)
+		assertStatus(t, delOut, "success")
+	})
+
 	t.Run("attachments/delete", func(t *testing.T) {
 		requireID(t, leadID, "create must have succeeded")
 		requireID(t, attachmentID, "attachments/upload must have succeeded")
@@ -874,26 +1011,77 @@ func TestCRM(t *testing.T) {
 		attachmentID = ""
 	})
 
-	t.Run("tags/add", func(t *testing.T) {
+	t.Run("tags/add-multiple", func(t *testing.T) {
 		requireID(t, leadID, "create must have succeeded")
-		out := zoho(t, "crm", "tags", "add", "Leads", "--ids", leadID, "--tags", "zohotest-tag")
+		out := zoho(t, "crm", "tags", "add", "Leads",
+			"--ids", leadID, "--tags", "zohotest-tag-a,zohotest-tag-b")
 		assertStatus(t, out, "success")
 
 		rec := getRecord(t, "Leads", leadID, "id,Tag")
-		if !hasTag(rec, "zohotest-tag") {
-			t.Errorf("tag 'zohotest-tag' not found on record %s after add; got: %v", leadID, rec["Tag"])
+		if !hasTag(rec, "zohotest-tag-a") {
+			t.Errorf("tag 'zohotest-tag-a' not found after add; got: %v", rec["Tag"])
+		}
+		if !hasTag(rec, "zohotest-tag-b") {
+			t.Errorf("tag 'zohotest-tag-b' not found after add; got: %v", rec["Tag"])
 		}
 	})
 
-	t.Run("tags/remove", func(t *testing.T) {
+	t.Run("tags/remove-one-of-two", func(t *testing.T) {
 		requireID(t, leadID, "create must have succeeded")
-		out := zoho(t, "crm", "tags", "remove", "Leads", "--ids", leadID, "--tags", "zohotest-tag")
+		out := zoho(t, "crm", "tags", "remove", "Leads",
+			"--ids", leadID, "--tags", "zohotest-tag-a")
 		assertStatus(t, out, "success")
 
 		rec := getRecord(t, "Leads", leadID, "id,Tag")
-		if hasTag(rec, "zohotest-tag") {
-			t.Errorf("tag 'zohotest-tag' still on record %s after remove", leadID)
+		if hasTag(rec, "zohotest-tag-a") {
+			t.Errorf("tag 'zohotest-tag-a' still present after remove")
 		}
+		if !hasTag(rec, "zohotest-tag-b") {
+			t.Errorf("tag 'zohotest-tag-b' should still be present; got: %v", rec["Tag"])
+		}
+	})
+
+	t.Run("tags/remove-remaining", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		out := zoho(t, "crm", "tags", "remove", "Leads",
+			"--ids", leadID, "--tags", "zohotest-tag-b")
+		assertStatus(t, out, "success")
+
+		rec := getRecord(t, "Leads", leadID, "id,Tag")
+		if hasTag(rec, "zohotest-tag-b") {
+			t.Errorf("tag 'zohotest-tag-b' still present after remove")
+		}
+	})
+
+	t.Run("tags/add-multi-records", func(t *testing.T) {
+		name1 := testName(t)
+		data1 := fmt.Sprintf(`{"Last_Name":"%s","Company":"TagCorp1"}`, name1)
+		out1 := zoho(t, "crm", "records", "create", "Leads", "--json", data1)
+		id1 := extractID(t, out1)
+		cleanup.trackLead(id1)
+
+		name2 := testName(t)
+		data2 := fmt.Sprintf(`{"Last_Name":"%s","Company":"TagCorp2"}`, name2)
+		out2 := zoho(t, "crm", "records", "create", "Leads", "--json", data2)
+		id2 := extractID(t, out2)
+		cleanup.trackLead(id2)
+
+		ids := id1 + "," + id2
+		out := zoho(t, "crm", "tags", "add", "Leads",
+			"--ids", ids, "--tags", "zohotest-multi-tag")
+		assertStatus(t, out, "success")
+
+		rec1 := getRecord(t, "Leads", id1, "id,Tag")
+		if !hasTag(rec1, "zohotest-multi-tag") {
+			t.Errorf("tag not found on record %s", id1)
+		}
+		rec2 := getRecord(t, "Leads", id2, "id,Tag")
+		if !hasTag(rec2, "zohotest-multi-tag") {
+			t.Errorf("tag not found on record %s", id2)
+		}
+
+		zoho(t, "crm", "tags", "remove", "Leads",
+			"--ids", ids, "--tags", "zohotest-multi-tag")
 	})
 
 	t.Run("coql", func(t *testing.T) {
@@ -911,6 +1099,82 @@ func TestCRM(t *testing.T) {
 		assertEqual(t, rec["Company"], "UpdatedCorp")
 	})
 
+	t.Run("coql/order-by", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		requireID(t, upsertLeadID, "upsert-insert must have succeeded")
+		query := fmt.Sprintf(
+			"select id, Last_Name from Leads where id in ('%s','%s') order by Last_Name asc",
+			leadID, upsertLeadID)
+		out := zoho(t, "crm", "coql", "--query", query)
+		parsed := parseJSON(t, out)
+		data, ok := parsed["data"].([]any)
+		if !ok || len(data) < 2 {
+			t.Fatalf("COQL ORDER BY returned fewer than 2 results:\n%s", truncate(out, 500))
+		}
+		first, _ := data[0].(map[string]any)
+		second, _ := data[1].(map[string]any)
+		name1 := fmt.Sprintf("%v", first["Last_Name"])
+		name2 := fmt.Sprintf("%v", second["Last_Name"])
+		if name1 > name2 {
+			t.Errorf("ORDER BY asc violated: %q > %q", name1, name2)
+		}
+	})
+
+	t.Run("coql/limit", func(t *testing.T) {
+		query := fmt.Sprintf("select id from Leads where Last_Name like '%s%%' limit 2", testPrefix)
+		out := zoho(t, "crm", "coql", "--query", query)
+		parsed := parseJSON(t, out)
+		data, ok := parsed["data"].([]any)
+		if !ok {
+			t.Fatalf("COQL LIMIT returned no data:\n%s", truncate(out, 500))
+		}
+		if len(data) > 2 {
+			t.Errorf("COQL LIMIT 2 returned %d records, expected at most 2", len(data))
+		}
+	})
+
+	t.Run("coql/like-operator", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		query := fmt.Sprintf("select id, Last_Name from Leads where Last_Name like '%s%%'", testPrefix)
+		out := zoho(t, "crm", "coql", "--query", query)
+		parsed := parseJSON(t, out)
+		data, ok := parsed["data"].([]any)
+		if !ok || len(data) == 0 {
+			t.Fatalf("COQL LIKE returned no results:\n%s", truncate(out, 500))
+		}
+		for _, item := range data {
+			rec, _ := item.(map[string]any)
+			name := fmt.Sprintf("%v", rec["Last_Name"])
+			if !strings.HasPrefix(name, testPrefix) {
+				t.Errorf("LIKE '%s%%' returned record with Last_Name=%q", testPrefix, name)
+			}
+		}
+	})
+
+	t.Run("coql/multi-field-types", func(t *testing.T) {
+		requireID(t, leadID, "create must have succeeded")
+		query := fmt.Sprintf(
+			"select id, Last_Name, Company, Email, Created_Time from Leads where id = '%s'", leadID)
+		out := zoho(t, "crm", "coql", "--query", query)
+		parsed := parseJSON(t, out)
+		data, ok := parsed["data"].([]any)
+		if !ok || len(data) == 0 {
+			t.Fatalf("COQL multi-field returned no data:\n%s", truncate(out, 500))
+		}
+		rec, _ := data[0].(map[string]any)
+		for _, field := range []string{"id", "Last_Name", "Company", "Email", "Created_Time"} {
+			if _, ok := rec[field]; !ok {
+				t.Errorf("expected field %q in COQL result", field)
+			}
+		}
+		if _, ok := rec["id"].(string); !ok {
+			t.Errorf("id should be string, got %T", rec["id"])
+		}
+		if _, ok := rec["Created_Time"].(string); !ok {
+			t.Errorf("Created_Time should be string, got %T", rec["Created_Time"])
+		}
+	})
+
 	t.Run("search-global", func(t *testing.T) {
 		requireID(t, leadID, "create must have succeeded")
 		retryUntil(t, 30*time.Second, func() bool {
@@ -925,9 +1189,13 @@ func TestCRM(t *testing.T) {
 				return false
 			}
 			for _, r := range envelope.Data {
-				if fmt.Sprintf("%v", r["id"]) == leadID {
-					return true
+				if fmt.Sprintf("%v", r["id"]) != leadID {
+					continue
 				}
+				if setype, ok := r["$setype"].(string); !ok || setype != "Leads" {
+					t.Errorf("search-global $setype: got %q, want %q", setype, "Leads")
+				}
+				return true
 			}
 			return false
 		})
@@ -955,6 +1223,22 @@ func TestCRM(t *testing.T) {
 		ids := id1 + "," + id2
 		out := zoho(t, "crm", "records", "bulk-delete", "Leads", ids)
 		assertStatus(t, out, "success")
+		var bulkResp struct {
+			Data []struct {
+				Status string `json:"status"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(out), &bulkResp); err != nil {
+			t.Fatalf("failed to parse bulk-delete response: %v", err)
+		}
+		if len(bulkResp.Data) != 2 {
+			t.Errorf("expected 2 results in bulk-delete, got %d", len(bulkResp.Data))
+		}
+		for i, d := range bulkResp.Data {
+			if d.Status != "success" {
+				t.Errorf("bulk-delete item %d: expected success, got %q", i, d.Status)
+			}
+		}
 
 		_, err1 := getRecordMayFail(t, "Leads", id1)
 		if err1 == nil {
@@ -978,6 +1262,64 @@ func TestCRM(t *testing.T) {
 		leadID = ""
 	})
 
+}
+
+func TestCRMConvert(t *testing.T) {
+	cleanup := newCleanup(t)
+
+	leadName := testName(t)
+	leadCompany := testPrefix + "ConvertCorp_" + randomSuffix(6)
+	leadEmail := strings.ToLower(leadName) + "@test.example.com"
+
+	data := fmt.Sprintf(`{"Last_Name":"%s","Company":"%s","Email":"%s"}`,
+		leadName, leadCompany, leadEmail)
+	createOut := zoho(t, "crm", "records", "create", "Leads", "--json", data)
+	leadID := extractID(t, createOut)
+	cleanup.trackLead(leadID)
+
+	convertOut := zoho(t, "crm", "convert", leadID)
+	ids := extractConvertIDs(t, convertOut)
+
+	cleanup.trackContact(ids.ContactID)
+	cleanup.trackAccount(ids.AccountID)
+
+	t.Run("contact-exists", func(t *testing.T) {
+		retryUntil(t, 15*time.Second, func() bool {
+			rec, err := getRecordMayFail(t, "Contacts", ids.ContactID)
+			if err != nil {
+				return false
+			}
+			return fmt.Sprintf("%v", rec["id"]) == ids.ContactID
+		})
+		rec := getRecord(t, "Contacts", ids.ContactID, "id,Last_Name,Email")
+		assertStringField(t, rec, "Last_Name", leadName)
+		assertStringField(t, rec, "Email", leadEmail)
+	})
+
+	t.Run("account-exists", func(t *testing.T) {
+		retryUntil(t, 15*time.Second, func() bool {
+			rec, err := getRecordMayFail(t, "Accounts", ids.AccountID)
+			if err != nil {
+				return false
+			}
+			return fmt.Sprintf("%v", rec["id"]) == ids.AccountID
+		})
+		rec := getRecord(t, "Accounts", ids.AccountID, "id,Account_Name")
+		assertStringField(t, rec, "Account_Name", leadCompany)
+	})
+
+	t.Run("lead-gone", func(t *testing.T) {
+		retryUntil(t, 15*time.Second, func() bool {
+			_, err := getRecordMayFail(t, "Leads", leadID)
+			return err != nil
+		})
+	})
+
+	t.Run("no-deal-created", func(t *testing.T) {
+		if ids.DealID != "" {
+			t.Errorf("expected no deal from simple conversion, got deal ID %s", ids.DealID)
+		}
+	})
 }
 
 func TestCRMErrors(t *testing.T) {
@@ -1023,6 +1365,17 @@ func TestCRMErrors(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for nonexistent record")
 		}
+	})
+
+	t.Run("invalid-coql-no-from", func(t *testing.T) {
+		r := runZoho(t, "crm", "coql", "--query", "select id")
+		assertExitCode(t, r, 1)
+	})
+
+	t.Run("invalid-coql-bad-field", func(t *testing.T) {
+		r := runZoho(t, "crm", "coql", "--query",
+			"select Nonexistent_Field_XYZ from Leads limit 1")
+		assertExitCode(t, r, 1)
 	})
 }
 
