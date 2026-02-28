@@ -21,6 +21,19 @@ run = "go vet ./..."
 description = "Format Go code"
 run = "gofmt -w ."
 
+[tasks.coverage]
+description = "Generate HTML coverage report"
+run = """
+go test -coverprofile=coverage.out -covermode=atomic ./...
+go tool cover -func=coverage.out | tail -1
+go tool cover -html=coverage.out -o coverage.html
+echo "Report: coverage.html"
+"""
+
+[tasks."coverage:integration"]
+description = "Generate coverage from integration tests via instrumented binary"
+run = "bash -c 'set -e && rm -rf coverage/ && mkdir -p coverage/raw && go build -cover -o zoho ./cmd/zoho/ && export GOCOVERDIR=$PWD/coverage/raw && source .env.test && go test -tags integration -timeout 300s ./internal/... && go tool covdata textfmt -i=coverage/raw -o=coverage/integration.out && go tool cover -func=coverage/integration.out | tail -1 && go tool cover -html=coverage/integration.out -o coverage.html && echo Report: coverage.html'"
+
 [tasks.typecheck]
 description = "Go type check (build)"
 run = "go build ./..."
