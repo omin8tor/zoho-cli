@@ -761,7 +761,7 @@ func taskFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/followers"
+					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/follow"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -810,8 +810,8 @@ func taskFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("DELETE", url, nil)
+					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/unfollow"
+					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
 					}
@@ -2121,7 +2121,7 @@ func tasklistFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasklists/" + cmd.Args().First() + "/followers"
+					url := base(c, portal, cmd.String("project")) + "/tasklists/" + cmd.Args().First() + "/follow"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -2143,8 +2143,8 @@ func tasklistFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasklists/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("DELETE", url, nil)
+					url := base(c, portal, cmd.String("project")) + "/tasklists/" + cmd.Args().First() + "/unfollow"
+					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
 					}

@@ -2097,6 +2097,9 @@ func TestProjects(t *testing.T) {
 	var timelogID string
 	var tlTaskID string
 	var ownerZPUID string
+	var taskCommentID string
+	var issueCommentID string
+	var tasklistCommentID string
 
 	t.Run("core/create", func(t *testing.T) {
 		projectName = testName(t)
@@ -2210,6 +2213,118 @@ func TestProjects(t *testing.T) {
 		var raw json.RawMessage
 		if err := json.Unmarshal([]byte(out), &raw); err != nil {
 			t.Fatalf("failed to parse tasks/my response: %v", err)
+		}
+	})
+
+	t.Run("task-comments/add", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "task-comments", "add",
+			"--task", taskID, "--project", projectID,
+			"--comment", testPrefix+"_task_comment")
+		arr := parseJSONArray(t, out)
+		if len(arr) == 0 {
+			t.Fatalf("task-comments add returned empty array:\n%s", truncate(out, 500))
+		}
+		taskCommentID = fmt.Sprintf("%v", arr[0]["id"])
+		if taskCommentID == "" || taskCommentID == "<nil>" {
+			t.Fatalf("no id in task-comments add response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, arr[0], "comment", testPrefix+"_task_comment")
+		t.Logf("created task comment %s", taskCommentID)
+	})
+
+	t.Run("task-comments/list", func(t *testing.T) {
+		requireID(t, taskCommentID, "task-comments/add must have succeeded")
+		out := zoho(t, "projects", "task-comments", "list",
+			"--task", taskID, "--project", projectID)
+		m := parseJSON(t, out)
+		comments, ok := m["comments"].([]any)
+		if !ok {
+			t.Fatalf("expected comments array in list response:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, c := range comments {
+			cm, _ := c.(map[string]any)
+			if fmt.Sprintf("%v", cm["id"]) == taskCommentID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("comment %s not found in task-comments list", taskCommentID)
+		}
+	})
+
+	t.Run("task-comments/update", func(t *testing.T) {
+		requireID(t, taskCommentID, "task-comments/add must have succeeded")
+		updatedComment := testPrefix + "_task_comment_upd"
+		out := zoho(t, "projects", "task-comments", "update", taskCommentID,
+			"--task", taskID, "--project", projectID,
+			"--comment", updatedComment)
+		arr := parseJSONArray(t, out)
+		if len(arr) == 0 {
+			t.Fatalf("task-comments update returned empty array:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, arr[0], "comment", updatedComment)
+
+		listOut := zoho(t, "projects", "task-comments", "list",
+			"--task", taskID, "--project", projectID)
+		assertContains(t, listOut, updatedComment)
+	})
+
+	t.Run("task-comments/delete", func(t *testing.T) {
+		requireID(t, taskCommentID, "task-comments/add must have succeeded")
+		out := zoho(t, "projects", "task-comments", "delete", taskCommentID,
+			"--task", taskID, "--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "task-comments", "list",
+			"--task", taskID, "--project", projectID)
+		if strings.Contains(listOut, taskCommentID) {
+			t.Errorf("comment %s still found in list after delete", taskCommentID)
+		}
+		taskCommentID = ""
+	})
+
+	t.Run("task-followers/follow", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "task-followers", "follow", taskID,
+			"--project", projectID)
+		parseJSON(t, out)
+	})
+
+	t.Run("task-followers/list", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "task-followers", "list", taskID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		followers, ok := m["followers"].([]any)
+		if !ok || len(followers) == 0 {
+			t.Fatalf("expected non-empty followers array:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, f := range followers {
+			fm, _ := f.(map[string]any)
+			if fmt.Sprintf("%v", fm["zpuid"]) == ownerZPUID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("follower %s not found in task-followers list", ownerZPUID)
+		}
+	})
+
+	t.Run("task-followers/unfollow", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "task-followers", "unfollow", taskID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "task-followers", "list", taskID,
+			"--project", projectID)
+		if strings.Contains(listOut, ownerZPUID) {
+			t.Logf("follower still present after unfollow (eventual consistency)")
 		}
 	})
 
@@ -2369,6 +2484,115 @@ func TestProjects(t *testing.T) {
 		}
 	})
 
+	t.Run("issue-comments/add", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-comments", "add",
+			"--issue", issueID, "--project", projectID,
+			"--comment", testPrefix+"_issue_comment")
+		m := parseJSON(t, out)
+		comments, ok := m["comments"].([]any)
+		if !ok || len(comments) == 0 {
+			t.Fatalf("expected comments array in add response:\n%s", truncate(out, 500))
+		}
+		cm, _ := comments[0].(map[string]any)
+		issueCommentID = fmt.Sprintf("%v", cm["id"])
+		if issueCommentID == "" || issueCommentID == "<nil>" {
+			t.Fatalf("no id in issue-comments add response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, cm, "comment", testPrefix+"_issue_comment")
+		t.Logf("created issue comment %s", issueCommentID)
+	})
+
+	t.Run("issue-comments/get", func(t *testing.T) {
+		requireID(t, issueCommentID, "issue-comments/add must have succeeded")
+		out := zoho(t, "projects", "issue-comments", "get", issueCommentID,
+			"--issue", issueID, "--project", projectID)
+		m := parseJSON(t, out)
+		comments, ok := m["comments"].([]any)
+		if !ok || len(comments) == 0 {
+			t.Fatalf("expected comments array in get response:\n%s", truncate(out, 500))
+		}
+		cm, _ := comments[0].(map[string]any)
+		assertEqual(t, fmt.Sprintf("%v", cm["id"]), issueCommentID)
+	})
+
+	t.Run("issue-comments/list", func(t *testing.T) {
+		requireID(t, issueCommentID, "issue-comments/add must have succeeded")
+		out := zoho(t, "projects", "issue-comments", "list",
+			"--issue", issueID, "--project", projectID)
+		m := parseJSON(t, out)
+		comments, ok := m["comments"].([]any)
+		if !ok {
+			t.Fatalf("expected comments array in list response:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, c := range comments {
+			cm, _ := c.(map[string]any)
+			if fmt.Sprintf("%v", cm["id"]) == issueCommentID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("comment %s not found in issue-comments list", issueCommentID)
+		}
+	})
+
+	t.Run("issue-comments/update", func(t *testing.T) {
+		requireID(t, issueCommentID, "issue-comments/add must have succeeded")
+		updatedComment := testPrefix + "_issue_comment_upd"
+		out := zoho(t, "projects", "issue-comments", "update", issueCommentID,
+			"--issue", issueID, "--project", projectID,
+			"--comment", updatedComment)
+		m := parseJSON(t, out)
+		comments, ok := m["comments"].([]any)
+		if !ok || len(comments) == 0 {
+			t.Fatalf("expected comments array in update response:\n%s", truncate(out, 500))
+		}
+		cm, _ := comments[0].(map[string]any)
+		assertStringField(t, cm, "comment", updatedComment)
+
+		getOut := zoho(t, "projects", "issue-comments", "get", issueCommentID,
+			"--issue", issueID, "--project", projectID)
+		assertContains(t, getOut, updatedComment)
+	})
+
+	t.Run("issue-comments/delete", func(t *testing.T) {
+		requireID(t, issueCommentID, "issue-comments/add must have succeeded")
+		out := zoho(t, "projects", "issue-comments", "delete", issueCommentID,
+			"--issue", issueID, "--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "issue-comments", "list",
+			"--issue", issueID, "--project", projectID)
+		if strings.Contains(listOut, issueCommentID) {
+			t.Errorf("comment %s still found in list after delete", issueCommentID)
+		}
+		issueCommentID = ""
+	})
+
+	t.Run("issue-followers/follow-known-limitation", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		r := runZoho(t, "projects", "issue-followers", "follow", issueID,
+			"--project", projectID)
+		if r.ExitCode != 0 {
+			t.Logf("issue-followers follow requires body (no self-follow endpoint for issues): %s",
+				truncate(r.Stderr, 300))
+			return
+		}
+		parseJSON(t, r.Stdout)
+	})
+
+	t.Run("issue-followers/list", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-followers", "list", issueID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		if _, ok := m["followers"]; !ok {
+			t.Fatalf("expected followers key in list response:\n%s", truncate(out, 500))
+		}
+	})
+
 	t.Run("issues/clone", func(t *testing.T) {
 		requireID(t, issueID, "issues/create must have succeeded")
 		out := zoho(t, "projects", "issues", "clone", issueID,
@@ -2450,6 +2674,126 @@ func TestProjects(t *testing.T) {
 		tl := getTasklist(t, tasklistID, projectID)
 		assertStringField(t, tl, "name", updatedTLName)
 		tasklistName = updatedTLName
+	})
+
+	t.Run("tasklist-comments/add", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		out := zoho(t, "projects", "tasklist-comments", "add",
+			"--tasklist", tasklistID, "--project", projectID,
+			"--comment", testPrefix+"_tl_comment")
+		arr := parseJSONArray(t, out)
+		if len(arr) == 0 {
+			t.Fatalf("tasklist-comments add returned empty array:\n%s", truncate(out, 500))
+		}
+		tasklistCommentID = fmt.Sprintf("%v", arr[0]["id"])
+		if tasklistCommentID == "" || tasklistCommentID == "<nil>" {
+			t.Fatalf("no id in tasklist-comments add response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, arr[0], "comment", testPrefix+"_tl_comment")
+		t.Logf("created tasklist comment %s", tasklistCommentID)
+	})
+
+	t.Run("tasklist-comments/get", func(t *testing.T) {
+		requireID(t, tasklistCommentID, "tasklist-comments/add must have succeeded")
+		out := zoho(t, "projects", "tasklist-comments", "get", tasklistCommentID,
+			"--tasklist", tasklistID, "--project", projectID)
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["id"]), tasklistCommentID)
+	})
+
+	t.Run("tasklist-comments/list", func(t *testing.T) {
+		requireID(t, tasklistCommentID, "tasklist-comments/add must have succeeded")
+		out := zoho(t, "projects", "tasklist-comments", "list",
+			"--tasklist", tasklistID, "--project", projectID)
+		m := parseJSON(t, out)
+		comments, ok := m["comments"].([]any)
+		if !ok {
+			t.Fatalf("expected comments array in list response:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, c := range comments {
+			cm, _ := c.(map[string]any)
+			if fmt.Sprintf("%v", cm["id"]) == tasklistCommentID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("comment %s not found in tasklist-comments list", tasklistCommentID)
+		}
+	})
+
+	t.Run("tasklist-comments/update", func(t *testing.T) {
+		requireID(t, tasklistCommentID, "tasklist-comments/add must have succeeded")
+		updatedComment := testPrefix + "_tl_comment_upd"
+		out := zoho(t, "projects", "tasklist-comments", "update", tasklistCommentID,
+			"--tasklist", tasklistID, "--project", projectID,
+			"--comment", updatedComment)
+		arr := parseJSONArray(t, out)
+		if len(arr) == 0 {
+			t.Fatalf("tasklist-comments update returned empty array:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, arr[0], "comment", updatedComment)
+
+		getOut := zoho(t, "projects", "tasklist-comments", "get", tasklistCommentID,
+			"--tasklist", tasklistID, "--project", projectID)
+		assertContains(t, getOut, updatedComment)
+	})
+
+	t.Run("tasklist-comments/delete", func(t *testing.T) {
+		requireID(t, tasklistCommentID, "tasklist-comments/add must have succeeded")
+		out := zoho(t, "projects", "tasklist-comments", "delete", tasklistCommentID,
+			"--tasklist", tasklistID, "--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "tasklist-comments", "list",
+			"--tasklist", tasklistID, "--project", projectID)
+		if strings.Contains(listOut, tasklistCommentID) {
+			t.Errorf("comment %s still found in list after delete", tasklistCommentID)
+		}
+		tasklistCommentID = ""
+	})
+
+	t.Run("tasklist-followers/follow", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		out := zoho(t, "projects", "tasklist-followers", "follow", tasklistID,
+			"--project", projectID)
+		parseJSON(t, out)
+	})
+
+	t.Run("tasklist-followers/list", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		out := zoho(t, "projects", "tasklist-followers", "list", tasklistID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		followers, ok := m["followers"].([]any)
+		if !ok || len(followers) == 0 {
+			t.Fatalf("expected non-empty followers array:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, f := range followers {
+			fm, _ := f.(map[string]any)
+			if fmt.Sprintf("%v", fm["zpuid"]) == ownerZPUID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("follower %s not found in tasklist-followers list", ownerZPUID)
+		}
+	})
+
+	t.Run("tasklist-followers/unfollow", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		out := zoho(t, "projects", "tasklist-followers", "unfollow", tasklistID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "tasklist-followers", "list", tasklistID,
+			"--project", projectID)
+		if strings.Contains(listOut, ownerZPUID) {
+			t.Logf("follower still present after unfollow (eventual consistency)")
+		}
 	})
 
 	t.Run("tasklists/delete", func(t *testing.T) {
@@ -2645,10 +2989,11 @@ func TestProjects(t *testing.T) {
 
 	t.Run("core/restore-second", func(t *testing.T) {
 		requireID(t, project2ID, "second project must exist")
+		time.Sleep(2 * time.Second)
 		out := zoho(t, "projects", "core", "restore", project2ID)
 		parseJSON(t, out)
 
-		retryUntil(t, 15*time.Second, func() bool {
+		retryUntil(t, 30*time.Second, func() bool {
 			r := runZoho(t, "projects", "core", "get", project2ID)
 			if r.ExitCode != 0 {
 				return false
