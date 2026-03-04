@@ -4721,10 +4721,8 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
 					url := c.ProjectsBase + "/portal/" + portal + "/tags"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{Form: map[string]string{"tags": cmd.String("json")}})
 					if err != nil {
 						return err
 					}
@@ -4786,7 +4784,8 @@ func tagsCmd() *cli.Command {
 				ArgsUsage: "<tag-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Entity IDs as JSON"},
+					&cli.StringFlag{Name: "entity", Required: true, Usage: "Entity ID"},
+					&cli.StringFlag{Name: "entity-type", Required: true, Usage: "Entity type (1=Project,2=Milestone,3=Tasklist,5=Task,6=Issue)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4797,10 +4796,12 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/tags/" + cmd.Args().First() + "/associate"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					url := base(c, portal, cmd.String("project")) + "/tags/associate"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{Form: map[string]string{
+						"tag_id":     cmd.Args().First(),
+						"entity_id":  cmd.String("entity"),
+						"entityType": cmd.String("entity-type"),
+					}})
 					if err != nil {
 						return err
 					}
@@ -4813,7 +4814,8 @@ func tagsCmd() *cli.Command {
 				ArgsUsage: "<tag-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Entity IDs as JSON"},
+					&cli.StringFlag{Name: "entity", Required: true, Usage: "Entity ID"},
+					&cli.StringFlag{Name: "entity-type", Required: true, Usage: "Entity type (1=Project,2=Milestone,3=Tasklist,5=Task,6=Issue)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4824,10 +4826,12 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/tags/" + cmd.Args().First() + "/dissociate"
-					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
+					url := base(c, portal, cmd.String("project")) + "/tags/dissociate"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{Form: map[string]string{
+						"tag_id":     cmd.Args().First(),
+						"entity_id":  cmd.String("entity"),
+						"entityType": cmd.String("entity-type"),
+					}})
 					if err != nil {
 						return err
 					}
@@ -5159,7 +5163,7 @@ func projectCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/comments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -5184,7 +5188,7 @@ func projectCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -5235,7 +5239,7 @@ func projectGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/projectgroups"
+					url := c.ProjectsBase + "/portal/" + portal + "/project-groups"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -5256,7 +5260,7 @@ func projectGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/projectgroups/mygroups"
+					url := c.ProjectsBase + "/portal/" + portal + "/my-project-groups"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -5282,7 +5286,7 @@ func projectGroupsCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := c.ProjectsBase + "/portal/" + portal + "/projectgroups"
+					url := c.ProjectsBase + "/portal/" + portal + "/project-groups"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -5309,7 +5313,7 @@ func projectGroupsCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := c.ProjectsBase + "/portal/" + portal + "/projectgroups/" + cmd.Args().First()
+					url := c.ProjectsBase + "/portal/" + portal + "/project-groups/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -5331,7 +5335,7 @@ func projectGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/projectgroups/" + cmd.Args().First()
+					url := c.ProjectsBase + "/portal/" + portal + "/project-groups/" + cmd.Args().First()
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
