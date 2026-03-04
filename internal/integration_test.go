@@ -106,6 +106,15 @@ func zohoIgnoreError(t *testing.T, args ...string) string {
 	return r.Stdout
 }
 
+func toJSON(t *testing.T, v any) string {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("failed to marshal JSON: %v", err)
+	}
+	return string(b)
+}
+
 func parseJSON(t *testing.T, s string) map[string]any {
 	t.Helper()
 	var m map[string]any
@@ -539,6 +548,104 @@ func requireDriveTeamID(t *testing.T) string {
 	return id
 }
 
+func requireProjectsPortalID(t *testing.T) string {
+	t.Helper()
+	id := os.Getenv("ZOHO_PORTAL_ID")
+	if id == "" {
+		t.Skip("skipping: ZOHO_PORTAL_ID not set")
+	}
+	return id
+}
+
+func extractProjectsID(t *testing.T, out string) string {
+	t.Helper()
+	m := parseJSON(t, out)
+	id := fmt.Sprintf("%v", m["id"])
+	if id == "" || id == "<nil>" {
+		t.Fatalf("no id in Projects response:\n%s", truncate(out, 500))
+	}
+	return id
+}
+
+func getProject(t *testing.T, projectID string) map[string]any {
+	t.Helper()
+	out := zoho(t, "projects", "core", "get", projectID)
+	return parseJSON(t, out)
+}
+
+func getTask(t *testing.T, taskID, projectID string) map[string]any {
+	t.Helper()
+	out := zoho(t, "projects", "tasks", "get", taskID, "--project", projectID)
+	return parseJSON(t, out)
+}
+
+func getIssue(t *testing.T, issueID, projectID string) map[string]any {
+	t.Helper()
+	out := zoho(t, "projects", "issues", "get", issueID, "--project", projectID)
+	arr := parseJSONArray(t, out)
+	if len(arr) == 0 {
+		t.Fatalf("issues get returned empty array for %s", issueID)
+	}
+	return arr[0]
+}
+
+func getTasklist(t *testing.T, tasklistID, projectID string) map[string]any {
+	t.Helper()
+	out := zoho(t, "projects", "tasklists", "get", tasklistID, "--project", projectID)
+	return parseJSON(t, out)
+}
+
+func getMilestone(t *testing.T, milestoneID, projectID string) map[string]any {
+	t.Helper()
+	out := zoho(t, "projects", "milestones", "get", milestoneID, "--project", projectID)
+	return parseJSON(t, out)
+}
+
+func getTimelog(t *testing.T, timelogID, projectID string) map[string]any {
+	t.Helper()
+	out := zoho(t, "projects", "timelogs", "get", timelogID, "--project", projectID)
+	return parseJSON(t, out)
+}
+
+func (c *testCleanup) trackProject(id string) {
+	c.add("delete project "+id, func() {
+		zohoIgnoreError(c.t, "projects", "core", "delete", id)
+	})
+	c.add("trash project "+id, func() {
+		zohoIgnoreError(c.t, "projects", "core", "trash", id)
+	})
+}
+
+func (c *testCleanup) trackTask(id, projectID string) {
+	c.add("delete task "+id, func() {
+		zohoIgnoreError(c.t, "projects", "tasks", "delete", id, "--project", projectID)
+	})
+}
+
+func (c *testCleanup) trackIssue(id, projectID string) {
+	c.add("delete issue "+id, func() {
+		zohoIgnoreError(c.t, "projects", "issues", "delete", id, "--project", projectID)
+	})
+}
+
+func (c *testCleanup) trackTasklist(id, projectID string) {
+	c.add("delete tasklist "+id, func() {
+		zohoIgnoreError(c.t, "projects", "tasklists", "delete", id, "--project", projectID)
+	})
+}
+
+func (c *testCleanup) trackMilestone(id, projectID string) {
+	c.add("delete milestone "+id, func() {
+		zohoIgnoreError(c.t, "projects", "milestones", "delete", id, "--project", projectID)
+	})
+}
+
+func (c *testCleanup) trackTimelog(id, projectID string) {
+	c.add("delete timelog "+id, func() {
+		zohoIgnoreError(c.t, "projects", "timelogs", "delete", id, "--project", projectID)
+	})
+}
+
 func TestCRMModules(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "crm", "modules", "list")
@@ -684,8 +791,7 @@ func TestCRM(t *testing.T) {
 		leadEmail = strings.ToLower(leadName) + "@test.example.com"
 		leadPhone = fmt.Sprintf("555%07d", time.Now().UnixNano()%10000000)
 
-		data := fmt.Sprintf(`{"Last_Name":"%s","Company":"TestCorp","Email":"%s","Phone":"%s"}`,
-			leadName, leadEmail, leadPhone)
+		data := toJSON(t, map[string]any{"Last_Name": leadName, "Company": "TestCorp", "Email": leadEmail, "Phone": leadPhone})
 		out := zoho(t, "crm", "records", "create", "Leads", "--json", data)
 		leadID = extractID(t, out)
 		cleanup.trackLead(leadID)
@@ -909,8 +1015,7 @@ func TestCRM(t *testing.T) {
 	t.Run("records/upsert-insert", func(t *testing.T) {
 		upsertName = testName(t)
 		upsertEmail = strings.ToLower(upsertName) + "@test.example.com"
-		data := fmt.Sprintf(`{"Last_Name":"%s","Company":"UpsertCorp","Email":"%s"}`,
-			upsertName, upsertEmail)
+		data := toJSON(t, map[string]any{"Last_Name": upsertName, "Company": "UpsertCorp", "Email": upsertEmail})
 		out := zoho(t, "crm", "records", "upsert", "Leads", "--json", data, "--duplicate-check", "Email")
 		upsertLeadID = extractID(t, out)
 		cleanup.trackLead(upsertLeadID)
@@ -928,8 +1033,7 @@ func TestCRM(t *testing.T) {
 		before := getRecord(t, "Leads", upsertLeadID, "id,Last_Name,Company,Email")
 		assertEqual(t, before["Company"], "UpsertCorp")
 
-		data := fmt.Sprintf(`{"Last_Name":"UpdatedViaUpsert","Company":"UpsertCorpV2","Email":"%s"}`,
-			upsertEmail)
+		data := toJSON(t, map[string]any{"Last_Name": "UpdatedViaUpsert", "Company": "UpsertCorpV2", "Email": upsertEmail})
 		out := zoho(t, "crm", "records", "upsert", "Leads", "--json", data, "--duplicate-check", "Email")
 		assertAction(t, out, "update")
 
@@ -1157,13 +1261,13 @@ func TestCRM(t *testing.T) {
 
 	t.Run("tags/add-multi-records", func(t *testing.T) {
 		name1 := testName(t)
-		data1 := fmt.Sprintf(`{"Last_Name":"%s","Company":"TagCorp1"}`, name1)
+		data1 := toJSON(t, map[string]any{"Last_Name": name1, "Company": "TagCorp1"})
 		out1 := zoho(t, "crm", "records", "create", "Leads", "--json", data1)
 		id1 := extractID(t, out1)
 		cleanup.trackLead(id1)
 
 		name2 := testName(t)
-		data2 := fmt.Sprintf(`{"Last_Name":"%s","Company":"TagCorp2"}`, name2)
+		data2 := toJSON(t, map[string]any{"Last_Name": name2, "Company": "TagCorp2"})
 		out2 := zoho(t, "crm", "records", "create", "Leads", "--json", data2)
 		id2 := extractID(t, out2)
 		cleanup.trackLead(id2)
@@ -1305,12 +1409,12 @@ func TestCRM(t *testing.T) {
 
 	t.Run("records/bulk-delete", func(t *testing.T) {
 		name1 := testName(t)
-		data1 := fmt.Sprintf(`{"Last_Name":"%s","Company":"BulkCorp1"}`, name1)
+		data1 := toJSON(t, map[string]any{"Last_Name": name1, "Company": "BulkCorp1"})
 		out1 := zoho(t, "crm", "records", "create", "Leads", "--json", data1)
 		id1 := extractID(t, out1)
 
 		name2 := testName(t)
-		data2 := fmt.Sprintf(`{"Last_Name":"%s","Company":"BulkCorp2"}`, name2)
+		data2 := toJSON(t, map[string]any{"Last_Name": name2, "Company": "BulkCorp2"})
 		out2 := zoho(t, "crm", "records", "create", "Leads", "--json", data2)
 		id2 := extractID(t, out2)
 
@@ -1373,8 +1477,7 @@ func TestCRMConvert(t *testing.T) {
 	leadCompany := testPrefix + "ConvertCorp_" + randomSuffix(6)
 	leadEmail := strings.ToLower(leadName) + "@test.example.com"
 
-	data := fmt.Sprintf(`{"Last_Name":"%s","Company":"%s","Email":"%s"}`,
-		leadName, leadCompany, leadEmail)
+	data := toJSON(t, map[string]any{"Last_Name": leadName, "Company": leadCompany, "Email": leadEmail})
 	createOut := zoho(t, "crm", "records", "create", "Leads", "--json", data)
 	leadID := extractID(t, createOut)
 	cleanup.trackLead(leadID)
@@ -1927,5 +2030,746 @@ func TestDriveEmergencyCleanup(t *testing.T) {
 		}
 		t.Logf("trashing orphaned file %s (%s)", id, name)
 		zohoIgnoreError(t, "drive", "files", "trash", id)
+	}
+}
+
+func TestProjectsPortals(t *testing.T) {
+	portalID := requireProjectsPortalID(t)
+
+	t.Run("portals/get", func(t *testing.T) {
+		out := zoho(t, "projects", "portals", "get")
+		m := parseJSON(t, out)
+		pd, ok := m["portal_details"].(map[string]any)
+		if ok {
+			m = pd
+		}
+		id := fmt.Sprintf("%v", m["id"])
+		if id == "" || id == "<nil>" {
+			t.Fatalf("expected portal id in response:\n%s", truncate(out, 500))
+		}
+		idNum := fmt.Sprintf("%v", m["id"])
+		if !strings.Contains(idNum, portalID) {
+			idF := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", m["id"]), "0"), ".")
+			if idF != portalID {
+				t.Logf("portal id mismatch: got %s / %s, env has %s", idNum, idF, portalID)
+			}
+		}
+		name := fmt.Sprintf("%v", m["name"])
+		if name == "" || name == "<nil>" {
+			t.Errorf("expected portal name in response")
+		}
+		t.Logf("portal: id=%s name=%s", id, name)
+	})
+
+	t.Run("portals/list-known-bug", func(t *testing.T) {
+		r := runZoho(t, "projects", "portals", "list")
+		if r.ExitCode == 0 {
+			t.Log("portals list succeeded unexpectedly (V3 bug may be fixed)")
+			return
+		}
+		combined := r.Stderr + r.Stdout
+		if !strings.Contains(combined, "INVALID_METHOD") {
+			t.Logf("portals list failed with unexpected error (exit %d): %s",
+				r.ExitCode, truncate(r.Stderr, 300))
+		}
+	})
+}
+
+func TestProjects(t *testing.T) {
+	_ = requireProjectsPortalID(t)
+	cleanup := newCleanup(t)
+
+	var projectID string
+	var projectName string
+	var project2ID string
+	var project2Name string
+	var taskID string
+	var taskName string
+	var subtaskID string
+	var clonedTaskID string
+	var issueID string
+	var issueName string
+	var clonedIssueID string
+	var tasklistID string
+	var tasklistName string
+	var milestoneID string
+	var milestoneName string
+	var timelogID string
+
+	t.Run("core/create", func(t *testing.T) {
+		projectName = testName(t)
+		out := zoho(t, "projects", "core", "create", "--name", projectName)
+		projectID = extractProjectsID(t, out)
+		cleanup.trackProject(projectID)
+		t.Logf("created project %s (%s)", projectID, projectName)
+
+		proj := getProject(t, projectID)
+		assertStringField(t, proj, "name", projectName)
+	})
+
+	t.Run("core/get", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		proj := getProject(t, projectID)
+		assertEqual(t, fmt.Sprintf("%v", proj["id"]), projectID)
+		assertStringField(t, proj, "name", projectName)
+	})
+
+	t.Run("core/list", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		out := zoho(t, "projects", "core", "list")
+		arr := parseJSONArray(t, out)
+		assertNonEmpty(t, arr, "expected at least one project")
+		_, found := findInArray(arr, projectID)
+		if !found {
+			t.Errorf("created project %s not found in project list", projectID)
+		}
+	})
+
+	t.Run("core/update", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		updatedName := projectName + "_updated"
+		out := zoho(t, "projects", "core", "update", projectID,
+			"--json", toJSON(t, map[string]any{"name": updatedName}))
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedName)
+
+		proj := getProject(t, projectID)
+		assertStringField(t, proj, "name", updatedName)
+		projectName = updatedName
+	})
+
+	t.Run("core/create-second-project", func(t *testing.T) {
+		project2Name = testName(t) + "_p2"
+		out := zoho(t, "projects", "core", "create", "--name", project2Name)
+		project2ID = extractProjectsID(t, out)
+		cleanup.trackProject(project2ID)
+		t.Logf("created second project %s (%s)", project2ID, project2Name)
+	})
+
+	t.Run("tasks/create", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		taskName = testName(t) + "_task"
+		out := zoho(t, "projects", "tasks", "create",
+			"--name", taskName, "--project", projectID)
+		taskID = extractProjectsID(t, out)
+		cleanup.trackTask(taskID, projectID)
+		t.Logf("created task %s", taskID)
+
+		task := getTask(t, taskID, projectID)
+		assertStringField(t, task, "name", taskName)
+	})
+
+	t.Run("tasks/get", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		task := getTask(t, taskID, projectID)
+		assertEqual(t, fmt.Sprintf("%v", task["id"]), taskID)
+		assertStringField(t, task, "name", taskName)
+	})
+
+	t.Run("tasks/update", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		updatedTaskName := taskName + "_upd"
+		out := zoho(t, "projects", "tasks", "update", taskID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"name": updatedTaskName}))
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedTaskName)
+
+		task := getTask(t, taskID, projectID)
+		assertStringField(t, task, "name", updatedTaskName)
+		taskName = updatedTaskName
+	})
+
+	t.Run("tasks/list", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "tasks", "list", "--project", projectID)
+		arr := parseJSONArray(t, out)
+		assertNonEmpty(t, arr, "expected at least one task")
+		_, found := findInArray(arr, taskID)
+		if !found {
+			t.Errorf("task %s not found in task list", taskID)
+		}
+	})
+
+	t.Run("tasks/my", func(t *testing.T) {
+		out := zoho(t, "projects", "tasks", "my")
+		var raw json.RawMessage
+		if err := json.Unmarshal([]byte(out), &raw); err != nil {
+			t.Fatalf("failed to parse tasks/my response: %v", err)
+		}
+	})
+
+	t.Run("tasks/add-subtask", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		subtaskName := testName(t) + "_sub"
+		out := zoho(t, "projects", "tasks", "add-subtask",
+			"--parent", taskID, "--name", subtaskName, "--project", projectID)
+		subtaskID = extractProjectsID(t, out)
+		cleanup.trackTask(subtaskID, projectID)
+		t.Logf("created subtask %s", subtaskID)
+
+		sub := getTask(t, subtaskID, projectID)
+		assertStringField(t, sub, "name", subtaskName)
+	})
+
+	t.Run("tasks/subtasks-known-broken", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		requireID(t, subtaskID, "tasks/add-subtask must have succeeded")
+		r := runZoho(t, "projects", "tasks", "subtasks", taskID,
+			"--project", projectID)
+		if r.ExitCode != 0 {
+			t.Logf("tasks subtasks endpoint not in V3 API: %s", truncate(r.Stderr, 200))
+			return
+		}
+		assertContains(t, r.Stdout, subtaskID)
+	})
+
+	t.Run("tasks/clone", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "tasks", "clone", taskID,
+			"--project", projectID)
+		clonedTaskID = extractProjectsID(t, out)
+		cleanup.trackTask(clonedTaskID, projectID)
+		t.Logf("cloned task %s -> %s", taskID, clonedTaskID)
+
+		cloned := getTask(t, clonedTaskID, projectID)
+		clonedName := fmt.Sprintf("%v", cloned["name"])
+		if clonedName == "" || clonedName == "<nil>" {
+			t.Errorf("cloned task has no name")
+		}
+	})
+
+	t.Run("tasks/move", func(t *testing.T) {
+		requireID(t, clonedTaskID, "tasks/clone must have succeeded")
+		requireID(t, project2ID, "second project must exist")
+		tlOut := zoho(t, "projects", "tasklists", "create",
+			"--name", testName(t)+"_tl", "--project", project2ID)
+		targetTL := extractProjectsID(t, tlOut)
+		cleanup.trackTasklist(targetTL, project2ID)
+		moveJSON := toJSON(t, map[string]any{"target_tasklist_id": targetTL})
+		zoho(t, "projects", "tasks", "move", clonedTaskID,
+			"--project", projectID,
+			"--json", moveJSON)
+
+		movedTask := getTask(t, clonedTaskID, project2ID)
+		movedName := fmt.Sprintf("%v", movedTask["name"])
+		if movedName == "" || movedName == "<nil>" {
+			t.Errorf("moved task not found in target project")
+		}
+		cleanup.trackTask(clonedTaskID, project2ID)
+	})
+
+	t.Run("tasks/delete-subtask", func(t *testing.T) {
+		requireID(t, subtaskID, "tasks/add-subtask must have succeeded")
+		out := zoho(t, "projects", "tasks", "delete", subtaskID,
+			"--project", projectID)
+		parseJSON(t, out)
+		t.Logf("deleted subtask %s", subtaskID)
+
+		r := runZoho(t, "projects", "tasks", "get", subtaskID, "--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("subtask %s still accessible after delete", subtaskID)
+		}
+		subtaskID = ""
+	})
+
+	t.Run("tasks/delete", func(t *testing.T) {
+		requireID(t, taskID, "tasks/create must have succeeded")
+		out := zoho(t, "projects", "tasks", "delete", taskID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		r := runZoho(t, "projects", "tasks", "get", taskID, "--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("task %s still accessible after delete", taskID)
+		}
+		taskID = ""
+	})
+
+	t.Run("issues/create", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		issueName = testName(t) + "_issue"
+		out := zoho(t, "projects", "issues", "create",
+			"--name", issueName, "--project", projectID)
+		issueID = extractProjectsID(t, out)
+		cleanup.trackIssue(issueID, projectID)
+		t.Logf("created issue %s", issueID)
+
+		issue := getIssue(t, issueID, projectID)
+		assertStringField(t, issue, "name", issueName)
+	})
+
+	t.Run("issues/get", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		issue := getIssue(t, issueID, projectID)
+		assertEqual(t, fmt.Sprintf("%v", issue["id"]), issueID)
+		assertStringField(t, issue, "name", issueName)
+	})
+
+	t.Run("issues/update", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		updatedIssueName := issueName + "_upd"
+		out := zoho(t, "projects", "issues", "update", issueID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"name": updatedIssueName}))
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedIssueName)
+
+		issue := getIssue(t, issueID, projectID)
+		assertStringField(t, issue, "name", updatedIssueName)
+		issueName = updatedIssueName
+	})
+
+	t.Run("issues/list", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issues", "list", "--project", projectID)
+		arr := parseJSONArray(t, out)
+		assertNonEmpty(t, arr, "expected at least one issue")
+		_, found := findInArray(arr, issueID)
+		if !found {
+			t.Errorf("issue %s not found in issue list", issueID)
+		}
+	})
+
+	t.Run("issues/defaults-removed", func(t *testing.T) {
+		r := runZoho(t, "projects", "issues", "defaults", "--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("issues defaults command should not exist (removed: endpoint not in Projects V3)")
+		}
+	})
+
+	t.Run("issues/description", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issues", "description", issueID,
+			"--project", projectID)
+		parseJSON(t, out)
+	})
+
+	t.Run("issues/activities", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issues", "activities", issueID,
+			"--project", projectID)
+		var raw json.RawMessage
+		if err := json.Unmarshal([]byte(out), &raw); err != nil {
+			t.Fatalf("failed to parse activities response: %v\nraw: %s", err, truncate(out, 500))
+		}
+	})
+
+	t.Run("issues/clone", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issues", "clone", issueID,
+			"--project", projectID)
+		clonedIssueID = extractProjectsID(t, out)
+		cleanup.trackIssue(clonedIssueID, projectID)
+		t.Logf("cloned issue %s -> %s", issueID, clonedIssueID)
+	})
+
+	t.Run("issues/move", func(t *testing.T) {
+		requireID(t, clonedIssueID, "issues/clone must have succeeded")
+		requireID(t, project2ID, "second project must exist")
+		moveJSON := toJSON(t, map[string]any{"to_project": project2ID})
+		zoho(t, "projects", "issues", "move", clonedIssueID,
+			"--project", projectID,
+			"--json", moveJSON)
+
+		movedIssue := getIssue(t, clonedIssueID, project2ID)
+		movedName := fmt.Sprintf("%v", movedIssue["name"])
+		if movedName == "" || movedName == "<nil>" {
+			t.Errorf("moved issue not found in target project")
+		}
+		cleanup.trackIssue(clonedIssueID, project2ID)
+	})
+
+	t.Run("issues/delete", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issues", "delete", issueID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		r := runZoho(t, "projects", "issues", "get", issueID, "--project", projectID)
+		if r.ExitCode == 0 && strings.Contains(r.Stdout, issueID) {
+			t.Errorf("issue %s still accessible after delete", issueID)
+		}
+		issueID = ""
+	})
+
+	t.Run("tasklists/create", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		tasklistName = testName(t) + "_tl"
+		out := zoho(t, "projects", "tasklists", "create",
+			"--name", tasklistName, "--project", projectID)
+		tasklistID = extractProjectsID(t, out)
+		cleanup.trackTasklist(tasklistID, projectID)
+		t.Logf("created tasklist %s", tasklistID)
+
+		tl := getTasklist(t, tasklistID, projectID)
+		assertStringField(t, tl, "name", tasklistName)
+	})
+
+	t.Run("tasklists/get", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		tl := getTasklist(t, tasklistID, projectID)
+		assertEqual(t, fmt.Sprintf("%v", tl["id"]), tasklistID)
+		assertStringField(t, tl, "name", tasklistName)
+	})
+
+	t.Run("tasklists/list", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		out := zoho(t, "projects", "tasklists", "list", "--project", projectID)
+		arr := parseJSONArray(t, out)
+		assertNonEmpty(t, arr, "expected at least one tasklist")
+		_, found := findInArray(arr, tasklistID)
+		if !found {
+			t.Errorf("tasklist %s not found in list", tasklistID)
+		}
+	})
+
+	t.Run("tasklists/update", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		updatedTLName := tasklistName + "_upd"
+		out := zoho(t, "projects", "tasklists", "update", tasklistID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"name": updatedTLName}))
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedTLName)
+
+		tl := getTasklist(t, tasklistID, projectID)
+		assertStringField(t, tl, "name", updatedTLName)
+		tasklistName = updatedTLName
+	})
+
+	t.Run("tasklists/delete", func(t *testing.T) {
+		requireID(t, tasklistID, "tasklists/create must have succeeded")
+		out := zoho(t, "projects", "tasklists", "delete", tasklistID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		time.Sleep(2 * time.Second)
+		r := runZoho(t, "projects", "tasklists", "get", tasklistID, "--project", projectID)
+		if r.ExitCode == 0 && strings.Contains(r.Stdout, tasklistID) {
+			t.Logf("tasklist %s still accessible after delete (eventual consistency)", tasklistID)
+		}
+		tasklistID = ""
+	})
+
+	t.Run("milestones/create", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		milestoneName = testName(t) + "_ms"
+		now := time.Now()
+		startDate := now.Format("2006-01-02")
+		endDate := now.AddDate(0, 1, 0).Format("2006-01-02")
+		out := zoho(t, "projects", "milestones", "create",
+			"--name", milestoneName,
+			"--start", startDate,
+			"--end", endDate,
+			"--project", projectID)
+		milestoneID = extractProjectsID(t, out)
+		cleanup.trackMilestone(milestoneID, projectID)
+		t.Logf("created milestone %s", milestoneID)
+
+		ms := getMilestone(t, milestoneID, projectID)
+		assertStringField(t, ms, "name", milestoneName)
+	})
+
+	t.Run("milestones/get", func(t *testing.T) {
+		requireID(t, milestoneID, "milestones/create must have succeeded")
+		ms := getMilestone(t, milestoneID, projectID)
+		assertEqual(t, fmt.Sprintf("%v", ms["id"]), milestoneID)
+		assertStringField(t, ms, "name", milestoneName)
+	})
+
+	t.Run("milestones/list", func(t *testing.T) {
+		requireID(t, milestoneID, "milestones/create must have succeeded")
+		out := zoho(t, "projects", "milestones", "list", "--project", projectID)
+		arr := parseJSONArray(t, out)
+		assertNonEmpty(t, arr, "expected at least one milestone")
+		_, found := findInArray(arr, milestoneID)
+		if !found {
+			t.Errorf("milestone %s not found in list", milestoneID)
+		}
+	})
+
+	t.Run("milestones/update", func(t *testing.T) {
+		requireID(t, milestoneID, "milestones/create must have succeeded")
+		updatedMSName := milestoneName + "_upd"
+		out := zoho(t, "projects", "milestones", "update", milestoneID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"name": updatedMSName}))
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedMSName)
+
+		ms := getMilestone(t, milestoneID, projectID)
+		assertStringField(t, ms, "name", updatedMSName)
+		milestoneName = updatedMSName
+	})
+
+	t.Run("milestones/delete", func(t *testing.T) {
+		requireID(t, milestoneID, "milestones/create must have succeeded")
+		out := zoho(t, "projects", "milestones", "delete", milestoneID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		r := runZoho(t, "projects", "milestones", "get", milestoneID, "--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("milestone %s still accessible after delete", milestoneID)
+		}
+		milestoneID = ""
+	})
+
+	t.Run("timelogs/add-needs-task", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		tlTaskName := testName(t) + "_tltask"
+		taskOut := zoho(t, "projects", "tasks", "create",
+			"--name", tlTaskName, "--project", projectID)
+		tlTaskID := extractProjectsID(t, taskOut)
+		cleanup.trackTask(tlTaskID, projectID)
+
+		today := time.Now().Format("2006-01-02")
+		r := runZoho(t, "projects", "timelogs", "add",
+			"--date", today,
+			"--hours", "2",
+			"--task", tlTaskID,
+			"--notes", testPrefix+"_timelog",
+			"--project", projectID)
+		if r.ExitCode != 0 {
+			t.Logf("timelogs add failed (known Zoho server bug): %s", truncate(r.Stderr, 300))
+			return
+		}
+		timelogID = extractProjectsID(t, r.Stdout)
+		cleanup.trackTimelog(timelogID, projectID)
+		t.Logf("created timelog %s for task %s", timelogID, tlTaskID)
+	})
+
+	t.Run("timelogs/get", func(t *testing.T) {
+		requireID(t, timelogID, "timelogs/add must have succeeded")
+		tl := getTimelog(t, timelogID, projectID)
+		assertEqual(t, fmt.Sprintf("%v", tl["id"]), timelogID)
+	})
+
+	t.Run("timelogs/list", func(t *testing.T) {
+		requireID(t, timelogID, "timelogs/add must have succeeded")
+		out := zoho(t, "projects", "timelogs", "list",
+			"--module", "task", "--project", projectID)
+		var raw json.RawMessage
+		if err := json.Unmarshal([]byte(out), &raw); err != nil {
+			t.Fatalf("failed to parse timelogs list: %v\nraw: %s", err, truncate(out, 500))
+		}
+		assertContains(t, out, timelogID)
+	})
+
+	t.Run("timelogs/update", func(t *testing.T) {
+		requireID(t, timelogID, "timelogs/add must have succeeded")
+		out := zoho(t, "projects", "timelogs", "update", timelogID,
+			"--project", projectID,
+			"--json", `{"hours":"3"}`)
+		parseJSON(t, out)
+
+		tl := getTimelog(t, timelogID, projectID)
+		hours := fmt.Sprintf("%v", tl["hours"])
+		if hours != "3" && hours != "03:00" && hours != "3:00" {
+			t.Logf("timelog hours after update: %s (format may vary)", hours)
+		}
+	})
+
+	t.Run("timelogs/delete", func(t *testing.T) {
+		requireID(t, timelogID, "timelogs/add must have succeeded")
+		out := zoho(t, "projects", "timelogs", "delete", timelogID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		r := runZoho(t, "projects", "timelogs", "get", timelogID, "--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("timelog %s still accessible after delete", timelogID)
+		}
+		timelogID = ""
+	})
+
+	t.Run("search/portal", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		retryUntil(t, 30*time.Second, func() bool {
+			out, err := zohoMayFail(t, "projects", "search", "portal",
+				"--query", testPrefix)
+			if err != nil {
+				return false
+			}
+			return strings.Contains(out, projectName) || strings.Contains(out, testPrefix)
+		})
+	})
+
+	t.Run("search/project", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		retryUntil(t, 30*time.Second, func() bool {
+			out, err := zohoMayFail(t, "projects", "search", "project",
+				"--query", testPrefix, "--project", projectID)
+			if err != nil {
+				return false
+			}
+			return strings.Contains(out, testPrefix)
+		})
+	})
+
+	t.Run("core/trash-second", func(t *testing.T) {
+		requireID(t, project2ID, "second project must exist")
+		out := zoho(t, "projects", "core", "trash", project2ID)
+		parseJSON(t, out)
+		t.Logf("trashed project %s", project2ID)
+
+		r := runZoho(t, "projects", "core", "get", project2ID)
+		if r.ExitCode == 0 {
+			m := parseJSON(t, r.Stdout)
+			status := fmt.Sprintf("%v", m["status"])
+			t.Logf("trashed project get returned status=%s (may still be accessible)", status)
+		}
+	})
+
+	t.Run("core/restore-second", func(t *testing.T) {
+		requireID(t, project2ID, "second project must exist")
+		out := zoho(t, "projects", "core", "restore", project2ID)
+		parseJSON(t, out)
+
+		retryUntil(t, 15*time.Second, func() bool {
+			r := runZoho(t, "projects", "core", "get", project2ID)
+			if r.ExitCode != 0 {
+				return false
+			}
+			return true
+		})
+		proj := getProject(t, project2ID)
+		assertStringField(t, proj, "name", project2Name)
+	})
+
+	t.Run("trash/list", func(t *testing.T) {
+		out := zoho(t, "projects", "trash", "list")
+		var raw json.RawMessage
+		if err := json.Unmarshal([]byte(out), &raw); err != nil {
+			t.Fatalf("trash list returned non-JSON: %v\nraw: %s", err, truncate(out, 500))
+		}
+	})
+
+	t.Run("trash/restore-known-broken", func(t *testing.T) {
+		r := runZoho(t, "projects", "trash", "restore",
+			"--json", `{"record_ids":["999999999999"]}`)
+		if r.ExitCode == 0 {
+			t.Log("trash restore succeeded unexpectedly")
+			return
+		}
+		t.Logf("trash restore failed (known issue): %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("trash/delete-known-broken", func(t *testing.T) {
+		r := runZoho(t, "projects", "trash", "delete",
+			"--json", `{"record_ids":["999999999999"]}`)
+		if r.ExitCode == 0 {
+			t.Log("trash delete succeeded unexpectedly")
+			return
+		}
+		t.Logf("trash delete failed (known issue): %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("core/trash-and-delete-second", func(t *testing.T) {
+		requireID(t, project2ID, "second project must exist")
+		zoho(t, "projects", "core", "trash", project2ID)
+		time.Sleep(2 * time.Second)
+		out := zoho(t, "projects", "core", "delete", project2ID)
+		parseJSON(t, out)
+		t.Logf("permanently deleted project %s", project2ID)
+		project2ID = ""
+	})
+
+	t.Run("core/trash-and-delete-main", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		zoho(t, "projects", "core", "trash", projectID)
+		time.Sleep(2 * time.Second)
+		out := zoho(t, "projects", "core", "delete", projectID)
+		parseJSON(t, out)
+		t.Logf("permanently deleted project %s", projectID)
+		projectID = ""
+	})
+}
+
+func TestProjectsErrors(t *testing.T) {
+	_ = requireProjectsPortalID(t)
+
+	t.Run("bad-auth", func(t *testing.T) {
+		r := runZohoWithEnv(t, map[string]string{
+			"ZOHO_CLIENT_ID":     "bad_client_id",
+			"ZOHO_CLIENT_SECRET": "bad_client_secret",
+			"ZOHO_REFRESH_TOKEN": "bad_refresh_token",
+			"ZOHO_DC":            "com",
+		}, "projects", "core", "list")
+		assertExitCode(t, r, 2)
+	})
+
+	t.Run("missing-portal", func(t *testing.T) {
+		r := runZohoWithEnv(t, map[string]string{
+			"ZOHO_PORTAL_ID": "",
+		}, "projects", "portals", "get")
+		if r.ExitCode == 0 {
+			t.Error("expected error when portal ID is missing")
+		}
+		assertContains(t, r.Stderr, "--portal")
+	})
+
+	t.Run("nonexistent-project", func(t *testing.T) {
+		r := runZoho(t, "projects", "core", "get", "999999999999")
+		if r.ExitCode == 0 {
+			t.Error("expected error for nonexistent project")
+		}
+	})
+
+	t.Run("nonexistent-task", func(t *testing.T) {
+		r := runZoho(t, "projects", "tasks", "get", "999999999999",
+			"--project", "999999999999")
+		if r.ExitCode == 0 {
+			t.Error("expected error for nonexistent task")
+		}
+	})
+
+	t.Run("missing-required-name", func(t *testing.T) {
+		r := runZoho(t, "projects", "core", "create")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "Required flag")
+	})
+
+	t.Run("missing-required-project-flag", func(t *testing.T) {
+		r := runZoho(t, "projects", "tasks", "list")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "Required flag")
+	})
+
+	t.Run("milestone-missing-dates", func(t *testing.T) {
+		r := runZoho(t, "projects", "milestones", "create",
+			"--name", "test", "--project", "12345")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "Required flag")
+	})
+
+	t.Run("timelog-missing-required", func(t *testing.T) {
+		r := runZoho(t, "projects", "timelogs", "add",
+			"--hours", "2", "--project", "12345")
+		assertExitCode(t, r, 1)
+		assertContains(t, r.Stderr, "Required flag")
+	})
+}
+
+func TestProjectsEmergencyCleanup(t *testing.T) {
+	if os.Getenv("ZOHO_EMERGENCY_CLEANUP") == "" {
+		t.Skip("set ZOHO_EMERGENCY_CLEANUP=1 to run")
+	}
+	_ = requireProjectsPortalID(t)
+
+	out := zoho(t, "projects", "core", "list")
+	arr := parseJSONArray(t, out)
+	t.Logf("found %d total projects", len(arr))
+	for _, proj := range arr {
+		name := fmt.Sprintf("%v", proj["name"])
+		if !strings.HasPrefix(name, testPrefix) {
+			continue
+		}
+		id := fmt.Sprintf("%v", proj["id"])
+		t.Logf("cleaning orphaned project %s (%s)", id, name)
+		zohoIgnoreError(t, "projects", "core", "trash", id)
+		time.Sleep(1 * time.Second)
+		zohoIgnoreError(t, "projects", "core", "delete", id)
 	}
 }

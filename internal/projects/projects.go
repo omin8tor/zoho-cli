@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
@@ -14,6 +15,13 @@ import (
 	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
+
+func convertDate(s string) string {
+	if t, err := time.Parse("2006-01-02", s); err == nil {
+		return t.Format("01-02-2006")
+	}
+	return s
+}
 
 func getClient() (*zohttp.Client, error) {
 	config, err := auth.ResolveAuth()
@@ -515,7 +523,12 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body := map[string]any{"name": cmd.String("name")}
+					body := map[string]any{
+						"name": cmd.String("name"),
+						"parental_info": map[string]any{
+							"parent_task_id": cmd.String("parent"),
+						},
+					}
 					if j := cmd.String("json"); j != "" {
 						var extra map[string]any
 						json.Unmarshal([]byte(j), &extra)
@@ -523,7 +536,7 @@ func tasksCmd() *cli.Command {
 							body[k] = v
 						}
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.String("parent") + "/subtasks"
+					url := base(c, portal, cmd.String("project")) + "/tasks"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -535,7 +548,10 @@ func tasksCmd() *cli.Command {
 				Name:      "clone",
 				Usage:     "Clone a task",
 				ArgsUsage: "<task-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{
+					portalFlag, projectFlag,
+					&cli.StringFlag{Name: "instances", Value: "1", Usage: "Number of copies"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -545,10 +561,21 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/clone"
-					raw, err := c.Request("POST", url, nil)
+					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/copy"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{"no_of_instances": cmd.String("instances")},
+					})
 					if err != nil {
 						return err
+					}
+					var envelope map[string]json.RawMessage
+					if json.Unmarshal(raw, &envelope) == nil {
+						if tasks, ok := envelope["tasks"]; ok {
+							var arr []json.RawMessage
+							if json.Unmarshal(tasks, &arr) == nil && len(arr) > 0 {
+								return output.JSONRaw(arr[0])
+							}
+						}
 					}
 					return output.JSONRaw(raw)
 				},
@@ -1071,27 +1098,7 @@ func issuesCmd() *cli.Command {
 					return output.JSONRaw(raw)
 				},
 			},
-			{
-				Name:  "defaults",
-				Usage: "Get issue default fields (statuses, severities, etc.)",
-				Flags: []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
-					if err != nil {
-						return err
-					}
-					portal, err := requirePortal(cmd)
-					if err != nil {
-						return err
-					}
-					url := base(c, portal, cmd.String("project")) + "/issues/defaultfields"
-					raw, err := c.Request("GET", url, nil)
-					if err != nil {
-						return err
-					}
-					return output.JSONRaw(raw)
-				},
-			},
+
 			{
 				Name:      "description",
 				Usage:     "Get issue description",
@@ -1159,6 +1166,15 @@ func issuesCmd() *cli.Command {
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
+					}
+					var envelope map[string]json.RawMessage
+					if json.Unmarshal(raw, &envelope) == nil {
+						if bugs, ok := envelope["bugs"]; ok {
+							var arr []json.RawMessage
+							if json.Unmarshal(bugs, &arr) == nil && len(arr) > 0 {
+								return output.JSONRaw(arr[0])
+							}
+						}
 					}
 					return output.JSONRaw(raw)
 				},
@@ -1458,9 +1474,8 @@ func issueLinkingCmd() *cli.Command {
 				},
 			},
 			{
-				Name:      "bulk-link",
-				Usage:     "Bulk link issues",
-				ArgsUsage: "<issue-id>",
+				Name:  "bulk-link",
+				Usage: "Bulk link issues",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Bulk link details as JSON"},
@@ -1476,7 +1491,7 @@ func issueLinkingCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/linkedissues/bulklink"
+					url := base(c, portal, cmd.String("project")) + "/issues/bulk-link-bugs"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -2344,8 +2359,8 @@ func timelogBulkCmd() *cli.Command {
 				Name:  "add",
 				Usage: "Bulk add timelogs",
 				Flags: []cli.Flag{
-					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Timelogs as JSON"},
+					portalFlag,
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Timelogs as JSON (log_object array)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2356,36 +2371,12 @@ func timelogBulkCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/timelogs"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
-					if err != nil {
-						return err
-					}
-					return output.JSONRaw(raw)
-				},
-			},
-			{
-				Name:  "update",
-				Usage: "Bulk update timelogs",
-				Flags: []cli.Flag{
-					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Timelogs as JSON"},
-				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
-					if err != nil {
-						return err
-					}
-					portal, err := requirePortal(cmd)
-					if err != nil {
-						return err
-					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/timelogs"
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					url := c.ProjectsBase + "/portal/" + portal + "/addbulktimelogs"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{
+							"log_object": cmd.String("json"),
+						},
+					})
 					if err != nil {
 						return err
 					}
@@ -2396,7 +2387,7 @@ func timelogBulkCmd() *cli.Command {
 				Name:  "delete",
 				Usage: "Bulk delete timelogs",
 				Flags: []cli.Flag{
-					portalFlag, projectFlag,
+					portalFlag,
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Timelog IDs as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -2410,7 +2401,7 @@ func timelogBulkCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/timelogs"
+					url := c.ProjectsBase + "/portal/" + portal + "/timelogs/bulkdelete"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -3050,8 +3041,8 @@ func milestonesCmd() *cli.Command {
 					}
 					body := map[string]any{
 						"name":       cmd.String("name"),
-						"start_date": cmd.String("start"),
-						"end_date":   cmd.String("end"),
+						"start_date": convertDate(cmd.String("start")),
+						"end_date":   convertDate(cmd.String("end")),
 					}
 					if j := cmd.String("json"); j != "" {
 						var extra map[string]any
@@ -3088,7 +3079,7 @@ func milestonesCmd() *cli.Command {
 					var parsed map[string]any
 					json.Unmarshal([]byte(cmd.String("json")), &parsed)
 					url := base(c, portal, cmd.String("project")) + "/milestones/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: parsed})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: parsed})
 					if err != nil {
 						return err
 					}
@@ -4357,7 +4348,10 @@ func attachmentsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List project attachments",
-				Flags: []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{
+					portalFlag, projectFlag,
+					&cli.StringFlag{Name: "type", Required: true, Usage: "Entity type (project, task, issue, forum, etc.)"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -4368,7 +4362,11 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/attachments"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{
+						Params: map[string]string{
+							"entity_type": cmd.String("type"),
+						},
+					})
 					if err != nil {
 						return err
 					}
@@ -4436,11 +4434,13 @@ func attachmentsCmd() *cli.Command {
 				},
 			},
 			{
-				Name:  "associate",
-				Usage: "Associate attachments to a project",
+				Name:      "associate",
+				Usage:     "Associate an attachment to an entity",
+				ArgsUsage: "<attachment-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Attachment details as JSON"},
+					&cli.StringFlag{Name: "type", Required: true, Usage: "Entity type (task, issue, etc.)"},
+					&cli.StringFlag{Name: "entity-id", Required: true, Usage: "Entity ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4451,10 +4451,13 @@ func attachmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/attachments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					url := base(c, portal, cmd.String("project")) + "/attachments/" + cmd.Args().First()
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{
+							"entity_type": cmd.String("type"),
+							"entity_id":   cmd.String("entity-id"),
+						},
+					})
 					if err != nil {
 						return err
 					}
@@ -4800,22 +4803,6 @@ func portalsCmd() *cli.Command {
 		Usage: "Portal operations",
 		Commands: []*cli.Command{
 			{
-				Name:  "list",
-				Usage: "List portals",
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
-					if err != nil {
-						return err
-					}
-					url := c.ProjectsBase + "/portal"
-					raw, err := c.Request("GET", url, nil)
-					if err != nil {
-						return err
-					}
-					return output.JSONRaw(raw)
-				},
-			},
-			{
 				Name:  "get",
 				Usage: "Get a portal",
 				Flags: []cli.Flag{portalFlag},
@@ -4858,7 +4845,7 @@ func trashCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/trash"
+					url := c.ProjectsBase + "/portal/" + portal + "/bin"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -4884,7 +4871,7 @@ func trashCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := c.ProjectsBase + "/portal/" + portal + "/trash"
+					url := c.ProjectsBase + "/portal/" + portal + "/bin"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -4910,7 +4897,7 @@ func trashCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := c.ProjectsBase + "/portal/" + portal + "/trash/restore"
+					url := c.ProjectsBase + "/portal/" + portal + "/bin/restore"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -4931,7 +4918,7 @@ func trashCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/trash/empty"
+					url := c.ProjectsBase + "/portal/" + portal + "/empty-bin"
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
