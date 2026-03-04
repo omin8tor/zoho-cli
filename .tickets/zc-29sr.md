@@ -1,6 +1,6 @@
 ---
 id: zc-29sr
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-22T15:49:02Z

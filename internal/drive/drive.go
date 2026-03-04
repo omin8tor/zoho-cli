@@ -68,7 +68,6 @@ func Commands() *cli.Command {
 			foldersCmd(),
 			downloadCmd(),
 			uploadCmd(),
-			uploadURLCmd(),
 			shareCmd(),
 			teamsCmd(),
 		},
@@ -282,17 +281,17 @@ func filesCmd() *cli.Command {
 			},
 			{
 				Name:  "trash-list",
-				Usage: "List trashed files in a folder",
+				Usage: "List trashed files in a team folder",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
+					&cli.StringFlag{Name: "team-folder", Required: true, Usage: "Team folder ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
 						return err
 					}
-					url := c.WorkDriveBase + "/files/" + cmd.String("folder") + "/files"
-					items, err := pagination.PaginateWorkDrive(c, url, map[string]string{"filter[status]": "51"}, 0)
+					url := c.WorkDriveBase + "/teamfolders/" + cmd.String("team-folder") + "/trashedfiles"
+					items, err := pagination.PaginateWorkDrive(c, url, nil, 0)
 					if err != nil {
 						return err
 					}
@@ -478,37 +477,6 @@ func uploadCmd() *cli.Command {
 			raw, err := c.Request("POST", c.WorkDriveBase+"/upload", &zohttp.RequestOpts{
 				Files: map[string]zohttp.FileUpload{"content": {Filename: name, Data: data}},
 				Form:  form,
-			})
-			if err != nil {
-				return err
-			}
-			return output.JSONRaw(raw)
-		},
-	}
-}
-
-func uploadURLCmd() *cli.Command {
-	return &cli.Command{
-		Name:      "upload-url",
-		Usage:     "Upload a file from a URL",
-		ArgsUsage: "<url>",
-		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "folder", Required: true, Usage: "Destination folder ID"},
-			&cli.StringFlag{Name: "name", Usage: "File name"},
-		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
-			if err != nil {
-				return err
-			}
-			attrs := map[string]any{"url": cmd.Args().First()}
-			if n := cmd.String("name"); n != "" {
-				attrs["name"] = n
-			}
-			body := map[string]any{"data": map[string]any{"attributes": attrs}}
-			raw, err := c.Request("POST", c.WorkDriveBase+"/files/"+cmd.String("folder")+"/remotefile", &zohttp.RequestOpts{
-				JSON:    body,
-				Headers: jsonapiHeaders(),
 			})
 			if err != nil {
 				return err
@@ -710,7 +678,7 @@ func teamsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/teams/"+cmd.Args().First()+"/members", nil)
+					raw, err := c.Request("GET", c.WorkDriveBase+"/teams/"+cmd.Args().First()+"/users", nil)
 					if err != nil {
 						return err
 					}

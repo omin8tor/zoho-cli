@@ -627,10 +627,10 @@ zoho drive files restore <file-id>
 
 ### zoho drive files trash-list
 
-List trashed files in a folder.
+List trashed files in a team folder.
 
 ```
-zoho drive files trash-list --folder FOLDER_ID
+zoho drive files trash-list --team-folder TEAMFOLDER_ID
 ```
 
 ### zoho drive files versions
@@ -649,14 +649,6 @@ zoho drive download <file-id> [--output path] [--format native|txt|html|pdf|docx
 
 ```
 zoho drive upload <file-path> --folder FOLDER_ID [--override]
-```
-
-### zoho drive upload-url
-
-Upload from a URL.
-
-```
-zoho drive upload-url <url> --folder FOLDER_ID [--name "filename"]
 ```
 
 ### zoho drive share permissions

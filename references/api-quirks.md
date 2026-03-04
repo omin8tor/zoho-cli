@@ -23,8 +23,14 @@ Things the CLI handles internally, plus things you need to know.
 - **Copy has reversed semantics**: You POST to the destination folder with the source file ID in the body. The `--to` flag on `files copy` handles this correctly.
 - **File status codes**: 1=active, 51=trash, 61=permanently deleted.
 - **Download endpoint**: Uses `workdrive.zoho.com/api/v1/download/{id}`, not `download.zoho.com`.
-- **`trash-list` with `filter[status]=51` returns 400** on some accounts. This appears to be a Zoho-side bug.
-- **`teams list` and `teams members`**: May return "URL Rule is not configured" for some account types.
+- **`trash-list`**: The correct endpoint is `teamfolders/{id}/trashedfiles`, NOT `files/{id}/files?filter[status]=51`. The `filter[status]` param is not in the API spec.
+- **`teams members`**: The correct endpoint is `teams/{id}/users`, NOT `teams/{id}/members`. The `/members` path returns "URL Rule is not configured".
+- **Permanent delete (status=61)** returns 401 Unauthorized on some accounts. Use trash (status=51) instead.
+- **`files get` on trashed copies** returns 401 Unauthorized. Trashed copies cannot be read back via `files get`.
+- **Search indexing delay**: Newly uploaded files may take 30-60 seconds to appear in search results.
+- **Folder names get timestamp suffix**: Created folders have ` DD-MM-YYYY HH:MM:SS:mmm` appended to the name.
+- **`share link` (create)** returns 500 on some accounts — likely a plan/feature limitation, not a code bug.
+- **`upload-url` (remotefile endpoint)** does not exist — removed from CLI. The `/files/{id}/remotefile` path was never a real API endpoint (returns F6016).
 
 ## Writer
 
