@@ -603,7 +603,7 @@ func getMilestone(t *testing.T, milestoneID, projectID string) map[string]any {
 
 func getTimelog(t *testing.T, timelogID, projectID string) map[string]any {
 	t.Helper()
-	out := zoho(t, "projects", "timelogs", "get", timelogID, "--project", projectID)
+	out := zoho(t, "projects", "timelogs", "get", timelogID, "--project", projectID, "--type", "task")
 	return parseJSON(t, out)
 }
 
@@ -642,7 +642,7 @@ func (c *testCleanup) trackMilestone(id, projectID string) {
 
 func (c *testCleanup) trackTimelog(id, projectID string) {
 	c.add("delete timelog "+id, func() {
-		zohoIgnoreError(c.t, "projects", "timelogs", "delete", id, "--project", projectID)
+		zohoIgnoreError(c.t, "projects", "timelogs", "delete", id, "--project", projectID, "--type", "task")
 	})
 }
 
@@ -2095,6 +2095,8 @@ func TestProjects(t *testing.T) {
 	var milestoneID string
 	var milestoneName string
 	var timelogID string
+	var tlTaskID string
+	var ownerZPUID string
 
 	t.Run("core/create", func(t *testing.T) {
 		projectName = testName(t)
@@ -2112,6 +2114,18 @@ func TestProjects(t *testing.T) {
 		proj := getProject(t, projectID)
 		assertEqual(t, fmt.Sprintf("%v", proj["id"]), projectID)
 		assertStringField(t, proj, "name", projectName)
+	})
+
+	t.Run("timelogs/setup-owner", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		proj := getProject(t, projectID)
+		if cb, ok := proj["created_by"].(map[string]any); ok {
+			ownerZPUID = fmt.Sprintf("%v", cb["zpuid"])
+		}
+		if ownerZPUID == "" || ownerZPUID == "<nil>" {
+			t.Fatal("could not determine owner zpuid from project")
+		}
+		t.Logf("owner zpuid: %s", ownerZPUID)
 	})
 
 	t.Run("core/list", func(t *testing.T) {
@@ -2516,26 +2530,31 @@ func TestProjects(t *testing.T) {
 		milestoneID = ""
 	})
 
-	t.Run("timelogs/add-needs-task", func(t *testing.T) {
+	t.Run("timelogs/add", func(t *testing.T) {
 		requireID(t, projectID, "core/create must have succeeded")
 		tlTaskName := testName(t) + "_tltask"
 		taskOut := zoho(t, "projects", "tasks", "create",
 			"--name", tlTaskName, "--project", projectID)
-		tlTaskID := extractProjectsID(t, taskOut)
+		tlTaskID = extractProjectsID(t, taskOut)
 		cleanup.trackTask(tlTaskID, projectID)
 
+		zoho(t, "projects", "tasks", "update", tlTaskID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{
+				"owners_and_work": map[string]any{
+					"owners": []map[string]string{{"zpuid": ownerZPUID}},
+				},
+			}))
+
 		today := time.Now().Format("2006-01-02")
-		r := runZoho(t, "projects", "timelogs", "add",
+		out := zoho(t, "projects", "timelogs", "add",
 			"--date", today,
 			"--hours", "2",
 			"--task", tlTaskID,
+			"--owner", ownerZPUID,
 			"--notes", testPrefix+"_timelog",
 			"--project", projectID)
-		if r.ExitCode != 0 {
-			t.Logf("timelogs add failed (known Zoho server bug): %s", truncate(r.Stderr, 300))
-			return
-		}
-		timelogID = extractProjectsID(t, r.Stdout)
+		timelogID = extractProjectsID(t, out)
 		cleanup.trackTimelog(timelogID, projectID)
 		t.Logf("created timelog %s for task %s", timelogID, tlTaskID)
 	})
@@ -2561,11 +2580,13 @@ func TestProjects(t *testing.T) {
 		requireID(t, timelogID, "timelogs/add must have succeeded")
 		out := zoho(t, "projects", "timelogs", "update", timelogID,
 			"--project", projectID,
-			"--json", `{"hours":"3"}`)
+			"--type", "task",
+			"--task", tlTaskID,
+			"--json", toJSON(t, map[string]any{"hours": "3"}))
 		parseJSON(t, out)
 
 		tl := getTimelog(t, timelogID, projectID)
-		hours := fmt.Sprintf("%v", tl["hours"])
+		hours := fmt.Sprintf("%v", tl["log_hour"])
 		if hours != "3" && hours != "03:00" && hours != "3:00" {
 			t.Logf("timelog hours after update: %s (format may vary)", hours)
 		}
@@ -2574,10 +2595,10 @@ func TestProjects(t *testing.T) {
 	t.Run("timelogs/delete", func(t *testing.T) {
 		requireID(t, timelogID, "timelogs/add must have succeeded")
 		out := zoho(t, "projects", "timelogs", "delete", timelogID,
-			"--project", projectID)
+			"--project", projectID, "--type", "task")
 		parseJSON(t, out)
 
-		r := runZoho(t, "projects", "timelogs", "get", timelogID, "--project", projectID)
+		r := runZoho(t, "projects", "timelogs", "get", timelogID, "--project", projectID, "--type", "task")
 		if r.ExitCode == 0 {
 			t.Errorf("timelog %s still accessible after delete", timelogID)
 		}

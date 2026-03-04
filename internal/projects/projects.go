@@ -2198,6 +2198,7 @@ func timelogsCmd() *cli.Command {
 					&cli.StringFlag{Name: "date", Required: true, Usage: "Date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "hours", Required: true, Usage: "Hours (e.g. 2, 1.5, 0:30)"},
 					&cli.StringFlag{Name: "task", Usage: "Task ID"},
+					&cli.StringFlag{Name: "owner", Usage: "Owner ZPUID"},
 					&cli.StringFlag{Name: "bill-status", Value: "Billable", Usage: "Billable or Non Billable"},
 					&cli.StringFlag{Name: "notes", Usage: "Notes for time entry"},
 				},
@@ -2210,25 +2211,47 @@ func timelogsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body := map[string]any{
+					logItem := map[string]string{
+						"project_id":  cmd.String("project"),
 						"date":        cmd.String("date"),
 						"hours":       cmd.String("hours"),
 						"bill_status": cmd.String("bill-status"),
 						"log_name":    "Time log",
+						"type":        "general",
 					}
 					if n := cmd.String("notes"); n != "" {
-						body["notes"] = n
-						body["log_name"] = n
+						logItem["notes"] = n
+						logItem["log_name"] = n
 					}
 					if t := cmd.String("task"); t != "" {
-						body["module"] = map[string]string{"type": "task", "id": t}
-					} else {
-						body["module"] = map[string]string{"type": "general"}
+						logItem["type"] = "task"
+						logItem["item_id"] = t
 					}
-					url := base(c, portal, cmd.String("project")) + "/log"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					if o := cmd.String("owner"); o != "" {
+						logItem["owner_zpuid"] = o
+					}
+					logBytes, err := json.Marshal([]map[string]string{logItem})
 					if err != nil {
 						return err
+					}
+					url := c.ProjectsBase + "/portal/" + portal + "/addbulktimelogs"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{
+							"log_object": string(logBytes),
+						},
+					})
+					if err != nil {
+						return err
+					}
+					var envelope struct {
+						TimeLogs []struct {
+							LogDetails []json.RawMessage `json:"log_details"`
+						} `json:"time_logs"`
+					}
+					if json.Unmarshal(raw, &envelope) == nil &&
+						len(envelope.TimeLogs) > 0 &&
+						len(envelope.TimeLogs[0].LogDetails) > 0 {
+						return output.JSONRaw(envelope.TimeLogs[0].LogDetails[0])
 					}
 					return output.JSONRaw(raw)
 				},
@@ -2237,7 +2260,10 @@ func timelogsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a timelog",
 				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{
+					portalFlag, projectFlag,
+					&cli.StringFlag{Name: "type", Value: "task", Usage: "task, issue, or general"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2247,8 +2273,8 @@ func timelogsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					url := base(c, portal, cmd.String("project")) + "/logs/" + cmd.Args().First()
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: map[string]string{"type": cmd.String("type")}})
 					if err != nil {
 						return err
 					}
@@ -2261,6 +2287,8 @@ func timelogsCmd() *cli.Command {
 				ArgsUsage: "<timelog-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
+					&cli.StringFlag{Name: "type", Value: "task", Usage: "task, issue, or general"},
+					&cli.StringFlag{Name: "task", Usage: "Task ID (for module)"},
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -2272,9 +2300,19 @@ func timelogsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
+					var body map[string]any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First()
+					if body == nil {
+						body = map[string]any{}
+					}
+					if _, ok := body["module"]; !ok {
+						mod := map[string]string{"type": cmd.String("type")}
+						if t := cmd.String("task"); t != "" {
+							mod["id"] = t
+						}
+						body["module"] = mod
+					}
+					url := base(c, portal, cmd.String("project")) + "/logs/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -2286,7 +2324,10 @@ func timelogsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a timelog",
 				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{
+					portalFlag, projectFlag,
+					&cli.StringFlag{Name: "type", Value: "task", Usage: "task, issue, or general"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2296,8 +2337,8 @@ func timelogsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					url := base(c, portal, cmd.String("project")) + "/logs/" + cmd.Args().First()
+					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: map[string]string{"module": cmd.String("type")}})
 					if err != nil {
 						return err
 					}
@@ -2388,7 +2429,7 @@ func timelogBulkCmd() *cli.Command {
 				Usage: "Bulk delete timelogs",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Timelog IDs as JSON"},
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Array of {id, module} objects as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
