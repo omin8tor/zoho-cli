@@ -1,6 +1,6 @@
 ---
 id: zc-e9y4
-status: open
+status: closed
 deps: [zc-10zs, zc-dgd5]
 links: []
 created: 2026-02-21T16:18:35Z
