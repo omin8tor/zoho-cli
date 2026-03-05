@@ -3268,7 +3268,7 @@ func phasesCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -3392,7 +3392,7 @@ func phaseFollowersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: map[string]string{"page": "1", "per_page": "200"}})
 					if err != nil {
 						return err
 					}
@@ -3418,7 +3418,7 @@ func phaseFollowersCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/followers"
+					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/follow"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -3445,7 +3445,7 @@ func phaseFollowersCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/followers"
+					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/unfollow"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -3504,7 +3504,7 @@ func phaseCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.String("phase") + "/comments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -3530,7 +3530,7 @@ func phaseCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.String("phase") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -4319,7 +4319,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -4345,7 +4345,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}

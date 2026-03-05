@@ -1,6 +1,6 @@
 ---
 id: zc-ll8j
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-02-22T15:49:03Z
