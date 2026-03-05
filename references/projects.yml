@@ -1,0 +1,518 @@
+openapi: 3.0.0
+info:
+  title: Projects
+  description: A project entity allows you to maintain information about a project.
+  contact: {}
+  version: 1.0.0
+servers:
+  - url: https://www.zohoapis.com/expense/v1
+    description: API Endpoint
+tags:
+  - name: projects
+    description: Projects Module
+paths:
+  /projects:
+    post:
+      tags:
+        - projects
+      operationId: create_project
+      summary: Create a project
+      description: Create a new project.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create-a-project-request'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-a-project-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.CREATE
+    get:
+      tags:
+        - projects
+      operationId: list_projects
+      summary: List of all projects
+      description: List of all projects.
+      parameters:
+        - name: page
+          in: query
+          description: Page number to be fetched. Default value is 1.
+          required: false
+          schema:
+            type: integer
+            default: 1
+          example: 1
+        - name: per_page
+          in: query
+          description: Number of records to be fetched per page. Default value is 200.
+          required: false
+          schema:
+            type: integer
+            default: 200
+          example: 200
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/list-of-all-projects-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.READ
+    parameters:
+      - $ref: '#/components/parameters/organization_id'
+  /projects/{project_id}:
+    get:
+      tags:
+        - projects
+      operationId: get_project
+      summary: Retrieve details of a project
+      description: Details of an existing project.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-details-of-a-project-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.READ
+    put:
+      tags:
+        - projects
+      operationId: update_project
+      summary: Update the details of a project
+      description: Update the details of an existing project.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-the-details-of-a-project-request'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/update-the-details-of-a-project-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.UPDATE
+    delete:
+      tags:
+        - projects
+      operationId: delete_project
+      summary: Delete a project
+      description: Delete an existing project.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/delete-a-project-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.DELETE
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        description: Unique identifier of the project.
+        schema:
+          type: string
+        example: '16367000000096055'
+      - $ref: '#/components/parameters/organization_id'
+  /projects/{project_id}/active:
+    post:
+      tags:
+        - projects
+      operationId: activate_project
+      summary: Make a project active
+      description: Mark a project as active.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/make-a-project-active-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.CREATE
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        description: Unique identifier of the project.
+        schema:
+          type: string
+        example: '16367000000096055'
+      - $ref: '#/components/parameters/organization_id'
+  /projects/{project_id}/inactive:
+    post:
+      tags:
+        - projects
+      operationId: deactivate_project
+      summary: Make a project inactive
+      description: Mark a project as inactive.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/make-a-project-inactive-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.project.CREATE
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        description: Unique identifier of the project.
+        schema:
+          type: string
+        example: '16367000000096055'
+      - $ref: '#/components/parameters/organization_id'
+components:
+  parameters:
+    organization_id:
+      name: X-com-zoho-expense-organizationid
+      description: ID of the organization
+      in: header
+      required: true
+      schema:
+        type: string
+      example: '10234695'
+  schemas:
+    gendoc-attributes-schema:
+      $ref: '#/components/schemas/project'
+    project_id:
+      description: Unique ID for the project generated by the server. This is used as identifier.
+      type: integer
+      format: int64
+      example: '16367000000096055'
+    project_name:
+      description: Name of the project.
+      type: string
+      example: Brochure Design - Spa
+    customer_id:
+      description: Unique ID of the customer.
+      type: integer
+      format: int64
+      example: '16367000000096001'
+    customer_name:
+      description: Name of the customer.
+      type: string
+      example: Kenny Digital
+    currency_code:
+      description: Base currency for the project.
+      type: string
+      example: USD
+    description:
+      description: Description about the project.
+      type: string
+      example: 8.5 x 11 Pet Hotel and Spa brochure template
+    status:
+      description: Status of the project. It can either be <code>active</code> or <code>inactive</code>.
+      type: string
+      example: active
+    billing_type:
+      description: Type of billing for the project. Give <code>based_on_task_hours</code> as default.
+      type: string
+      example: based_on_task_hours
+    budget_type:
+      description: Type of budget of the project. Possible values are <code>hours_per_staff</code> or <code>hours_per_task</code> or <code>total_project_hours</code> or <code>total_project_cost</code>.
+      type: string
+      example: hours_per_task
+    show_to_all_users:
+      description: Whether the Project is shown to all users.
+      type: boolean
+      example: true
+    project_head_id:
+      description: Unique ID of Project Head.
+      type: integer
+      format: int64
+      example: '16367000000073071'
+    project_head_name:
+      description: Name of the Project Head.
+      type: string
+      example: Tricia
+    customfield_id:
+      type: integer
+      description: Unique identifier of the custom field
+      format: int64
+      example: '46000000012845'
+    value:
+      description: Value of the Custom Field
+      type: string
+      example: Normal
+    custom_fields:
+      description: Custom fields for a project.
+      type: array
+      items:
+        type: object
+        properties:
+          customfield_id:
+            $ref: '#/components/schemas/customfield_id'
+          value:
+            $ref: '#/components/schemas/value'
+    created_time:
+      description: Time of project creation.
+      type: string
+      example: 2017-02-28T12:30:34+0530
+    user_id:
+      description: Unique ID of the user.
+      type: integer
+      format: int64
+      example: '16367000000073001'
+    is_current_user:
+      description: Whether he/she is the current user. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    name:
+      description: Name of the user.
+      type: string
+      example: Will Smith
+    email:
+      description: Email ID of the user.
+      type: string
+      example: will.smith@gmail.com
+    user_role:
+      description: Role of the user.
+      type: string
+      example: admin
+    role_id:
+      description: Unique ID for the role.
+      type: integer
+      format: int64
+      example: '16367000000030001'
+    rate:
+      description: Fixed rate for user.
+      type: number
+      format: double
+      example: 0
+    users:
+      description: Associated user details list.
+      type: array
+      items:
+        type: object
+        properties:
+          user_id:
+            $ref: '#/components/schemas/user_id'
+          is_current_user:
+            $ref: '#/components/schemas/is_current_user'
+          name:
+            $ref: '#/components/schemas/name'
+          email:
+            $ref: '#/components/schemas/email'
+          user_role:
+            $ref: '#/components/schemas/user_role'
+          role_id:
+            $ref: '#/components/schemas/role_id'
+          status:
+            $ref: '#/components/schemas/status'
+          rate:
+            description: Fixed rate for user.
+            type: number
+            format: double
+            example: 0
+    project:
+      type: object
+      properties:
+        project_id:
+          $ref: '#/components/schemas/project_id'
+        project_name:
+          $ref: '#/components/schemas/project_name'
+        customer_id:
+          $ref: '#/components/schemas/customer_id'
+        customer_name:
+          $ref: '#/components/schemas/customer_name'
+        currency_code:
+          $ref: '#/components/schemas/currency_code'
+        description:
+          $ref: '#/components/schemas/description'
+        status:
+          $ref: '#/components/schemas/status'
+        billing_type:
+          $ref: '#/components/schemas/billing_type'
+        budget_type:
+          $ref: '#/components/schemas/budget_type'
+        show_to_all_users:
+          $ref: '#/components/schemas/show_to_all_users'
+        project_head_id:
+          $ref: '#/components/schemas/project_head_id'
+        project_head_name:
+          $ref: '#/components/schemas/project_head_name'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        created_time:
+          $ref: '#/components/schemas/created_time'
+        users:
+          $ref: '#/components/schemas/users'
+    create-a-project-request:
+      required:
+        - project_name
+        - customer_id
+      type: object
+      properties:
+        project_name:
+          $ref: '#/components/schemas/project_name'
+        customer_id:
+          $ref: '#/components/schemas/customer_id'
+        description:
+          $ref: '#/components/schemas/description'
+        billing_type:
+          $ref: '#/components/schemas/billing_type'
+        show_to_all_users:
+          $ref: '#/components/schemas/show_to_all_users'
+        project_head_id:
+          $ref: '#/components/schemas/project_head_id'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        users:
+          $ref: '#/components/schemas/users'
+    create-a-project-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The project has been created.
+          readOnly: true
+        project:
+          $ref: '#/components/schemas/project'
+    list-of-all-projects-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        projects:
+          type: array
+          items:
+            type: object
+            properties:
+              project_id:
+                $ref: '#/components/schemas/project_id'
+              project_name:
+                $ref: '#/components/schemas/project_name'
+              customer_id:
+                $ref: '#/components/schemas/customer_id'
+              customer_name:
+                $ref: '#/components/schemas/customer_name'
+              description:
+                $ref: '#/components/schemas/description'
+              status:
+                $ref: '#/components/schemas/status'
+              custom_fields:
+                $ref: '#/components/schemas/custom_fields'
+              created_time:
+                $ref: '#/components/schemas/created_time'
+    retrieve-details-of-a-project-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        project:
+          $ref: '#/components/schemas/project'
+    update-the-details-of-a-project-request:
+      type: object
+      properties:
+        project_name:
+          $ref: '#/components/schemas/project_name'
+        customer_id:
+          $ref: '#/components/schemas/customer_id'
+        description:
+          $ref: '#/components/schemas/description'
+        billing_type:
+          $ref: '#/components/schemas/billing_type'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+    update-the-details-of-a-project-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The project details has been updated.
+          readOnly: true
+        project:
+          $ref: '#/components/schemas/project'
+    delete-a-project-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The project has been deleted.
+          readOnly: true
+    make-a-project-active-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The project has been marked as active.
+          readOnly: true
+    make-a-project-inactive-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The project has been marked as inactive.
+          readOnly: true
+  securitySchemes:
+    Zoho_Auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://accounts.zoho.com/oauth/v2/auth
+          scopes:
+            ZohoExpense.project.CREATE: Create project
+            ZohoExpense.project.READ: Read project
+            ZohoExpense.project.UPDATE: Update project
+            ZohoExpense.project.DELETE: Delete project

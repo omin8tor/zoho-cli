@@ -1,0 +1,852 @@
+openapi: 3.0.0
+info:
+  title: Users
+  description: A user entity allows you to maintain information about a user.
+  contact: {}
+  version: 1.0.0
+servers:
+  - url: https://www.zohoapis.com/expense/v1
+    description: API Endpoint
+tags:
+  - name: users
+    description: Users Module
+paths:
+  /users:
+    post:
+      tags:
+        - users
+      operationId: create_user
+      summary: Create an user
+      description: Create a new user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create-an-user-request'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-an-user-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.CREATE
+    get:
+      tags:
+        - users
+      operationId: list_users
+      summary: Retrieve list of users
+      description: Details of all existing users.
+      parameters:
+        - name: page
+          in: query
+          description: Page number to be fetched. Default value is 1.
+          required: false
+          schema:
+            type: integer
+            default: 1
+          example: 1
+        - name: per_page
+          in: query
+          description: Number of records to be fetched per page. Default value is 200.
+          required: false
+          schema:
+            type: integer
+            default: 200
+          example: 200
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-list-of-users-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.READ
+    parameters:
+      - $ref: '#/components/parameters/organization_id'
+  /users/{user_id}:
+    get:
+      tags:
+        - users
+      operationId: get_user
+      summary: Retrieve details of an user
+      description: Details of an existing user.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-details-of-an-user-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.READ
+    put:
+      tags:
+        - users
+      operationId: update_user
+      summary: Update details of an user
+      description: Update the details of an existing user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-details-of-an-user-request'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/update-details-of-an-user-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.UPDATE
+    delete:
+      tags:
+        - users
+      operationId: delete_user
+      summary: Delete an user
+      description: Delete an existing user.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/delete-an-user-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.DELETE
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Unique identifier of the user.
+        schema:
+          type: string
+        example: '16367000000073071'
+      - $ref: '#/components/parameters/organization_id'
+  /users/{user_id}/inactive:
+    post:
+      tags:
+        - users
+      operationId: deactivate_user
+      summary: Make an user inactive
+      description: Make an user inactive.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/make-an-user-inactive-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.CREATE
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Unique identifier of the user.
+        schema:
+          type: string
+        example: '16367000000073071'
+      - $ref: '#/components/parameters/organization_id'
+  /users/{user_id}/active:
+    post:
+      tags:
+        - users
+      operationId: activate_user
+      summary: Make an user active
+      description: Make an user active.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/make-an-user-active-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.CREATE
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Unique identifier of the user.
+        schema:
+          type: string
+        example: '16367000000073071'
+      - $ref: '#/components/parameters/organization_id'
+  /users/{user_id}/role/{role_id}:
+    post:
+      tags:
+        - users
+      operationId: assign_role_to_user
+      summary: Assign a role to user
+      description: Assign a role to user.
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          description: Unique identifier of the role.
+          schema:
+            type: string
+          example: '16367000000030005'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/assign-a-role-to-user-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.users.CREATE
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Unique identifier of the user.
+        schema:
+          type: string
+        example: '16367000000073071'
+      - $ref: '#/components/parameters/organization_id'
+components:
+  parameters:
+    organization_id:
+      name: X-com-zoho-expense-organizationid
+      description: ID of the organization
+      in: header
+      required: true
+      schema:
+        type: string
+      example: '10234695'
+  schemas:
+    gendoc-attributes-schema:
+      $ref: '#/components/schemas/user'
+    user_id:
+      description: Unique ID for user generated by the server. This is used as identifier.
+      type: integer
+      format: int64
+      example: '16367000000073071'
+    role_id:
+      description: Unique ID for the role of user.
+      type: integer
+      format: int64
+      example: '16367000000030005'
+    name:
+      description: Name of the user.
+      type: string
+      example: Tricia Boyle
+    email:
+      description: Active Email ID of the user.
+      type: string
+      example: patriciab@zillum.com
+    user_role:
+      description: Role of the user.
+      type: string
+      example: submitter
+    user_type:
+      description: Type of the User.
+      type: string
+      example: zoho
+    can_approve:
+      description: Whether the the user is allowed to approve. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    status:
+      description: Status of the user. It can either be <code>active</code> or <code>inactive</code> or <code>deleted</code> or <code>invited</code>.
+      type: string
+      example: active
+    default_approver_id:
+      description: ID of the Approver.
+      type: integer
+      format: int64
+      example: '16367000000073001'
+    default_approver_name:
+      description: Name of the Approver for a user.
+      type: string
+      example: Will Smith
+    default_approver_email:
+      description: Email Id of the Approver for a user.
+      type: string
+      example: will.smith@yahoo.in
+    is_from_crm:
+      description: Whether the the user is from CRM. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: false
+    is_current_user:
+      description: Whether the the user is a Current User or not. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    photo_url:
+      description: Url of the profile photo.
+      type: string
+      example: https://contacts.zoho.com/file?ID=a8625cce152ee5dc0ca36e254b6ccd89a644a6e131442dd531484dc7a3a15ad4cdd0803c615479b1c1a699af5729301fa0a180e1d691bb9609894e60544ef753&fs=thumb
+    approves_to_id:
+      description: ID of the User getting approved by.
+      type: integer
+      format: int64
+      example: '16367000000073001'
+    approves_to_name:
+      description: Name of to user getting approved by.
+      type: string
+      example: Will Smith
+    approves_to_email:
+      description: Email ID of the user getting approved by.
+      type: string
+      example: will.smith@yahoo.in
+    submission_amount_limit:
+      description: Limit of the amount being submitted.
+      type: number
+      format: double
+      example: 5000
+    approval_amount_limit:
+      description: Limit of the amount being approved.
+      type: number
+      format: double
+      example: 1000
+    created_time:
+      description: Time at which this user was created.
+      type: string
+      example: '2017-02-15'
+    last_modified_time:
+      description: Time at which this user's details were last modified.
+      type: string
+      example: '2017-02-21'
+    user_mail_in_id:
+      description: Mail ID generated by Zoho Expense for the User.
+      type: string
+      example: tricia.boyle.9k2rrt@zohoexpensemail.com
+    employee_number:
+      description: Number of the employee.
+      type: string
+      example: E001
+    department_id:
+      description: Unique ID for the department.
+      type: integer
+      format: int64
+      example: '16367000000093001'
+    department_name:
+      description: Name of the department.
+      type: string
+      example: Finance
+    policy_id:
+      description: Unique ID for the Policy.
+      type: integer
+      format: int64
+      example: '16367000000092011'
+    policy_name:
+      description: Name of the Policy.
+      type: string
+      example: Expense Saver
+    is_selected:
+      description: Whether selected as active. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    first_name:
+      description: First Name of the User.
+      type: string
+      example: Tricia
+    last_name:
+      description: Last Name of the User.
+      type: string
+      example: Boyle
+    designation_id:
+      description: Unique ID for the designation generated by server.
+      type: integer
+      format: int64
+      example: '16367000000093003'
+    designation_name:
+      description: Name of the designation.
+      type: string
+      example: Manager
+    date_of_birth:
+      description: Date Of Birth of the User.
+      type: string
+      example: '1996-07-25'
+    date_of_joining:
+      description: Date of Joining of the User.
+      type: string
+      example: '2017-01-04'
+    mobile:
+      description: Mobile Number of the User.
+      type: integer
+      format: int64
+      example: '9500881944'
+    gender:
+      description: Gender of the User.
+      type: string
+      example: male
+    customfield_id:
+      description: Unique ID for the Custom Field.
+      type: integer
+      format: int64
+      example: '16367000000093005'
+    data_type:
+      description: Data Type of the Custom Field.
+      type: string
+      example: string
+    is_active:
+      description: Whether the Custom Field is Active. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    is_basecurrency_amount:
+      description: Whether the Custom Field is Base Currency Amount. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    is_mandatory:
+      description: Whether the Custom Field is Mandatory. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: false
+    label:
+      description: Label for the Custom Field.
+      type: string
+      example: Nick Name
+    value:
+      description: Value entered in the Custom Field.
+      type: string
+      example: Tric
+    bank_name:
+      description: Name of the bank.
+      type: string
+      example: HDFC
+    bank_account_type:
+      description: Type of Bank Account.
+      type: string
+      example: Savings
+    custom_fields:
+      description: Custom Fields added.
+      type: array
+      items:
+        type: object
+        properties:
+          customfield_id:
+            $ref: '#/components/schemas/customfield_id'
+          data_type:
+            $ref: '#/components/schemas/data_type'
+          is_active:
+            $ref: '#/components/schemas/is_active'
+          is_basecurrency_amount:
+            $ref: '#/components/schemas/is_basecurrency_amount'
+          is_mandatory:
+            $ref: '#/components/schemas/is_mandatory'
+          label:
+            $ref: '#/components/schemas/label'
+          value:
+            $ref: '#/components/schemas/value'
+    email_ids:
+      description: Registered Email Ids of the user.
+      type: array
+      items:
+        type: object
+        properties:
+          email:
+            $ref: '#/components/schemas/email'
+          is_selected:
+            $ref: '#/components/schemas/is_selected'
+    user:
+      type: object
+      properties:
+        user_id:
+          $ref: '#/components/schemas/user_id'
+        name:
+          $ref: '#/components/schemas/name'
+        first_name:
+          $ref: '#/components/schemas/first_name'
+        last_name:
+          $ref: '#/components/schemas/last_name'
+        email:
+          $ref: '#/components/schemas/email'
+        email_ids:
+          $ref: '#/components/schemas/email_ids'
+        status:
+          $ref: '#/components/schemas/status'
+        role_id:
+          $ref: '#/components/schemas/role_id'
+        user_role:
+          $ref: '#/components/schemas/user_role'
+        user_type:
+          $ref: '#/components/schemas/user_type'
+        photo_url:
+          $ref: '#/components/schemas/photo_url'
+        default_approver_id:
+          $ref: '#/components/schemas/default_approver_id'
+        default_approver_name:
+          $ref: '#/components/schemas/default_approver_name'
+        default_approver_email:
+          $ref: '#/components/schemas/default_approver_email'
+        created_time:
+          $ref: '#/components/schemas/created_time'
+        last_modified_time:
+          $ref: '#/components/schemas/last_modified_time'
+        approves_to_id:
+          $ref: '#/components/schemas/approves_to_id'
+        approves_to_name:
+          $ref: '#/components/schemas/approves_to_name'
+        approves_to_email:
+          $ref: '#/components/schemas/approves_to_email'
+        submission_amount_limit:
+          $ref: '#/components/schemas/submission_amount_limit'
+        approval_amount_limit:
+          $ref: '#/components/schemas/approval_amount_limit'
+        employee_number:
+          $ref: '#/components/schemas/employee_number'
+        department_id:
+          $ref: '#/components/schemas/department_id'
+        department_name:
+          $ref: '#/components/schemas/department_name'
+        designation_name:
+          $ref: '#/components/schemas/designation_name'
+        designation_id:
+          $ref: '#/components/schemas/designation_id'
+        date_of_birth:
+          $ref: '#/components/schemas/date_of_birth'
+        date_of_joining:
+          $ref: '#/components/schemas/date_of_joining'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        gender:
+          $ref: '#/components/schemas/gender'
+        policy_id:
+          $ref: '#/components/schemas/policy_id'
+        policy_name:
+          $ref: '#/components/schemas/policy_name'
+        bank_name:
+          $ref: '#/components/schemas/bank_name'
+        bank_account_type:
+          $ref: '#/components/schemas/bank_account_type'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        user_mail_in_id:
+          $ref: '#/components/schemas/user_mail_in_id'
+    create-an-user-request:
+      type: object
+      required:
+        - name
+        - email
+        - user_role
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        email:
+          $ref: '#/components/schemas/email'
+        user_role:
+          $ref: '#/components/schemas/user_role'
+        default_approver_email:
+          $ref: '#/components/schemas/default_approver_email'
+        approves_to_email:
+          $ref: '#/components/schemas/approves_to_email'
+        submission_amount_limit:
+          $ref: '#/components/schemas/submission_amount_limit'
+        approval_amount_limit:
+          $ref: '#/components/schemas/approval_amount_limit'
+        employee_number:
+          $ref: '#/components/schemas/employee_number'
+        department_name:
+          $ref: '#/components/schemas/department_name'
+        designation_name:
+          $ref: '#/components/schemas/designation_name'
+        date_of_birth:
+          $ref: '#/components/schemas/date_of_birth'
+        date_of_joining:
+          $ref: '#/components/schemas/date_of_joining'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        gender:
+          $ref: '#/components/schemas/gender'
+        policy_name:
+          $ref: '#/components/schemas/policy_name'
+        custom_fields:
+          description: Custom Fields added.
+          type: array
+          items:
+            type: object
+            required:
+              - customfield_id
+              - value
+            properties:
+              customfield_id:
+                $ref: '#/components/schemas/customfield_id'
+              value:
+                $ref: '#/components/schemas/value'
+    create-an-user-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: Your invitation has been sent.
+          readOnly: true
+        user:
+          $ref: '#/components/schemas/user'
+    retrieve-list-of-users-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              user_id:
+                $ref: '#/components/schemas/user_id'
+              role_id:
+                $ref: '#/components/schemas/role_id'
+              name:
+                $ref: '#/components/schemas/name'
+              email:
+                $ref: '#/components/schemas/email'
+              user_role:
+                $ref: '#/components/schemas/user_role'
+              user_type:
+                $ref: '#/components/schemas/user_type'
+              can_approve:
+                $ref: '#/components/schemas/can_approve'
+              status:
+                $ref: '#/components/schemas/status'
+              default_approver_id:
+                $ref: '#/components/schemas/default_approver_id'
+              default_approver_name:
+                $ref: '#/components/schemas/default_approver_name'
+              default_approver_email:
+                $ref: '#/components/schemas/default_approver_email'
+              is_from_crm:
+                $ref: '#/components/schemas/is_from_crm'
+              is_current_user:
+                $ref: '#/components/schemas/is_current_user'
+              photo_url:
+                $ref: '#/components/schemas/photo_url'
+              approves_to_id:
+                $ref: '#/components/schemas/approves_to_id'
+              approves_to_name:
+                $ref: '#/components/schemas/approves_to_name'
+              approves_to_email:
+                $ref: '#/components/schemas/approves_to_email'
+              submission_amount_limit:
+                $ref: '#/components/schemas/submission_amount_limit'
+              approval_amount_limit:
+                $ref: '#/components/schemas/approval_amount_limit'
+              created_time:
+                $ref: '#/components/schemas/created_time'
+              last_modified_time:
+                $ref: '#/components/schemas/last_modified_time'
+              user_mail_in_id:
+                $ref: '#/components/schemas/user_mail_in_id'
+              employee_number:
+                $ref: '#/components/schemas/employee_number'
+              department_id:
+                $ref: '#/components/schemas/department_id'
+              department_name:
+                $ref: '#/components/schemas/department_name'
+              policy_id:
+                $ref: '#/components/schemas/policy_id'
+              policy_name:
+                $ref: '#/components/schemas/policy_name'
+    retrieve-details-of-an-user-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        user:
+          $ref: '#/components/schemas/user'
+    update-details-of-an-user-request:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        user_role:
+          $ref: '#/components/schemas/user_role'
+        approval_amount_limit:
+          $ref: '#/components/schemas/approval_amount_limit'
+        submission_amount_limit:
+          $ref: '#/components/schemas/submission_amount_limit'
+        department_id:
+          $ref: '#/components/schemas/department_id'
+        department_name:
+          $ref: '#/components/schemas/department_name'
+        designation_name:
+          $ref: '#/components/schemas/designation_name'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        custom_fields:
+          description: Custom Fields added.
+          type: array
+          items:
+            type: object
+            required:
+              - customfield_id
+              - value
+            properties:
+              customfield_id:
+                $ref: '#/components/schemas/customfield_id'
+              value:
+                $ref: '#/components/schemas/value'
+    update-details-of-an-user-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The user details has been updated.
+          readOnly: true
+        user_id:
+          $ref: '#/components/schemas/user_id'
+        name:
+          $ref: '#/components/schemas/name'
+        first_name:
+          $ref: '#/components/schemas/first_name'
+        last_name:
+          $ref: '#/components/schemas/last_name'
+        email:
+          $ref: '#/components/schemas/email'
+        email_ids:
+          $ref: '#/components/schemas/email_ids'
+        status:
+          $ref: '#/components/schemas/status'
+        role_id:
+          $ref: '#/components/schemas/role_id'
+        user_role:
+          $ref: '#/components/schemas/user_role'
+        user_type:
+          $ref: '#/components/schemas/user_type'
+        photo_url:
+          $ref: '#/components/schemas/photo_url'
+        default_approver_id:
+          $ref: '#/components/schemas/default_approver_id'
+        default_approver_name:
+          $ref: '#/components/schemas/default_approver_name'
+        default_approver_email:
+          $ref: '#/components/schemas/default_approver_email'
+        created_time:
+          $ref: '#/components/schemas/created_time'
+        last_modified_time:
+          $ref: '#/components/schemas/last_modified_time'
+        approves_to_id:
+          $ref: '#/components/schemas/approves_to_id'
+        approves_to_name:
+          $ref: '#/components/schemas/approves_to_name'
+        approves_to_email:
+          $ref: '#/components/schemas/approves_to_email'
+        submission_amount_limit:
+          $ref: '#/components/schemas/submission_amount_limit'
+        approval_amount_limit:
+          $ref: '#/components/schemas/approval_amount_limit'
+        employee_number:
+          $ref: '#/components/schemas/employee_number'
+        department_id:
+          $ref: '#/components/schemas/department_id'
+        department_name:
+          $ref: '#/components/schemas/department_name'
+        designation_name:
+          $ref: '#/components/schemas/designation_name'
+        designation_id:
+          $ref: '#/components/schemas/designation_id'
+        date_of_birth:
+          $ref: '#/components/schemas/date_of_birth'
+        date_of_joining:
+          $ref: '#/components/schemas/date_of_joining'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        gender:
+          $ref: '#/components/schemas/gender'
+        policy_id:
+          $ref: '#/components/schemas/policy_id'
+        policy_name:
+          $ref: '#/components/schemas/policy_name'
+        bank_name:
+          $ref: '#/components/schemas/bank_name'
+        bank_account_type:
+          $ref: '#/components/schemas/bank_account_type'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        user_mail_in_id:
+          $ref: '#/components/schemas/user_mail_in_id'
+    delete-an-user-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The user has been deleted.
+          readOnly: true
+    make-an-user-inactive-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The user has been marked as inactive.
+          readOnly: true
+    make-an-user-active-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The user has been marked as active.
+          readOnly: true
+    assign-a-role-to-user-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: Role has been assigned to the user
+          readOnly: true
+  securitySchemes:
+    Zoho_Auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://accounts.zoho.com/oauth/v2/auth
+          scopes:
+            ZohoExpense.users.CREATE: Create user
+            ZohoExpense.users.READ: Read user
+            ZohoExpense.users.UPDATE: Update user
+            ZohoExpense.users.DELETE: Delete user

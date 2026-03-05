@@ -1,0 +1,423 @@
+openapi: 3.0.0
+info:
+  title: Taxes
+  description: A tax entity allows you to maintain details of a tax.(Not supported for US Version)
+  contact: {}
+  version: 1.0.0
+servers:
+  - url: https://www.zohoapis.com/expense/v1
+    description: API Endpoint
+tags:
+  - name: taxes
+    description: Taxes Module
+paths:
+  /settings/taxes:
+    post:
+      tags:
+        - taxes
+      operationId: create_tax
+      summary: Create a tax
+      description: Create a tax.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create-a-tax-request'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-a-tax-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.tax.CREATE
+    get:
+      tags:
+        - taxes
+      operationId: list_taxes
+      summary: Retrieve list of taxes
+      description: Details of all existing taxes.
+      parameters:
+        - name: page
+          in: query
+          description: Page number to be fetched. Default value is 1.
+          required: false
+          schema:
+            type: integer
+            default: 1
+          example: 1
+        - name: per_page
+          in: query
+          description: Number of records to be fetched per page. Default value is 200.
+          required: false
+          schema:
+            type: integer
+            default: 200
+          example: 200
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-list-of-taxes-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.tax.READ
+    parameters:
+      - $ref: '#/components/parameters/organization_id'
+  /settings/taxes/{tax_id}:
+    get:
+      tags:
+        - taxes
+      operationId: get_tax
+      summary: Retrieve details of a tax
+      description: Details of an existing tax.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-details-of-a-tax-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.tax.READ
+    put:
+      tags:
+        - taxes
+      operationId: update_tax
+      summary: Update details of a tax
+      description: Update the details of an existing tax.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-details-of-a-tax-request'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/update-details-of-a-tax-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.tax.UPDATE
+    delete:
+      tags:
+        - taxes
+      operationId: delete_tax
+      summary: Delete a tax
+      description: Delete an existing tax.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/delete-a-tax-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.tax.DELETE
+    parameters:
+      - name: tax_id
+        in: path
+        required: true
+        description: Unique identifier of the tax.
+        schema:
+          type: string
+        example: '16367000000086009'
+      - $ref: '#/components/parameters/organization_id'
+  /settings/taxgroups/{tax_group_id}:
+    get:
+      tags:
+        - taxes
+      operationId: get_tax_group
+      summary: Retrieve details of a tax group
+      description: Details of an existing tax group.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-details-of-a-tax-group-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.tax.READ
+    parameters:
+      - name: tax_group_id
+        in: path
+        required: true
+        description: Unique identifier of the tax group.
+        schema:
+          type: string
+        example: '27927000000681015'
+      - $ref: '#/components/parameters/organization_id'
+components:
+  parameters:
+    organization_id:
+      name: X-com-zoho-expense-organizationid
+      description: ID of the organization
+      in: header
+      required: true
+      schema:
+        type: string
+      example: '10234695'
+  schemas:
+    gendoc-attributes-schema:
+      $ref: '#/components/schemas/tax-response'
+    tax-response:
+      type: object
+      properties:
+        tax_id:
+          $ref: '#/components/schemas/tax_id'
+        tax_name:
+          $ref: '#/components/schemas/tax_name'
+        tax_percentage:
+          $ref: '#/components/schemas/tax_percentage'
+        tax_type:
+          $ref: '#/components/schemas/tax_type'
+        is_value_added:
+          $ref: '#/components/schemas/is_value_added'
+        tax_authority_id:
+          $ref: '#/components/schemas/tax_authority_id'
+        tax_authority_name:
+          $ref: '#/components/schemas/tax_authority_name'
+    tax_id:
+      description: Unique ID for tax generated by the server. This is used as an identifier.
+      type: integer
+      format: int64
+      example: '16367000000086009'
+    tax_name:
+      description: Name of the tax.
+      type: string
+      example: Vat
+    tax_percentage:
+      description: Tax percentage.
+      type: number
+      format: double
+      example: 7
+    tax_type:
+      description: Type of tax. Possible values are <code>tax</code> or <code>compound_tax</code> or <code>tax_group</code>.
+      type: string
+      example: tax
+    is_value_added:
+      description: Whether it is a value added tax. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+      x-node_available_in:
+        - ca
+      x-node_unavailable_in: []
+    tax_group_id:
+      description: Unique ID for tax group generated by the server. This is used as an identifier.
+      type: integer
+      format: int64
+      example: '27927000000681015'
+    tax_group_name:
+      description: Name of the tax group.
+      type: string
+      example: Saviour group
+    tax_group_percentage:
+      description: Total percentage of the tax group.
+      type: number
+      format: double
+      example: 7
+    tax_authority_id:
+      description: Unique Id of the Tax Agency.
+      type: integer
+      format: int64
+      example: '17455000000076047'
+      x-node_available_in:
+        - ca
+      x-node_unavailable_in: []
+    tax_authority_name:
+      description: Name of the Tax Agency.
+      type: string
+      example: Canada Revenue Agency
+      x-node_available_in:
+        - ca
+      x-node_unavailable_in: []
+    create-a-tax-request:
+      type: object
+      required:
+        - tax_name
+        - tax_percentage
+        - tax_authority_name
+      properties:
+        tax_name:
+          $ref: '#/components/schemas/tax_name'
+        tax_percentage:
+          $ref: '#/components/schemas/tax_percentage'
+        tax_type:
+          $ref: '#/components/schemas/tax_type'
+        is_value_added:
+          $ref: '#/components/schemas/is_value_added'
+        tax_authority_name:
+          $ref: '#/components/schemas/tax_authority_name'
+    create-a-tax-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The tax has been created.
+          readOnly: true
+        tax:
+          $ref: '#/components/schemas/tax-response'
+    retrieve-list-of-taxes-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        taxes:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                $ref: '#/components/schemas/tax_id'
+              tax_name:
+                $ref: '#/components/schemas/tax_name'
+              tax_percentage:
+                $ref: '#/components/schemas/tax_percentage'
+              tax_type:
+                $ref: '#/components/schemas/tax_type'
+              is_value_added:
+                $ref: '#/components/schemas/is_value_added'
+              tax_authority_id:
+                $ref: '#/components/schemas/tax_authority_id'
+              tax_authority_name:
+                $ref: '#/components/schemas/tax_authority_name'
+    retrieve-details-of-a-tax-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        tax:
+          type: object
+          properties:
+            tax_id:
+              $ref: '#/components/schemas/tax_id'
+            tax_name:
+              $ref: '#/components/schemas/tax_name'
+            tax_percentage:
+              $ref: '#/components/schemas/tax_percentage'
+            tax_type:
+              $ref: '#/components/schemas/tax_type'
+            is_value_added:
+              $ref: '#/components/schemas/is_value_added'
+    update-details-of-a-tax-request:
+      type: object
+      properties:
+        tax_name:
+          $ref: '#/components/schemas/tax_name'
+        tax_percentage:
+          $ref: '#/components/schemas/tax_percentage'
+        tax_type:
+          $ref: '#/components/schemas/tax_type'
+        is_value_added:
+          $ref: '#/components/schemas/is_value_added'
+    update-details-of-a-tax-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The tax details has been updated.
+          readOnly: true
+        tax:
+          type: object
+          properties:
+            tax_id:
+              $ref: '#/components/schemas/tax_id'
+            tax_name:
+              $ref: '#/components/schemas/tax_name'
+            tax_percentage:
+              $ref: '#/components/schemas/tax_percentage'
+            tax_type:
+              $ref: '#/components/schemas/tax_type'
+            is_value_added:
+              $ref: '#/components/schemas/is_value_added'
+    delete-a-tax-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The tax has been deleted.
+          readOnly: true
+    retrieve-details-of-a-tax-group-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        tax_group:
+          type: object
+          properties:
+            tax_group_id:
+              $ref: '#/components/schemas/tax_group_id'
+            tax_group_name:
+              $ref: '#/components/schemas/tax_group_name'
+            tax_group_percentage:
+              $ref: '#/components/schemas/tax_group_percentage'
+            taxes:
+              type: array
+              items:
+                type: object
+                properties:
+                  tax_id:
+                    $ref: '#/components/schemas/tax_id'
+                  tax_name:
+                    $ref: '#/components/schemas/tax_name'
+                  tax_percentage:
+                    $ref: '#/components/schemas/tax_percentage'
+                  tax_type:
+                    $ref: '#/components/schemas/tax_type'
+  securitySchemes:
+    Zoho_Auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://accounts.zoho.com/oauth/v2/auth
+          scopes:
+            ZohoExpense.tax.CREATE: Create tax
+            ZohoExpense.tax.READ: Read tax
+            ZohoExpense.tax.UPDATE: Update tax
+            ZohoExpense.tax.DELETE: Delete tax

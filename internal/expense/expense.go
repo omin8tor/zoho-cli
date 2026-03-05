@@ -44,6 +44,12 @@ func v3Base(c *zohttp.Client) string {
 	return strings.Replace(c.ExpenseBase, "/v1", "/v3", 1)
 }
 
+func v3OrgParams(orgID string) map[string]string {
+	return map[string]string{
+		"organization_id": orgID,
+	}
+}
+
 func Commands() *cli.Command {
 	return &cli.Command{
 		Name:  "expense",
@@ -1837,7 +1843,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("GET", v3Base(c)+"/reportingtags", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -1863,8 +1869,8 @@ func tagsCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					raw, err := c.Request("POST", v3Base(c)+"/reportingtags", &zohttp.RequestOpts{
-						JSON:    body,
-						Headers: orgHeaders(orgID),
+						JSON:   body,
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -1885,8 +1891,8 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", v3Base(c)+"/reportingtags/"+cmd.Args().First(), &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+					raw, err := c.Request("GET", v3Base(c)+"/reportingtags/"+cmd.Args().First(), &zohttp.RequestOpts{
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -1913,8 +1919,8 @@ func tagsCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/"+cmd.Args().First(), &zohttp.RequestOpts{
-						JSON:    body,
-						Headers: orgHeaders(orgID),
+						JSON:   body,
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -1936,7 +1942,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("DELETE", v3Base(c)+"/reportingtags/"+cmd.Args().First(), &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -1963,8 +1969,8 @@ func tagsCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/options", &zohttp.RequestOpts{
-						JSON:    body,
-						Headers: orgHeaders(orgID),
+						JSON:   body,
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -1991,8 +1997,8 @@ func tagsCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/criteria", &zohttp.RequestOpts{
-						JSON:    body,
-						Headers: orgHeaders(orgID),
+						JSON:   body,
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2014,7 +2020,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("POST", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2036,7 +2042,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("POST", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2058,7 +2064,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("POST", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/option/"+cmd.Args().Get(1)+"/active", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2080,7 +2086,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("POST", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/option/"+cmd.Args().Get(1)+"/inactive", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2101,7 +2107,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("GET", v3Base(c)+"/reportingtags/options", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2123,7 +2129,7 @@ func tagsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("GET", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/options/all", &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err
@@ -2149,8 +2155,8 @@ func tagsCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/reorder", &zohttp.RequestOpts{
-						JSON:    body,
-						Headers: orgHeaders(orgID),
+						JSON:   body,
+						Params: v3OrgParams(orgID),
 					})
 					if err != nil {
 						return err

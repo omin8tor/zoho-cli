@@ -1,0 +1,802 @@
+openapi: 3.0.0
+info:
+  title: Customers
+  description: A customer entity allows you to maintain information about a customer.
+  contact: {}
+  version: 1.0.0
+servers:
+  - url: https://www.zohoapis.com/expense/v1
+    description: API Endpoint
+tags:
+  - name: customers
+    description: Customers Module
+paths:
+  /contacts:
+    post:
+      tags:
+        - customers
+      operationId: create_customer
+      summary: Create a customer
+      description: Create a new customer.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create-a-customer-request'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-a-customer-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.contacts.CREATE
+    get:
+      tags:
+        - customers
+      operationId: list_customers
+      summary: List of all customers
+      description: List of all customers.
+      parameters:
+        - name: page
+          in: query
+          description: Page number to be fetched. Default value is 1.
+          required: false
+          schema:
+            type: integer
+            default: 1
+          example: 1
+        - name: per_page
+          in: query
+          description: Number of records to be fetched per page. Default value is 200.
+          required: false
+          schema:
+            type: integer
+            default: 200
+          example: 200
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/list-of-all-customers-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.customer.READ
+    parameters:
+      - $ref: '#/components/parameters/organization_id'
+  /contacts/{customer_id}:
+    get:
+      tags:
+        - customers
+      operationId: get_customer
+      summary: Retrieve details of a customer
+      description: Details of an existing customer.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieve-details-of-a-customer-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.customer.READ
+    put:
+      tags:
+        - customers
+      operationId: update_customer
+      summary: Update a customer
+      description: Update the details of an existing customer.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-a-customer-request'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/update-a-customer-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.customer.UPDATE
+    delete:
+      tags:
+        - customers
+      operationId: delete_customer
+      summary: Delete a customer
+      description: Delete an existing customer.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/delete-a-customer-response'
+      deprecated: false
+      security:
+        - Zoho_Auth:
+            - ZohoExpense.contacts.DELETE
+    parameters:
+      - name: customer_id
+        in: path
+        required: true
+        description: Unique identifier of the customer.
+        schema:
+          type: string
+        example: '16367000000096001'
+      - $ref: '#/components/parameters/organization_id'
+components:
+  parameters:
+    organization_id:
+      name: X-com-zoho-expense-organizationid
+      description: ID of the organization
+      in: header
+      required: true
+      schema:
+        type: string
+      example: '10234695'
+  schemas:
+    gendoc-attributes-schema:
+      $ref: '#/components/schemas/contact-response'
+    contact-response:
+      type: object
+      properties:
+        contact_id:
+          $ref: '#/components/schemas/contact_id'
+        contact_name:
+          $ref: '#/components/schemas/contact_name'
+        company_name:
+          $ref: '#/components/schemas/company_name'
+        website:
+          $ref: '#/components/schemas/website'
+        contact_salutation:
+          $ref: '#/components/schemas/contact_salutation'
+        has_transaction:
+          $ref: '#/components/schemas/has_transaction'
+        contact_type:
+          $ref: '#/components/schemas/contact_type'
+        source:
+          $ref: '#/components/schemas/source'
+        is_crm_customer:
+          $ref: '#/components/schemas/is_crm_customer'
+        is_linked_with_zohocrm:
+          $ref: '#/components/schemas/is_linked_with_zohocrm'
+        primary_contact_id:
+          $ref: '#/components/schemas/primary_contact_id'
+        payment_terms:
+          $ref: '#/components/schemas/payment_terms'
+        payment_terms_label:
+          $ref: '#/components/schemas/payment_terms_label'
+        currency_id:
+          $ref: '#/components/schemas/currency_id'
+        currency_code:
+          $ref: '#/components/schemas/currency_code'
+        currency_symbol:
+          $ref: '#/components/schemas/currency_symbol'
+        price_precision:
+          $ref: '#/components/schemas/price_precision'
+        status:
+          $ref: '#/components/schemas/status'
+        vat_reg_no:
+          $ref: '#/components/schemas/vat_reg_no'
+        vat_treatment:
+          $ref: '#/components/schemas/vat_treatment'
+        first_name:
+          $ref: '#/components/schemas/first_name'
+        last_name:
+          $ref: '#/components/schemas/last_name'
+        email:
+          $ref: '#/components/schemas/email'
+        phone:
+          $ref: '#/components/schemas/phone'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        twitter:
+          $ref: '#/components/schemas/twitter'
+        facebook:
+          $ref: '#/components/schemas/facebook'
+        billing_address:
+          $ref: '#/components/schemas/billing_address'
+        shipping_address:
+          $ref: '#/components/schemas/shipping_address'
+        contact_persons:
+          $ref: '#/components/schemas/contact_persons'
+        notes:
+          $ref: '#/components/schemas/notes'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        created_time:
+          $ref: '#/components/schemas/created_time'
+        last_modified_time:
+          $ref: '#/components/schemas/last_modified_time'
+    contact_id:
+      description: Unique ID for the contact. This is used as an identifier.
+      type: integer
+      format: int64
+      example: '16367000000096001'
+    contact_name:
+      description: Name of the contact.
+      type: string
+      example: Kenny Digital
+    company_name:
+      description: Registered name of the company the contact represents.
+      type: string
+      example: Kenny Digital
+    website:
+      description: Website of the contact.
+      type: string
+      example: kennedyr.com
+    contact_salutation:
+      description: Salutation of the contact person. Possible values are <code>Mr</code> or <code>Mrs</code> or <code>Miss</code> or <code>Ms</code> or <code>Dr</code>
+      type: string
+      example: Mr
+    has_transaction:
+      description: Whether the Contact has transactions. It can either be <code>true</code>or <code>false</code>.
+      type: boolean
+      example: false
+    contact_type:
+      description: Type of the contact.
+      type: string
+      example: customer
+    source:
+      description: Source of the contact.
+      type: string
+      example: user
+    is_crm_customer:
+      description: Whether the Contact is a CRM customer. It can either be <code>true</code>or <code>false</code>.
+      type: boolean
+      example: false
+    is_linked_with_zohocrm:
+      description: Whether the Contact is linked with ZOHO CRM. It can either be <code>true</code>or <code>false</code>.
+      type: boolean
+      example: false
+    primary_contact_id:
+      description: Unique ID for Primary contact.
+      type: integer
+      format: int64
+      example: '16367000000096003'
+    payment_terms:
+      description: Payment terms for contact.
+      type: integer
+      example: 0
+    payment_terms_label:
+      description: Payment term label.
+      type: string
+      example: Due on Receipt
+    currency_id:
+      description: Unique ID for currency.
+      type: integer
+      format: int64
+      example: '16367000000000097'
+    currency_code:
+      description: Base currency of contact.
+      type: string
+      example: USD
+    currency_symbol:
+      description: Symbol of the currency.
+      type: string
+      example: $
+    price_precision:
+      description: Precise amount upto n decimal points.
+      type: integer
+      example: 2
+    status:
+      description: Status of the contact. It can either be <code>active</code>or <code>inactive</code>.
+      type: string
+      example: active
+    vat_reg_no:
+      description: Reg no. of VAT.
+      type: integer
+      format: int64
+      example: ''
+    vat_treatment:
+      description: VAT treatment.
+      type: string
+      example: ''
+    first_name:
+      description: First name of the contact person.
+      type: string
+      example: Ken
+    last_name:
+      description: Last name of the contact person.
+      type: string
+      example: Kennedy
+    email:
+      description: Email address of the contact person.
+      type: string
+      example: ken.kennedy@gmail.com
+    phone:
+      description: Landline phone number of the contact person.
+      type: integer
+      format: int64
+      example: '235456'
+    mobile:
+      description: Mobile number of the contact person.
+      type: integer
+      format: int64
+      example: '9566977190'
+    twitter:
+      description: Twitter handle of the contact person.
+      type: string
+      example: kenkennedy
+    facebook:
+      description: Facebook ID of the contact person.
+      type: string
+      example: ken.kennedy
+    address_id:
+      description: Unique ID for address.
+      type: integer
+      format: int64
+      example: '16367000000096004'
+    address:
+      description: Address
+      type: string
+      example: 3500, Bayshore, Burlingame
+    city:
+      description: City
+      type: string
+      example: San Francisco
+    state:
+      description: State
+      type: string
+      example: CA
+    zip:
+      description: Zip Code
+      type: string
+      example: '94010'
+    country:
+      description: Country
+      type: string
+      example: USA
+    fax:
+      description: Fax Number
+      type: string
+      example: 342-421234
+    attention:
+      description: attention
+      type: string
+      example: ''
+    contact_person_id:
+      description: Unique ID for contact person. This is used as an identifier.
+      type: integer
+      format: int64
+      example: '16367000000096003'
+    salutation:
+      description: Salutation of the contact person. Possible values are <code>Mr</code> or <code>Mrs</code> or <code>Miss</code> or <code>Ms</code> or <code>Dr</code>
+      type: string
+      example: Mr.
+    department:
+      description: Department of the contact person.
+      type: string
+      example: ''
+    designation:
+      description: Designation of the contact person.
+      type: string
+      example: ''
+    skype:
+      description: Skype Name / Number of the contact person.
+      type: string
+      example: Kenny
+    can_invite:
+      description: Whether the contact person is allowed to invite others. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    is_primary_contact:
+      description: Whether this person is the primary contact person for this contact. It can either be <code>true</code> or <code>false</code>.
+      type: boolean
+      example: true
+    notes:
+      description: A short note about the contact.
+      type: string
+      example: note
+    customfield_id:
+      type: integer
+      description: Unique identifier of the custom field
+      format: int64
+      example: '46000000012845'
+    value:
+      description: Value of the Custom Field
+      type: string
+      example: Normal
+    custom_fields:
+      description: Custom fields for a customer.
+      type: array
+      items:
+        type: object
+        properties:
+          customfield_id:
+            $ref: '#/components/schemas/customfield_id'
+          value:
+            $ref: '#/components/schemas/value'
+    created_time:
+      description: Time at which the contact details were created.
+      type: string
+      example: 2017-02-28T10:36:40+0530
+    last_modified_time:
+      description: Time at which the contact details were last updated.
+      type: string
+      example: 2017-02-28T10:36:40+0530
+    billing_address:
+      description: Contact's billing address object.
+      type: object
+      properties:
+        address_id:
+          $ref: '#/components/schemas/address_id'
+        address:
+          $ref: '#/components/schemas/address'
+        city:
+          $ref: '#/components/schemas/city'
+        state:
+          $ref: '#/components/schemas/state'
+        zip:
+          $ref: '#/components/schemas/zip'
+        country:
+          $ref: '#/components/schemas/country'
+        fax:
+          $ref: '#/components/schemas/fax'
+        attention:
+          $ref: '#/components/schemas/attention'
+    shipping_address:
+      description: Contact's shipping address object.
+      type: object
+      properties:
+        address_id:
+          $ref: '#/components/schemas/address_id'
+        address:
+          $ref: '#/components/schemas/address'
+        city:
+          $ref: '#/components/schemas/city'
+        state:
+          $ref: '#/components/schemas/state'
+        zip:
+          $ref: '#/components/schemas/zip'
+        country:
+          $ref: '#/components/schemas/country'
+        fax:
+          $ref: '#/components/schemas/fax'
+        attention:
+          $ref: '#/components/schemas/attention'
+    contact_persons:
+      description: List of contact persons for the contact. It contains <code>contact_person_id</code>, <code>salutation</code>, <code>first_name</code>,<code>last_name</code>,<code>email</code>,<code>phone</code>,<code>mobile</code> and <code>is_primary_contact</code>.
+      type: array
+      items:
+        type: object
+        properties:
+          contact_person_id:
+            $ref: '#/components/schemas/contact_person_id'
+          salutation:
+            $ref: '#/components/schemas/salutation'
+          first_name:
+            $ref: '#/components/schemas/first_name'
+          last_name:
+            $ref: '#/components/schemas/last_name'
+          email:
+            $ref: '#/components/schemas/email'
+          phone:
+            $ref: '#/components/schemas/phone'
+          mobile:
+            $ref: '#/components/schemas/mobile'
+          department:
+            $ref: '#/components/schemas/department'
+          designation:
+            $ref: '#/components/schemas/designation'
+          skype:
+            $ref: '#/components/schemas/skype'
+          fax:
+            $ref: '#/components/schemas/fax'
+          can_invite:
+            $ref: '#/components/schemas/can_invite'
+          is_primary_contact:
+            $ref: '#/components/schemas/is_primary_contact'
+    create-a-customer-request:
+      required:
+        - contact_name
+      type: object
+      properties:
+        contact_name:
+          $ref: '#/components/schemas/contact_name'
+        company_name:
+          $ref: '#/components/schemas/company_name'
+        website:
+          $ref: '#/components/schemas/website'
+        email:
+          $ref: '#/components/schemas/email'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        twitter:
+          $ref: '#/components/schemas/twitter'
+        facebook:
+          $ref: '#/components/schemas/facebook'
+        phone:
+          $ref: '#/components/schemas/phone'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        billing_address:
+          $ref: '#/components/schemas/billing_address'
+        shipping_address:
+          $ref: '#/components/schemas/shipping_address'
+        contact_persons:
+          $ref: '#/components/schemas/contact_persons'
+    create-a-customer-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The customer has been created.
+          readOnly: true
+        contact:
+          $ref: '#/components/schemas/contact-response'
+    list-of-all-customers-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        customers:
+          type: array
+          items:
+            type: object
+            properties:
+              contact_id:
+                $ref: '#/components/schemas/contact_id'
+              contact_name:
+                $ref: '#/components/schemas/contact_name'
+              company_name:
+                $ref: '#/components/schemas/company_name'
+              contact_type:
+                $ref: '#/components/schemas/contact_type'
+              status:
+                $ref: '#/components/schemas/status'
+              source:
+                $ref: '#/components/schemas/source'
+              is_linked_with_zohocrm:
+                $ref: '#/components/schemas/is_linked_with_zohocrm'
+              currency_id:
+                $ref: '#/components/schemas/currency_id'
+              currency_code:
+                $ref: '#/components/schemas/currency_code'
+              first_name:
+                $ref: '#/components/schemas/first_name'
+              last_name:
+                $ref: '#/components/schemas/last_name'
+              email:
+                $ref: '#/components/schemas/email'
+              phone:
+                $ref: '#/components/schemas/phone'
+              mobile:
+                $ref: '#/components/schemas/mobile'
+              custom_fields:
+                $ref: '#/components/schemas/custom_fields'
+              created_time:
+                $ref: '#/components/schemas/created_time'
+              last_modified_time:
+                $ref: '#/components/schemas/last_modified_time'
+    retrieve-details-of-a-customer-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: success
+          readOnly: true
+        contact:
+          type: object
+          properties:
+            contact_id:
+              $ref: '#/components/schemas/contact_id'
+            contact_name:
+              $ref: '#/components/schemas/contact_name'
+            company_name:
+              $ref: '#/components/schemas/company_name'
+            website:
+              $ref: '#/components/schemas/website'
+            contact_salutation:
+              $ref: '#/components/schemas/contact_salutation'
+            has_transaction:
+              $ref: '#/components/schemas/has_transaction'
+            contact_type:
+              $ref: '#/components/schemas/contact_type'
+            source:
+              $ref: '#/components/schemas/source'
+            is_crm_customer:
+              $ref: '#/components/schemas/is_crm_customer'
+            is_linked_with_zohocrm:
+              $ref: '#/components/schemas/is_linked_with_zohocrm'
+            primary_contact_id:
+              $ref: '#/components/schemas/primary_contact_id'
+            payment_terms:
+              $ref: '#/components/schemas/payment_terms'
+            payment_terms_label:
+              $ref: '#/components/schemas/payment_terms_label'
+            currency_id:
+              $ref: '#/components/schemas/currency_id'
+            currency_code:
+              $ref: '#/components/schemas/currency_code'
+            currency_symbol:
+              $ref: '#/components/schemas/currency_symbol'
+            price_precision:
+              $ref: '#/components/schemas/price_precision'
+            status:
+              $ref: '#/components/schemas/status'
+            vat_reg_no:
+              $ref: '#/components/schemas/vat_reg_no'
+            vat_treatment:
+              $ref: '#/components/schemas/vat_treatment'
+            first_name:
+              $ref: '#/components/schemas/first_name'
+            last_name:
+              $ref: '#/components/schemas/last_name'
+            email:
+              $ref: '#/components/schemas/email'
+            phone:
+              $ref: '#/components/schemas/phone'
+            mobile:
+              $ref: '#/components/schemas/mobile'
+            twitter:
+              $ref: '#/components/schemas/twitter'
+            facebook:
+              $ref: '#/components/schemas/facebook'
+            billing_address:
+              $ref: '#/components/schemas/billing_address'
+            shipping_address:
+              $ref: '#/components/schemas/shipping_address'
+            contact_persons:
+              $ref: '#/components/schemas/contact_persons'
+            notes:
+              $ref: '#/components/schemas/notes'
+            custom_fields:
+              $ref: '#/components/schemas/custom_fields'
+            created_time:
+              $ref: '#/components/schemas/created_time'
+            last_modified_time:
+              $ref: '#/components/schemas/last_modified_time'
+    update-a-customer-request:
+      type: object
+      properties:
+        contact_name:
+          $ref: '#/components/schemas/contact_name'
+        company_name:
+          $ref: '#/components/schemas/company_name'
+        website:
+          $ref: '#/components/schemas/website'
+        notes:
+          $ref: '#/components/schemas/notes'
+        email:
+          $ref: '#/components/schemas/email'
+        phone:
+          $ref: '#/components/schemas/phone'
+        facebook:
+          $ref: '#/components/schemas/facebook'
+        mobile:
+          $ref: '#/components/schemas/mobile'
+        custom_fields:
+          $ref: '#/components/schemas/custom_fields'
+        billing_address:
+          $ref: '#/components/schemas/billing_address'
+    update-a-customer-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: Customer information has been saved.
+          readOnly: true
+        contact:
+          type: object
+          properties:
+            contact_id:
+              $ref: '#/components/schemas/contact_id'
+            contact_name:
+              $ref: '#/components/schemas/contact_name'
+            company_name:
+              $ref: '#/components/schemas/company_name'
+            website:
+              $ref: '#/components/schemas/website'
+            contact_salutation:
+              $ref: '#/components/schemas/contact_salutation'
+            has_transaction:
+              $ref: '#/components/schemas/has_transaction'
+            contact_type:
+              $ref: '#/components/schemas/contact_type'
+            source:
+              $ref: '#/components/schemas/source'
+            is_crm_customer:
+              $ref: '#/components/schemas/is_crm_customer'
+            is_linked_with_zohocrm:
+              $ref: '#/components/schemas/is_linked_with_zohocrm'
+            primary_contact_id:
+              $ref: '#/components/schemas/primary_contact_id'
+            payment_terms:
+              $ref: '#/components/schemas/payment_terms'
+            payment_terms_label:
+              $ref: '#/components/schemas/payment_terms_label'
+            currency_id:
+              $ref: '#/components/schemas/currency_id'
+            currency_code:
+              $ref: '#/components/schemas/currency_code'
+            currency_symbol:
+              $ref: '#/components/schemas/currency_symbol'
+            price_precision:
+              $ref: '#/components/schemas/price_precision'
+            status:
+              $ref: '#/components/schemas/status'
+            vat_reg_no:
+              $ref: '#/components/schemas/vat_reg_no'
+            vat_treatment:
+              $ref: '#/components/schemas/vat_treatment'
+            first_name:
+              $ref: '#/components/schemas/first_name'
+            last_name:
+              $ref: '#/components/schemas/last_name'
+            email:
+              $ref: '#/components/schemas/email'
+            phone:
+              $ref: '#/components/schemas/phone'
+            mobile:
+              $ref: '#/components/schemas/mobile'
+            twitter:
+              $ref: '#/components/schemas/twitter'
+            facebook:
+              $ref: '#/components/schemas/facebook'
+            billing_address:
+              $ref: '#/components/schemas/billing_address'
+            shipping_address:
+              $ref: '#/components/schemas/shipping_address'
+            contact_persons:
+              $ref: '#/components/schemas/contact_persons'
+            notes:
+              $ref: '#/components/schemas/notes'
+            custom_fields:
+              $ref: '#/components/schemas/custom_fields'
+            created_time:
+              $ref: '#/components/schemas/created_time'
+            last_modified_time:
+              $ref: '#/components/schemas/last_modified_time'
+    delete-a-customer-response:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+          readOnly: true
+        message:
+          type: string
+          example: The customer has been deleted.
+          readOnly: true
+  securitySchemes:
+    Zoho_Auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://accounts.zoho.com/oauth/v2/auth
+          scopes:
+            ZohoExpense.contacts.CREATE: Create customer
+            ZohoExpense.customer.READ: Read customer
+            ZohoExpense.customer.UPDATE: Update customer
+            ZohoExpense.contacts.DELETE: Delete customer
