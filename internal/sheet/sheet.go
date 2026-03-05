@@ -91,14 +91,14 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.templates.list"}
+					params := map[string]string{"method": "template.list"}
 					if v := cmd.Int("start-index"); v > 0 {
 						params["start_index"] = fmt.Sprintf("%d", v)
 					}
 					if v := cmd.Int("count"); v > 0 {
 						params["count"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/templates", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -139,7 +139,7 @@ func workbooksCmd() *cli.Command {
 						"method":        "workbook.create",
 						"workbook_name": cmd.String("workbook-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/create", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -159,10 +159,11 @@ func workbooksCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":        "workbook.create.from.template",
+						"method":        "workbook.createfromtemplate",
+						"resource_id":   cmd.String("workbook"),
 						"workbook_name": cmd.String("workbook-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/createfromtemplate", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -192,7 +193,7 @@ func workbooksCmd() *cli.Command {
 					if v := cmd.String("workbook-name"); v != "" {
 						form["workbook_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{
+					raw, err := c.Request("POST", c.SheetBase+"/upload", &zohttp.RequestOpts{
 						Params: params,
 						Files:  map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
 						Form:   form,
@@ -219,7 +220,7 @@ func workbooksCmd() *cli.Command {
 						"method":          "workbook.download",
 						"download_format": cmd.String("format"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/download/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -240,8 +241,9 @@ func workbooksCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "workbook.images.insert",
-						"image_json": cmd.String("image-json"),
+						"method":      "workbook.images.insert",
+						"resource_id": cmd.String("workbook"),
+						"image_json":  cmd.String("image-json"),
 					}
 					opts := &zohttp.RequestOpts{Params: params}
 					if filePath := cmd.String("file"); filePath != "" {
@@ -252,7 +254,7 @@ func workbooksCmd() *cli.Command {
 						name := filepath.Base(filePath)
 						opts.Files = map[string]zohttp.FileUpload{"imagefiles": {Filename: name, Data: data}}
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), opts)
+					raw, err := c.Request("POST", c.SheetBase+"/insertimages", opts)
 					if err != nil {
 						return err
 					}
@@ -273,9 +275,10 @@ func workbooksCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method":            "workbook.copy",
+						"resource_id":       cmd.String("workbook"),
 						"new_workbook_name": cmd.String("new-workbook-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/copy", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -297,8 +300,9 @@ func workbooksCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":   "workbook.share",
-						"email_id": cmd.String("email"),
+						"method":      "workbook.share",
+						"resource_id": cmd.String("workbook"),
+						"email_id":    cmd.String("email"),
 					}
 					if v := cmd.String("role"); v != "" {
 						params["role"] = v
@@ -306,7 +310,7 @@ func workbooksCmd() *cli.Command {
 					if v := cmd.String("notify"); v != "" {
 						params["notify"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/share", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -370,8 +374,8 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.trash"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					params := map[string]string{"method": "workbook.trash", "resource_ids": fmt.Sprintf(`["%s"]`, cmd.String("workbook"))}
+					raw, err := c.Request("POST", c.SheetBase+"/trash", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -389,8 +393,8 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.restore"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					params := map[string]string{"method": "workbook.restore", "resource_ids": fmt.Sprintf(`["%s"]`, cmd.String("workbook"))}
+					raw, err := c.Request("POST", c.SheetBase+"/restore", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -408,8 +412,8 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.delete"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					params := map[string]string{"method": "workbook.delete", "resource_ids": fmt.Sprintf(`["%s"]`, cmd.String("workbook"))}
+					raw, err := c.Request("POST", c.SheetBase+"/delete", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -427,8 +431,8 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.publish"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					params := map[string]string{"method": "workbook.publish", "resource_id": cmd.String("workbook")}
+					raw, err := c.Request("POST", c.SheetBase+"/publish", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -446,8 +450,8 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.publish.remove"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					params := map[string]string{"method": "workbook.publish.remove", "resource_id": cmd.String("workbook")}
+					raw, err := c.Request("POST", c.SheetBase+"/publish", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -465,7 +469,7 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.lock"}
+					params := map[string]string{"method": "lock"}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
@@ -484,7 +488,7 @@ func workbooksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "workbook.unlock"}
+					params := map[string]string{"method": "unlock"}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
@@ -533,7 +537,7 @@ func worksheetsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":         "worksheet.create",
+						"method":         "worksheet.insert",
 						"worksheet_name": cmd.String("worksheet-name"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
@@ -583,7 +587,7 @@ func worksheetsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":           "worksheet.copy.to",
+						"method":           "worksheet.copy.otherdoc",
 						"worksheet_name":   cmd.String("worksheet"),
 						"dest_resource_id": cmd.String("dest-workbook"),
 					}
@@ -658,7 +662,7 @@ func worksheetsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":          "worksheet.delete.multiple",
+						"method":          "worksheets.delete",
 						"worksheet_names": cmd.String("worksheet-names"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
@@ -772,7 +776,7 @@ func tablesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "table.rename.headers",
+						"method":     "table.header.rename",
 						"table_name": cmd.String("table-name"),
 						"header_row": cmd.String("header-row"),
 					}
@@ -1110,7 +1114,7 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":  "worksheet.columns.insert",
+						"method":  "records.columns.insert",
 						"columns": cmd.String("columns"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1146,7 +1150,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "cell.get",
+						"method": "cell.content.get",
 						"cell":   cmd.String("cell"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1173,7 +1177,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "range.get",
+						"method": "range.content.get",
 						"range":  cmd.String("range"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1199,7 +1203,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":      "namedrange.get",
+						"method":      "namedrange.content.get",
 						"named_range": cmd.String("named-range"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
@@ -1260,7 +1264,7 @@ func cellsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "worksheet.usedarea.get"}
+					params := map[string]string{"method": "worksheet.usedarea"}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
@@ -1286,7 +1290,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "cell.set",
+						"method": "cell.content.set",
 						"cell":   cmd.String("cell"),
 						"value":  cmd.String("value"),
 					}
@@ -1314,7 +1318,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "cells.set",
+						"method":    "cells.content.set",
 						"cell_data": cmd.String("cell-data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1343,7 +1347,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":       "row.set",
+						"method":       "row.content.set",
 						"row":          fmt.Sprintf("%d", cmd.Int("row")),
 						"column_array": cmd.String("column-array"),
 						"data_array":   cmd.String("data-array"),
@@ -1373,7 +1377,7 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "range.set",
+						"method": "worksheet.csvdata.set",
 						"range":  cmd.String("range"),
 						"data":   cmd.String("data"),
 					}
@@ -1410,7 +1414,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "content.append.csv",
+						"method": "worksheet.csvdata.append",
 						"data":   cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1438,7 +1442,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "content.append.json",
+						"method":    "worksheet.jsondata.append",
 						"json_data": cmd.String("json"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1470,7 +1474,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "content.update.json",
+						"method":    "worksheet.jsondata.set",
 						"criteria":  cmd.String("criteria"),
 						"json_data": cmd.String("json"),
 					}
@@ -1503,7 +1507,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "content.insert.json",
+						"method":    "worksheet.jsondata.insert",
 						"row_index": fmt.Sprintf("%d", cmd.Int("row-index")),
 						"json_data": cmd.String("json"),
 					}
@@ -1534,7 +1538,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "content.clear",
+						"method": "range.content.clear",
 						"range":  cmd.String("range"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1586,7 +1590,7 @@ func contentCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "filter.clear"}
+					params := map[string]string{"method": "worksheet.filter.clear"}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
@@ -1612,7 +1616,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":       "content.find",
+						"method":       "find",
 						"search_value": cmd.String("search-value"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1644,7 +1648,7 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":        "content.findreplace",
+						"method":        "replace",
 						"search_value":  cmd.String("search-value"),
 						"replace_value": cmd.String("replace-value"),
 					}
@@ -1702,7 +1706,7 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":      "format.ranges",
+						"method":      "ranges.format.set",
 						"format_json": cmd.String("format-json"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
@@ -1725,7 +1729,7 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "workbook.images.fit",
+						"method":     "range.images.fit",
 						"image_json": cmd.String("image-json"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
@@ -1750,7 +1754,7 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "row.height.set",
+						"method": "worksheet.rows.height",
 						"row":    fmt.Sprintf("%d", cmd.Int("row")),
 						"height": fmt.Sprintf("%d", cmd.Int("height")),
 					}
@@ -1779,7 +1783,7 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "column.width.set",
+						"method": "worksheet.columns.width",
 						"column": fmt.Sprintf("%d", cmd.Int("column")),
 						"width":  fmt.Sprintf("%d", cmd.Int("width")),
 					}
@@ -1897,7 +1901,7 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "rows.delete",
+						"method":    "worksheet.rows.delete",
 						"start_row": fmt.Sprintf("%d", cmd.Int("start-row")),
 						"end_row":   fmt.Sprintf("%d", cmd.Int("end-row")),
 					}
@@ -2093,8 +2097,8 @@ func mergeCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "merge.templates.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{Params: params})
+					params := map[string]string{"method": "mergetemplate.list"}
+					raw, err := c.Request("POST", c.SheetBase+"/mergetemplates", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2112,7 +2116,7 @@ func mergeCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "merge.fields.get"}
+					params := map[string]string{"method": "workbook.mergefield.list"}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
@@ -2131,7 +2135,7 @@ func mergeCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "merge.jobs.list"}
+					params := map[string]string{"method": "workbook.mergejob.list"}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
@@ -2152,7 +2156,7 @@ func mergeCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "merge.job.get",
+						"method": "workbook.mergejob.details",
 						"job_id": cmd.String("job-id"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
@@ -2177,10 +2181,11 @@ func mergeCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method":          "merge.save",
+						"resource_id":     cmd.String("workbook"),
 						"merge_data":      cmd.String("merge-data"),
 						"output_settings": cmd.String("output-settings"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/merge", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2201,11 +2206,12 @@ func mergeCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":         "merge.email",
+						"method":         "merge.email.attachment",
+						"resource_id":    cmd.String("workbook"),
 						"merge_data":     cmd.String("merge-data"),
 						"email_settings": cmd.String("email-settings"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/merge", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2235,7 +2241,7 @@ func premiumCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{"method": "premium.records.fetch"}
+					params := map[string]string{"method": "premium.records.fetch", "resource_id": cmd.String("workbook")}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
@@ -2245,7 +2251,7 @@ func premiumCmd() *cli.Command {
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/fetchrecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2267,8 +2273,9 @@ func premiumCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "premium.records.add",
-						"json_data": cmd.String("json"),
+						"method":      "premium.records.add",
+						"resource_id": cmd.String("workbook"),
+						"json_data":   cmd.String("json"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -2276,7 +2283,7 @@ func premiumCmd() *cli.Command {
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/addrecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2299,9 +2306,10 @@ func premiumCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "premium.records.update",
-						"criteria":  cmd.String("criteria"),
-						"json_data": cmd.String("json"),
+						"method":      "premium.records.update",
+						"resource_id": cmd.String("workbook"),
+						"criteria":    cmd.String("criteria"),
+						"json_data":   cmd.String("json"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -2309,7 +2317,7 @@ func premiumCmd() *cli.Command {
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/updaterecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2338,10 +2346,10 @@ func utilityCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "range.to.index",
-						"range":  cmd.String("range"),
+						"method":        "range.index.get",
+						"range_address": cmd.String("range"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("POST", c.SheetBase+"/utils", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2353,8 +2361,10 @@ func utilityCmd() *cli.Command {
 				Usage: "Convert index to range",
 				Flags: []cli.Flag{
 					workbookFlag,
-					&cli.IntFlag{Name: "row", Required: true, Usage: "Row number"},
-					&cli.IntFlag{Name: "column", Required: true, Usage: "Column number"},
+					&cli.IntFlag{Name: "start-row", Required: true, Usage: "Start row index"},
+					&cli.IntFlag{Name: "start-column", Required: true, Usage: "Start column index"},
+					&cli.IntFlag{Name: "end-row", Usage: "End row index"},
+					&cli.IntFlag{Name: "end-column", Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2362,11 +2372,17 @@ func utilityCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "index.to.range",
-						"row":    fmt.Sprintf("%d", cmd.Int("row")),
-						"column": fmt.Sprintf("%d", cmd.Int("column")),
+						"method":       "range.address.get",
+						"start_row":    fmt.Sprintf("%d", cmd.Int("start-row")),
+						"start_column": fmt.Sprintf("%d", cmd.Int("start-column")),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					if v := cmd.Int("end-row"); v > 0 {
+						params["end_row"] = fmt.Sprintf("%d", v)
+					}
+					if v := cmd.Int("end-column"); v > 0 {
+						params["end_column"] = fmt.Sprintf("%d", v)
+					}
+					raw, err := c.Request("POST", c.SheetBase+"/utils", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
