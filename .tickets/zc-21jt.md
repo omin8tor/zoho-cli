@@ -1,6 +1,6 @@
 ---
 id: zc-21jt
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-22T15:49:02Z

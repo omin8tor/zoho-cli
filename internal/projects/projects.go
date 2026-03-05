@@ -2357,7 +2357,10 @@ func timelogBulkCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List timelogs (portal-level)",
-				Flags: []cli.Flag{portalFlag},
+				Flags: []cli.Flag{
+					portalFlag,
+					&cli.StringFlag{Name: "module", Required: true, Usage: "Module type (task or bug)"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2368,7 +2371,9 @@ func timelogBulkCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timelogs"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{
+						Params: map[string]string{"module": cmd.String("module")},
+					})
 					if err != nil {
 						return err
 					}
@@ -2378,7 +2383,10 @@ func timelogBulkCmd() *cli.Command {
 			{
 				Name:  "project-list",
 				Usage: "List timelogs (project-level)",
-				Flags: []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{
+					portalFlag, projectFlag,
+					&cli.StringFlag{Name: "module", Required: true, Usage: "Module type (task or bug)"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2389,7 +2397,9 @@ func timelogBulkCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/timelogs"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{
+						Params: map[string]string{"module": cmd.String("module")},
+					})
 					if err != nil {
 						return err
 					}
@@ -2472,7 +2482,7 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/timers"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -2484,7 +2494,7 @@ func timelogTimersCmd() *cli.Command {
 				Name:  "start",
 				Usage: "Start a timer",
 				Flags: []cli.Flag{
-					portalFlag, projectFlag,
+					portalFlag,
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Timer details as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -2498,7 +2508,7 @@ func timelogTimersCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/timers"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -2508,9 +2518,9 @@ func timelogTimersCmd() *cli.Command {
 			},
 			{
 				Name:      "get",
-				Usage:     "Get timer for a timelog",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				Usage:     "Get a timer",
+				ArgsUsage: "<timer-id>",
+				Flags:     []cli.Flag{portalFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2520,7 +2530,7 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/timer"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First()
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -2531,8 +2541,11 @@ func timelogTimersCmd() *cli.Command {
 			{
 				Name:      "pause",
 				Usage:     "Pause a timer",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				ArgsUsage: "<timer-id>",
+				Flags: []cli.Flag{
+					portalFlag,
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Pause details as JSON"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2542,8 +2555,10 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/timer/pause"
-					raw, err := c.Request("POST", url, nil)
+					var body any
+					json.Unmarshal([]byte(cmd.String("json")), &body)
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First() + "/pause"
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2553,8 +2568,11 @@ func timelogTimersCmd() *cli.Command {
 			{
 				Name:      "resume",
 				Usage:     "Resume a timer",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				ArgsUsage: "<timer-id>",
+				Flags: []cli.Flag{
+					portalFlag,
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Resume details as JSON"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2564,8 +2582,10 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/timer/resume"
-					raw, err := c.Request("POST", url, nil)
+					var body any
+					json.Unmarshal([]byte(cmd.String("json")), &body)
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First() + "/resume"
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2575,8 +2595,11 @@ func timelogTimersCmd() *cli.Command {
 			{
 				Name:      "stop",
 				Usage:     "Stop a timer",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				ArgsUsage: "<timer-id>",
+				Flags: []cli.Flag{
+					portalFlag,
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Stop details as JSON"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2586,8 +2609,10 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/timer/stop"
-					raw, err := c.Request("POST", url, nil)
+					var body any
+					json.Unmarshal([]byte(cmd.String("json")), &body)
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First() + "/stop"
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2597,8 +2622,8 @@ func timelogTimersCmd() *cli.Command {
 			{
 				Name:      "delete",
 				Usage:     "Delete a timer",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				ArgsUsage: "<timer-id>",
+				Flags:     []cli.Flag{portalFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2608,7 +2633,7 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/timer"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First()
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
@@ -2627,7 +2652,7 @@ func timelogPinsCmd() *cli.Command {
 		Commands: []*cli.Command{
 			{
 				Name:  "list",
-				Usage: "List timelog pins (portal-level)",
+				Usage: "List timelog pins",
 				Flags: []cli.Flag{portalFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2638,7 +2663,7 @@ func timelogPinsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/timelogs/pins"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/pin"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -2647,9 +2672,12 @@ func timelogPinsCmd() *cli.Command {
 				},
 			},
 			{
-				Name:  "project-list",
-				Usage: "List timelog pins (project-level)",
-				Flags: []cli.Flag{portalFlag, projectFlag},
+				Name:  "create",
+				Usage: "Pin a timelog",
+				Flags: []cli.Flag{
+					portalFlag,
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Pin details as JSON (log_id, module_type)"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2659,30 +2687,10 @@ func timelogPinsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/pins"
-					raw, err := c.Request("GET", url, nil)
-					if err != nil {
-						return err
-					}
-					return output.JSONRaw(raw)
-				},
-			},
-			{
-				Name:      "create",
-				Usage:     "Pin a timelog",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
-					if err != nil {
-						return err
-					}
-					portal, err := requirePortal(cmd)
-					if err != nil {
-						return err
-					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/pin"
-					raw, err := c.Request("POST", url, nil)
+					var body any
+					json.Unmarshal([]byte(cmd.String("json")), &body)
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/pin"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2692,9 +2700,9 @@ func timelogPinsCmd() *cli.Command {
 			{
 				Name:      "update",
 				Usage:     "Update a timelog pin",
-				ArgsUsage: "<timelog-id>",
+				ArgsUsage: "<pin-id>",
 				Flags: []cli.Flag{
-					portalFlag, projectFlag,
+					portalFlag,
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Pin details as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -2708,7 +2716,7 @@ func timelogPinsCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/pin"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/pin/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -2719,8 +2727,8 @@ func timelogPinsCmd() *cli.Command {
 			{
 				Name:      "delete",
 				Usage:     "Unpin a timelog",
-				ArgsUsage: "<timelog-id>",
-				Flags:     []cli.Flag{portalFlag, projectFlag},
+				ArgsUsage: "<pin-id>",
+				Flags:     []cli.Flag{portalFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
@@ -2730,7 +2738,7 @@ func timelogPinsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/timelogs/" + cmd.Args().First() + "/pin"
+					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/pin/" + cmd.Args().First()
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
@@ -2806,10 +2814,12 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
 					url := c.ProjectsBase + "/portal/" + portal + "/users"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{
+							"userdetails": cmd.String("json"),
+						},
+					})
 					if err != nil {
 						return err
 					}
@@ -2830,7 +2840,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/users/" + cmd.Args().First() + "/active"
+					url := c.ProjectsBase + "/portal/" + portal + "/users/" + cmd.Args().First() + "/activate"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -2852,7 +2862,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/users/" + cmd.Args().First() + "/inactive"
+					url := c.ProjectsBase + "/portal/" + portal + "/users/" + cmd.Args().First() + "/deactivate"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -5355,6 +5365,27 @@ func teamsCmd() *cli.Command {
 		Usage: "Team operations",
 		Commands: []*cli.Command{
 			{
+				Name:  "list",
+				Usage: "List all teams",
+				Flags: []cli.Flag{portalFlag},
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					c, err := getClient()
+					if err != nil {
+						return err
+					}
+					portal, err := requirePortal(cmd)
+					if err != nil {
+						return err
+					}
+					url := c.ProjectsBase + "/portal/" + portal + "/teams"
+					raw, err := c.Request("GET", url, nil)
+					if err != nil {
+						return err
+					}
+					return output.JSONRaw(raw)
+				},
+			},
+			{
 				Name:      "get",
 				Usage:     "Get a team",
 				ArgsUsage: "<team-id>",
@@ -5521,7 +5552,7 @@ func teamsCmd() *cli.Command {
 				Usage: "Add a team to a project",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Team details as JSON"},
+					&cli.StringFlag{Name: "json", Required: true, Usage: "Team details as JSON (team_ids array)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5532,10 +5563,12 @@ func teamsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/teams"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					url := base(c, portal, cmd.String("project")) + "/associate-teams"
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{
+							"team_ids": cmd.String("json"),
+						},
+					})
 					if err != nil {
 						return err
 					}
@@ -5556,7 +5589,7 @@ func teamsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/teams/" + cmd.Args().First()
+					url := base(c, portal, cmd.String("project")) + "/dissociate-teams/" + cmd.Args().First()
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
@@ -5683,7 +5716,7 @@ func profilesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/profiles/" + cmd.Args().First() + "/default"
+					url := c.ProjectsBase + "/portal/" + portal + "/profiles/" + cmd.Args().First() + "/setprimary"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -6094,27 +6127,6 @@ func reportsCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/reports/workload"
-					raw, err := c.Request("GET", url, nil)
-					if err != nil {
-						return err
-					}
-					return output.JSONRaw(raw)
-				},
-			},
-			{
-				Name:  "allocated",
-				Usage: "Get allocated workload report",
-				Flags: []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
-					if err != nil {
-						return err
-					}
-					portal, err := requirePortal(cmd)
-					if err != nil {
-						return err
-					}
-					url := c.ProjectsBase + "/portal/" + portal + "/reports/workload/allocated"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
