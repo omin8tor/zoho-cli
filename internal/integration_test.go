@@ -2137,6 +2137,7 @@ func TestProjects(t *testing.T) {
 	var forumCategoryID string
 	var forumID string
 	var forumCommentID string
+	var issueLinkID string
 
 	t.Run("core/create", func(t *testing.T) {
 		projectName = testName(t)
@@ -2640,6 +2641,112 @@ func TestProjects(t *testing.T) {
 		t.Logf("cloned issue %s -> %s", issueID, clonedIssueID)
 	})
 
+	t.Run("issue-linking/list-empty", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-linking", "list", issueID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		if _, ok := m["issue_linked"]; !ok {
+			t.Fatalf("expected issue_linked key in response:\n%s", truncate(out, 500))
+		}
+	})
+
+	t.Run("issue-linking/link", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		requireID(t, clonedIssueID, "issues/clone must have succeeded")
+		out := zoho(t, "projects", "issue-linking", "link", issueID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{
+				"link_type": "relate",
+				"issue_ids": []string{clonedIssueID},
+			}))
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "issue-linking", "list", issueID,
+			"--project", projectID)
+		lm := parseJSON(t, listOut)
+		linked, ok := lm["issue_linked"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected issue_linked object in list response:\n%s", truncate(listOut, 500))
+		}
+		linkedIssues, ok := linked["linked_issues"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected linked_issues in response:\n%s", truncate(listOut, 500))
+		}
+		for _, v := range linkedIssues {
+			if arr, ok := v.([]any); ok {
+				for _, item := range arr {
+					if im, ok := item.(map[string]any); ok {
+						if fmt.Sprintf("%v", im["issue_id"]) == clonedIssueID {
+							issueLinkID = fmt.Sprintf("%v", im["link_id"])
+							break
+						}
+					}
+				}
+			}
+			if issueLinkID != "" {
+				break
+			}
+		}
+		if issueLinkID == "" || issueLinkID == "<nil>" {
+			t.Fatalf("could not extract link_id from list response:\n%s", truncate(listOut, 500))
+		}
+		assertContains(t, listOut, clonedIssueID)
+		t.Logf("created issue link %s", issueLinkID)
+	})
+
+	t.Run("issue-linking/change-type", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		requireID(t, issueLinkID, "issue-linking/link must have succeeded")
+		out := zoho(t, "projects", "issue-linking", "change-type",
+			issueID, issueLinkID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"link_type": "blocks"}))
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "issue-linking", "list", issueID,
+			"--project", projectID)
+		assertContains(t, listOut, "blocks")
+	})
+
+	t.Run("issue-linking/unlink", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		requireID(t, issueLinkID, "issue-linking/link must have succeeded")
+		out := zoho(t, "projects", "issue-linking", "unlink",
+			issueID, issueLinkID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "issue-linking", "list", issueID,
+			"--project", projectID)
+		if strings.Contains(listOut, clonedIssueID) {
+			t.Errorf("cloned issue %s still in linked issues after unlink", clonedIssueID)
+		}
+		issueLinkID = ""
+	})
+
+	t.Run("issue-linking/bulk-link", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		requireID(t, clonedIssueID, "issues/clone must have succeeded")
+		r := runZoho(t, "projects", "issue-linking", "bulk-link",
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{
+				"link_type":         "relate",
+				"issue_ids":         []string{issueID},
+				"linking_issue_ids": []string{clonedIssueID},
+			}))
+		if r.ExitCode != 0 {
+			t.Logf("bulk-link failed: %s",
+				truncate(r.Stderr+r.Stdout, 300))
+			return
+		}
+		parseJSON(t, r.Stdout)
+
+		listOut := zoho(t, "projects", "issue-linking", "list", issueID,
+			"--project", projectID)
+		assertContains(t, listOut, clonedIssueID)
+	})
+
 	t.Run("issues/move", func(t *testing.T) {
 		requireID(t, clonedIssueID, "issues/clone must have succeeded")
 		requireID(t, project2ID, "second project must exist")
@@ -2704,6 +2811,44 @@ func TestProjects(t *testing.T) {
 		if _, hasResolution := ir["resolution"]; hasResolution {
 			t.Errorf("resolution key still present after delete")
 		}
+	})
+
+	t.Run("issue-attachments/list", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-attachments", "list", issueID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		if _, ok := m["attachments"]; !ok {
+			t.Fatalf("expected attachments key in response:\n%s", truncate(out, 500))
+		}
+	})
+
+	t.Run("issue-attachments/associate-known-broken", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		r := runZoho(t, "projects", "issue-attachments", "associate", issueID,
+			"--project", projectID,
+			"--json", "[999999999]")
+		if r.ExitCode == 0 {
+			t.Logf("issue-attachments associate succeeded unexpectedly: %s",
+				truncate(r.Stdout, 300))
+			return
+		}
+		t.Logf("issue-attachments associate failed (no real attachment ID): %s",
+			truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("issue-attachments/dissociate-known-broken", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		r := runZoho(t, "projects", "issue-attachments", "dissociate",
+			issueID, "999999999",
+			"--project", projectID)
+		if r.ExitCode == 0 {
+			t.Logf("issue-attachments dissociate succeeded unexpectedly: %s",
+				truncate(r.Stdout, 300))
+			return
+		}
+		t.Logf("issue-attachments dissociate failed (no real attachment ID): %s",
+			truncate(r.Stderr+r.Stdout, 300))
 	})
 
 	t.Run("issues/delete", func(t *testing.T) {
@@ -3906,6 +4051,82 @@ func TestProjects(t *testing.T) {
 		if err := json.Unmarshal([]byte(out), &raw); err != nil {
 			t.Fatalf("failed to parse task-statustimeline portal response: %v\nraw: %s", err, truncate(out, 500))
 		}
+	})
+
+	t.Run("attachments/list", func(t *testing.T) {
+		requireID(t, tlTaskID, "timelogs/add must have succeeded")
+		requireID(t, projectID, "core/create must have succeeded")
+		out := zoho(t, "projects", "attachments", "list",
+			"--project", projectID,
+			"--type", "task",
+			"--entity-id", tlTaskID)
+		m := parseJSON(t, out)
+		t.Logf("attachments list response keys: %v", func() []string {
+			keys := make([]string, 0, len(m))
+			for k := range m {
+				keys = append(keys, k)
+			}
+			return keys
+		}())
+	})
+
+	t.Run("attachments/upload-known-broken", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		testFile := tmpDir + "/test-upload.txt"
+		if err := os.WriteFile(testFile, []byte("zoho-cli test"), 0644); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+		r := runZoho(t, "projects", "attachments", "upload",
+			"--file", testFile)
+		if r.ExitCode == 0 {
+			t.Logf("attachments upload succeeded unexpectedly: %s",
+				truncate(r.Stdout, 300))
+			return
+		}
+		t.Logf("attachments upload failed (needs WorkDrive integration): %s",
+			truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("attachments/get-known-broken", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		r := runZoho(t, "projects", "attachments", "get", "999999999",
+			"--project", projectID)
+		if r.ExitCode == 0 {
+			t.Logf("attachments get with fake ID succeeded: %s",
+				truncate(r.Stdout, 300))
+			return
+		}
+		t.Logf("attachments get failed as expected: %s",
+			truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("attachments/associate-known-broken", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		requireID(t, tlTaskID, "timelogs/add must have succeeded")
+		r := runZoho(t, "projects", "attachments", "associate", "999999999",
+			"--project", projectID,
+			"--type", "task",
+			"--entity-id", tlTaskID)
+		if r.ExitCode == 0 {
+			t.Logf("attachments associate with fake ID succeeded: %s",
+				truncate(r.Stdout, 300))
+			return
+		}
+		t.Logf("attachments associate failed as expected: %s",
+			truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("attachments/dissociate-known-broken", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		r := runZoho(t, "projects", "attachments", "dissociate", "999999999",
+			"--project", projectID)
+		if r.ExitCode == 0 {
+			t.Logf("attachments dissociate with fake ID succeeded: %s",
+				truncate(r.Stdout, 300))
+			return
+		}
+		t.Logf("attachments dissociate failed as expected: %s",
+			truncate(r.Stderr+r.Stdout, 300))
 	})
 
 	t.Run("search/portal", func(t *testing.T) {

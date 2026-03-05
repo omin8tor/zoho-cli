@@ -1465,7 +1465,7 @@ func issueLinkingCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/linkedissues"
+					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/link"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -1518,8 +1518,8 @@ func issueLinkingCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().Get(0) + "/linkedissues/" + cmd.Args().Get(1)
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().Get(0) + "/link/" + cmd.Args().Get(1)
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1540,7 +1540,7 @@ func issueLinkingCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().Get(0) + "/linkedissues/" + cmd.Args().Get(1)
+					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().Get(0) + "/link/" + cmd.Args().Get(1)
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
@@ -1703,10 +1703,10 @@ func issueAttachmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/attachments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+						Form: map[string]string{"attachment_ids": cmd.String("json")},
+					})
 					if err != nil {
 						return err
 					}
@@ -4391,7 +4391,8 @@ func attachmentsCmd() *cli.Command {
 				Usage: "List project attachments",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "type", Required: true, Usage: "Entity type (project, task, issue, forum, etc.)"},
+					&cli.StringFlag{Name: "type", Required: true, Usage: "Entity type (task, bug, forum)"},
+					&cli.StringFlag{Name: "entity-id", Required: true, Usage: "Entity ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4406,6 +4407,7 @@ func attachmentsCmd() *cli.Command {
 					raw, err := c.Request("GET", url, &zohttp.RequestOpts{
 						Params: map[string]string{
 							"entity_type": cmd.String("type"),
+							"entity_id":   cmd.String("entity-id"),
 						},
 					})
 					if err != nil {
