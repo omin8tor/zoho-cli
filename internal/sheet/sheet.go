@@ -322,7 +322,7 @@ func workbooksCmd() *cli.Command {
 				Usage: "Create a version",
 				Flags: []cli.Flag{
 					workbookFlag,
-					&cli.StringFlag{Name: "version-name", Required: true, Usage: "Version name"},
+					&cli.StringFlag{Name: "version-description", Required: true, Usage: "Version description"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -330,8 +330,8 @@ func workbooksCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":       "workbook.version.create",
-						"version_name": cmd.String("version-name"),
+						"method":              "workbook.version.create",
+						"version_description": cmd.String("version-description"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -345,7 +345,7 @@ func workbooksCmd() *cli.Command {
 				Usage: "Revert to a version",
 				Flags: []cli.Flag{
 					workbookFlag,
-					&cli.StringFlag{Name: "version-id", Required: true, Usage: "Version ID"},
+					&cli.StringFlag{Name: "version-number", Required: true, Usage: "Version number"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -353,8 +353,8 @@ func workbooksCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "workbook.version.revert",
-						"version_id": cmd.String("version-id"),
+						"method":         "workbook.version.revert",
+						"version_number": cmd.String("version-number"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -615,9 +615,9 @@ func worksheetsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":             "worksheet.rename",
-						"worksheet_name":     cmd.String("worksheet"),
-						"new_worksheet_name": cmd.String("new-worksheet-name"),
+						"method":   "worksheet.rename",
+						"old_name": cmd.String("worksheet"),
+						"new_name": cmd.String("new-worksheet-name"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -768,7 +768,7 @@ func tablesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
-					&cli.StringFlag{Name: "header-row", Required: true, Usage: "Header row JSON"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Header rename data JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -778,7 +778,7 @@ func tablesCmd() *cli.Command {
 					params := map[string]string{
 						"method":     "table.header.rename",
 						"table_name": cmd.String("table-name"),
-						"header_row": cmd.String("header-row"),
+						"data":       cmd.String("data"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -794,6 +794,7 @@ func tablesCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 					&cli.StringFlag{Name: "criteria", Usage: "Filter criteria"},
+					&cli.StringFlag{Name: "criteria-json", Usage: "Filter criteria JSON"},
 					&cli.IntFlag{Name: "start-index", Usage: "Start index"},
 					&cli.IntFlag{Name: "count", Usage: "Number of records"},
 				},
@@ -807,6 +808,9 @@ func tablesCmd() *cli.Command {
 						"table_name": cmd.String("table-name"),
 					}
 					if v := cmd.String("criteria"); v != "" {
+						params["criteria"] = v
+					}
+					if v := cmd.String("criteria-json"); v != "" {
 						params["criteria"] = v
 					}
 					if v := cmd.Int("start-index"); v > 0 {
@@ -865,7 +869,7 @@ func tablesCmd() *cli.Command {
 						"method":     "table.records.update",
 						"table_name": cmd.String("table-name"),
 						"criteria":   cmd.String("criteria"),
-						"json_data":  cmd.String("json"),
+						"data":       cmd.String("json"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -889,9 +893,9 @@ func tablesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "table.records.delete",
-						"table_name": cmd.String("table-name"),
-						"criteria":   cmd.String("criteria"),
+						"method":        "table.records.delete",
+						"table_name":    cmd.String("table-name"),
+						"criteria_json": cmd.String("criteria"),
 					}
 					if v := cmd.String("delete-rows"); v != "" {
 						params["delete_rows"] = v
@@ -917,9 +921,9 @@ func tablesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "table.columns.insert",
-						"table_name": cmd.String("table-name"),
-						"columns":    cmd.String("columns"),
+						"method":       "table.columns.insert",
+						"table_name":   cmd.String("table-name"),
+						"column_names": cmd.String("columns"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -942,9 +946,9 @@ func tablesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":     "table.columns.delete",
-						"table_name": cmd.String("table-name"),
-						"columns":    cmd.String("columns"),
+						"method":       "table.columns.delete",
+						"table_name":   cmd.String("table-name"),
+						"column_names": cmd.String("columns"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1048,9 +1052,9 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "worksheet.records.update",
-						"criteria":  cmd.String("criteria"),
-						"json_data": cmd.String("json"),
+						"method":   "worksheet.records.update",
+						"criteria": cmd.String("criteria"),
+						"data":     cmd.String("json"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1114,8 +1118,8 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":  "records.columns.insert",
-						"columns": cmd.String("columns"),
+						"method":       "records.columns.insert",
+						"column_names": cmd.String("columns"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1142,7 +1146,8 @@ func cellsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "cell", Required: true, Usage: "Cell reference (e.g. A1)"},
+					&cli.IntFlag{Name: "row", Required: true, Usage: "Row index"},
+					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1151,7 +1156,8 @@ func cellsCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method": "cell.content.get",
-						"cell":   cmd.String("cell"),
+						"row":    fmt.Sprintf("%d", cmd.Int("row")),
+						"column": fmt.Sprintf("%d", cmd.Int("column")),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1169,7 +1175,10 @@ func cellsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference (e.g. A1:B5)"},
+					&cli.IntFlag{Name: "start-row", Required: true, Usage: "Start row index"},
+					&cli.IntFlag{Name: "start-column", Required: true, Usage: "Start column index"},
+					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row index"},
+					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1177,8 +1186,11 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "range.content.get",
-						"range":  cmd.String("range"),
+						"method":       "range.content.get",
+						"start_row":    fmt.Sprintf("%d", cmd.Int("start-row")),
+						"start_column": fmt.Sprintf("%d", cmd.Int("start-column")),
+						"end_row":      fmt.Sprintf("%d", cmd.Int("end-row")),
+						"end_column":   fmt.Sprintf("%d", cmd.Int("end-column")),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1203,8 +1215,8 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":      "namedrange.content.get",
-						"named_range": cmd.String("named-range"),
+						"method":        "namedrange.content.get",
+						"name_of_range": cmd.String("named-range"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1281,8 +1293,9 @@ func cellsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "cell", Required: true, Usage: "Cell reference (e.g. A1)"},
-					&cli.StringFlag{Name: "value", Required: true, Usage: "Cell value"},
+					&cli.IntFlag{Name: "row", Required: true, Usage: "Row index"},
+					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
+					&cli.StringFlag{Name: "content", Required: true, Usage: "Cell content"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1290,9 +1303,10 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "cell.content.set",
-						"cell":   cmd.String("cell"),
-						"value":  cmd.String("value"),
+						"method":  "cell.content.set",
+						"row":     fmt.Sprintf("%d", cmd.Int("row")),
+						"column":  fmt.Sprintf("%d", cmd.Int("column")),
+						"content": cmd.String("content"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1310,7 +1324,7 @@ func cellsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "cell-data", Required: true, Usage: "Cell data JSON"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Cell data JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1318,8 +1332,8 @@ func cellsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "cells.content.set",
-						"cell_data": cmd.String("cell-data"),
+						"method": "cells.content.set",
+						"data":   cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1368,7 +1382,8 @@ func cellsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference (e.g. A1:B5)"},
+					&cli.IntFlag{Name: "row", Required: true, Usage: "Row index"},
+					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Data JSON 2D array"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -1378,7 +1393,8 @@ func cellsCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method": "worksheet.csvdata.set",
-						"range":  cmd.String("range"),
+						"row":    fmt.Sprintf("%d", cmd.Int("row")),
+						"column": fmt.Sprintf("%d", cmd.Int("column")),
 						"data":   cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -1530,7 +1546,10 @@ func contentCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
+					&cli.IntFlag{Name: "start-row", Required: true, Usage: "Start row index"},
+					&cli.IntFlag{Name: "start-column", Required: true, Usage: "Start column index"},
+					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row index"},
+					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1538,8 +1557,11 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "range.content.clear",
-						"range":  cmd.String("range"),
+						"method":       "range.content.clear",
+						"start_row":    fmt.Sprintf("%d", cmd.Int("start-row")),
+						"start_column": fmt.Sprintf("%d", cmd.Int("start-column")),
+						"end_row":      fmt.Sprintf("%d", cmd.Int("end-row")),
+						"end_column":   fmt.Sprintf("%d", cmd.Int("end-column")),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1557,7 +1579,10 @@ func contentCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
+					&cli.IntFlag{Name: "start-row", Required: true, Usage: "Start row index"},
+					&cli.IntFlag{Name: "start-column", Required: true, Usage: "Start column index"},
+					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row index"},
+					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1565,8 +1590,11 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "range.clear",
-						"range":  cmd.String("range"),
+						"method":       "range.clear",
+						"start_row":    fmt.Sprintf("%d", cmd.Int("start-row")),
+						"start_column": fmt.Sprintf("%d", cmd.Int("start-column")),
+						"end_row":      fmt.Sprintf("%d", cmd.Int("end-row")),
+						"end_column":   fmt.Sprintf("%d", cmd.Int("end-column")),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1607,8 +1635,10 @@ func contentCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "search-value", Required: true, Usage: "Value to search for"},
-					&cli.StringFlag{Name: "match-type", Usage: "Match type"},
+					&cli.StringFlag{Name: "search", Required: true, Usage: "Value to search for"},
+					&cli.StringFlag{Name: "scope", Required: true, Usage: "Search scope"},
+					&cli.BoolFlag{Name: "is-case-sensitive", Usage: "Case sensitive search"},
+					&cli.BoolFlag{Name: "is-exact-match", Usage: "Exact match search"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1616,14 +1646,18 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":       "find",
-						"search_value": cmd.String("search-value"),
+						"method": "find",
+						"search": cmd.String("search"),
+						"scope":  cmd.String("scope"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					if v := cmd.String("match-type"); v != "" {
-						params["match_type"] = v
+					if cmd.IsSet("is-case-sensitive") {
+						params["is_case_sensitive"] = fmt.Sprintf("%t", cmd.Bool("is-case-sensitive"))
+					}
+					if cmd.IsSet("is-exact-match") {
+						params["is_exact_match"] = fmt.Sprintf("%t", cmd.Bool("is-exact-match"))
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1638,9 +1672,11 @@ func contentCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "search-value", Required: true, Usage: "Value to search for"},
-					&cli.StringFlag{Name: "replace-value", Required: true, Usage: "Replacement value"},
-					&cli.StringFlag{Name: "match-type", Usage: "Match type"},
+					&cli.StringFlag{Name: "search", Required: true, Usage: "Value to search for"},
+					&cli.StringFlag{Name: "replace-with", Required: true, Usage: "Replacement value"},
+					&cli.StringFlag{Name: "scope", Required: true, Usage: "Search scope"},
+					&cli.BoolFlag{Name: "is-case-sensitive", Usage: "Case sensitive search"},
+					&cli.BoolFlag{Name: "is-exact-match", Usage: "Exact match search"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1648,15 +1684,19 @@ func contentCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":        "replace",
-						"search_value":  cmd.String("search-value"),
-						"replace_value": cmd.String("replace-value"),
+						"method":       "replace",
+						"search":       cmd.String("search"),
+						"replace_with": cmd.String("replace-with"),
+						"scope":        cmd.String("scope"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					if v := cmd.String("match-type"); v != "" {
-						params["match_type"] = v
+					if cmd.IsSet("is-case-sensitive") {
+						params["is_case_sensitive"] = fmt.Sprintf("%t", cmd.Bool("is-case-sensitive"))
+					}
+					if cmd.IsSet("is-exact-match") {
+						params["is_exact_match"] = fmt.Sprintf("%t", cmd.Bool("is-exact-match"))
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1745,8 +1785,8 @@ func formatCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.IntFlag{Name: "row", Required: true, Usage: "Row number"},
-					&cli.IntFlag{Name: "height", Required: true, Usage: "Height in pixels"},
+					&cli.StringFlag{Name: "row-index-array", Required: true, Usage: "JSON array of row indices"},
+					&cli.IntFlag{Name: "row-height", Required: true, Usage: "Height in pixels"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1754,9 +1794,9 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "worksheet.rows.height",
-						"row":    fmt.Sprintf("%d", cmd.Int("row")),
-						"height": fmt.Sprintf("%d", cmd.Int("height")),
+						"method":          "worksheet.rows.height",
+						"row_index_array": cmd.String("row-index-array"),
+						"row_height":      fmt.Sprintf("%d", cmd.Int("row-height")),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1774,8 +1814,8 @@ func formatCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.IntFlag{Name: "column", Required: true, Usage: "Column number"},
-					&cli.IntFlag{Name: "width", Required: true, Usage: "Width in pixels"},
+					&cli.StringFlag{Name: "column-index-array", Required: true, Usage: "JSON array of column indices"},
+					&cli.IntFlag{Name: "column-width", Required: true, Usage: "Width in pixels"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1783,9 +1823,9 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "worksheet.columns.width",
-						"column": fmt.Sprintf("%d", cmd.Int("column")),
-						"width":  fmt.Sprintf("%d", cmd.Int("width")),
+						"method":             "worksheet.columns.width",
+						"column_index_array": cmd.String("column-index-array"),
+						"column_width":       fmt.Sprintf("%d", cmd.Int("column-width")),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1892,8 +1932,7 @@ func formatCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.IntFlag{Name: "start-row", Required: true, Usage: "Start row"},
-					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row"},
+					&cli.StringFlag{Name: "row-index-array", Required: true, Usage: "JSON array of row indices"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1901,9 +1940,8 @@ func formatCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method":    "worksheet.rows.delete",
-						"start_row": fmt.Sprintf("%d", cmd.Int("start-row")),
-						"end_row":   fmt.Sprintf("%d", cmd.Int("end-row")),
+						"method":          "worksheet.rows.delete",
+						"row_index_array": cmd.String("row-index-array"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -1948,7 +1986,8 @@ func formatCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					worksheetFlag,
-					&cli.StringFlag{Name: "cell", Required: true, Usage: "Cell reference (e.g. A1)"},
+					&cli.IntFlag{Name: "row", Required: true, Usage: "Row index"},
+					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 					&cli.StringFlag{Name: "note", Required: true, Usage: "Note text"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -1958,7 +1997,8 @@ func formatCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method": "cell.note.set",
-						"cell":   cmd.String("cell"),
+						"row":    fmt.Sprintf("%d", cmd.Int("row")),
+						"column": fmt.Sprintf("%d", cmd.Int("column")),
 						"note":   cmd.String("note"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
@@ -2014,9 +2054,9 @@ func namedRangesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "namedrange.create",
-						"name":   cmd.String("name"),
-						"range":  cmd.String("range"),
+						"method":        "namedrange.create",
+						"name_of_range": cmd.String("name"),
+						"range":         cmd.String("range"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -2043,9 +2083,9 @@ func namedRangesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "namedrange.update",
-						"name":   cmd.String("name"),
-						"range":  cmd.String("range"),
+						"method":        "namedrange.update",
+						"name_of_range": cmd.String("name"),
+						"range":         cmd.String("range"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
@@ -2070,8 +2110,8 @@ func namedRangesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{
-						"method": "namedrange.delete",
-						"name":   cmd.String("name"),
+						"method":        "namedrange.delete",
+						"name_of_range": cmd.String("name"),
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
