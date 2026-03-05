@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/omin8tor/zoho-cli/internal"
 	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
@@ -46,9 +47,9 @@ func Commands() *cli.Command {
 					if err != nil {
 						return err
 					}
-					st := "zw"
-					if mapped, ok := serviceTypeMap[cmd.String("type")]; ok {
-						st = mapped
+					mapped, ok := serviceTypeMap[cmd.String("type")]
+					if !ok {
+						return internal.NewValidationError("invalid --type; expected writer, sheet, or show")
 					}
 					body := map[string]any{
 						"data": map[string]any{
@@ -56,7 +57,7 @@ func Commands() *cli.Command {
 							"attributes": map[string]any{
 								"name":         cmd.String("name"),
 								"parent_id":    cmd.String("folder"),
-								"service_type": st,
+								"service_type": mapped,
 							},
 						},
 					}
@@ -118,7 +119,9 @@ func Commands() *cli.Command {
 					}
 					docID := cmd.Args().First()
 					var mergeData any
-					json.Unmarshal([]byte(cmd.String("json")), &mergeData)
+					if err := json.Unmarshal([]byte(cmd.String("json")), &mergeData); err != nil {
+						return internal.NewValidationError("invalid --json: must be valid JSON")
+					}
 
 					if cmd.String("format") == "inline" {
 						body := map[string]any{
@@ -152,15 +155,31 @@ func Commands() *cli.Command {
 				},
 			},
 			{
-				Name:      "delete",
-				Usage:     "Delete a document",
+				Name:      "trash",
+				Usage:     "Move a document to trash",
 				ArgsUsage: "<doc-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.WriterBase+"/documents/"+cmd.Args().First(), nil)
+					raw, err := c.Request("DELETE", c.WriterBase+"/documents/"+cmd.Args().First()+"/trash", nil)
+					if err != nil {
+						return err
+					}
+					return output.JSONRaw(raw)
+				},
+			},
+			{
+				Name:      "delete",
+				Usage:     "Permanently delete a trashed document",
+				ArgsUsage: "<doc-id>",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					c, err := getClient()
+					if err != nil {
+						return err
+					}
+					raw, err := c.Request("DELETE", c.WriterBase+"/documents/"+cmd.Args().First()+"/delete", nil)
 					if err != nil {
 						return err
 					}

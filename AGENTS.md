@@ -62,6 +62,13 @@ tk blocked             # Show blocked issues
 
 Flag passed on CLI always overrides the env var. If neither is set, commands fail with a clear error.
 
+## API Documentation (Context7)
+
+- **Always use Context7** to look up Zoho API docs before writing tests or fixing CLI bugs
+- Context7 provides up-to-date API documentation with code examples
+- Cross-reference CLI endpoint URLs, method names, and parameters against Context7 docs
+- The CLI was auto-generated and contains many errors — Context7 is the source of truth
+
 ## Conventions
 
 - No comments in code unless asked
