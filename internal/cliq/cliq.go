@@ -84,6 +84,7 @@ func channelsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Channel name"},
 					&cli.StringFlag{Name: "description", Usage: "Channel description"},
+					&cli.StringFlag{Name: "level", Usage: "Channel level (organization, team, private, external)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -93,6 +94,9 @@ func channelsCmd() *cli.Command {
 					body := map[string]any{"name": cmd.String("name")}
 					if d := cmd.String("description"); d != "" {
 						body["description"] = d
+					}
+					if l := cmd.String("level"); l != "" {
+						body["level"] = l
 					}
 					raw, err := c.Request("POST", c.CliqBase+"/api/v2/channels", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -128,13 +132,29 @@ func channelsCmd() *cli.Command {
 			{
 				Name:      "members",
 				Usage:     "List channel members",
-				ArgsUsage: "<channel-name>",
+				ArgsUsage: "<channel-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/channelsbyname/"+cmd.Args().First()+"/members", nil)
+					raw, err := c.Request("GET", c.CliqBase+"/api/v2/channels/"+cmd.Args().First()+"/members", nil)
+					if err != nil {
+						return err
+					}
+					return output.JSONRaw(raw)
+				},
+			},
+			{
+				Name:      "delete",
+				Usage:     "Delete a channel",
+				ArgsUsage: "<channel-id>",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					c, err := getClient()
+					if err != nil {
+						return err
+					}
+					raw, err := c.Request("DELETE", c.CliqBase+"/api/v2/channels/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -297,7 +317,7 @@ func usersCmd() *cli.Command {
 			{
 				Name:      "get",
 				Usage:     "Get user details",
-				ArgsUsage: "<user-id>",
+				ArgsUsage: "<user-id-or-email>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
