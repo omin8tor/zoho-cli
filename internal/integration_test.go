@@ -2196,16 +2196,7 @@ func TestProjectsPortals(t *testing.T) {
 	})
 
 	t.Run("portals/list-known-bug", func(t *testing.T) {
-		r := runZoho(t, "projects", "portals", "list")
-		if r.ExitCode == 0 {
-			t.Log("portals list succeeded unexpectedly (V3 bug may be fixed)")
-			return
-		}
-		combined := r.Stderr + r.Stdout
-		if !strings.Contains(combined, "INVALID_METHOD") {
-			t.Logf("portals list failed with unexpected error (exit %d): %s",
-				r.ExitCode, truncate(r.Stderr, 300))
-		}
+		t.Skip("portals list endpoint returns INVALID_METHOD in V3 API")
 	})
 }
 
@@ -2249,11 +2240,6 @@ func TestProjects(t *testing.T) {
 	var phaseCommentID string
 	var eventID string
 	var eventCommentID string
-	var timerTaskID string
-	var timerTimelogID string
-	var timerID string
-	var pinTimelogID string
-	var pinID string
 
 	t.Run("core/create", func(t *testing.T) {
 		projectName = testName(t)
@@ -2475,10 +2461,11 @@ func TestProjects(t *testing.T) {
 			"--project", projectID)
 		parseJSON(t, out)
 
+		time.Sleep(2 * time.Second)
 		listOut := zoho(t, "projects", "task-followers", "list", taskID,
 			"--project", projectID)
 		if strings.Contains(listOut, ownerZPUID) {
-			t.Logf("follower still present after unfollow (eventual consistency)")
+			t.Errorf("follower %s still present after unfollow", ownerZPUID)
 		}
 	})
 
@@ -2496,15 +2483,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("tasks/subtasks-known-broken", func(t *testing.T) {
-		requireID(t, taskID, "tasks/create must have succeeded")
-		requireID(t, subtaskID, "tasks/add-subtask must have succeeded")
-		r := runZoho(t, "projects", "tasks", "subtasks", taskID,
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Log("tasks subtasks endpoint not in V3 API")
-			return
-		}
-		t.Logf("tasks subtasks endpoint not in V3 API: %s", truncate(r.Stderr, 200))
+		t.Skip("subtasks endpoint not available in V3 API")
 	})
 
 	t.Run("tasks/clone", func(t *testing.T) {
@@ -2727,15 +2706,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("issue-followers/follow-known-limitation", func(t *testing.T) {
-		requireID(t, issueID, "issues/create must have succeeded")
-		r := runZoho(t, "projects", "issue-followers", "follow", issueID,
-			"--project", projectID)
-		if r.ExitCode != 0 {
-			t.Logf("issue-followers follow requires body (no self-follow endpoint for issues): %s",
-				truncate(r.Stderr, 300))
-			return
-		}
-		parseJSON(t, r.Stdout)
+		t.Skip("issue follower self-follow not supported")
 	})
 
 	t.Run("issue-followers/list", func(t *testing.T) {
@@ -2940,31 +2911,11 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("issue-attachments/associate-known-broken", func(t *testing.T) {
-		requireID(t, issueID, "issues/create must have succeeded")
-		r := runZoho(t, "projects", "issue-attachments", "associate", issueID,
-			"--project", projectID,
-			"--json", "[999999999]")
-		if r.ExitCode == 0 {
-			t.Logf("issue-attachments associate succeeded unexpectedly: %s",
-				truncate(r.Stdout, 300))
-			return
-		}
-		t.Logf("issue-attachments associate failed (no real attachment ID): %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("no real attachment ID available for test")
 	})
 
 	t.Run("issue-attachments/dissociate-known-broken", func(t *testing.T) {
-		requireID(t, issueID, "issues/create must have succeeded")
-		r := runZoho(t, "projects", "issue-attachments", "dissociate",
-			issueID, "999999999",
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Logf("issue-attachments dissociate succeeded unexpectedly: %s",
-				truncate(r.Stdout, 300))
-			return
-		}
-		t.Logf("issue-attachments dissociate failed (no real attachment ID): %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("no real attachment ID available for test")
 	})
 
 	t.Run("issues/delete", func(t *testing.T) {
@@ -3138,10 +3089,11 @@ func TestProjects(t *testing.T) {
 			"--project", projectID)
 		parseJSON(t, out)
 
+		time.Sleep(2 * time.Second)
 		listOut := zoho(t, "projects", "tasklist-followers", "list", tasklistID,
 			"--project", projectID)
 		if strings.Contains(listOut, ownerZPUID) {
-			t.Logf("follower still present after unfollow (eventual consistency)")
+			t.Errorf("follower %s still present after unfollow", ownerZPUID)
 		}
 	})
 
@@ -3154,7 +3106,7 @@ func TestProjects(t *testing.T) {
 		time.Sleep(2 * time.Second)
 		r := runZoho(t, "projects", "tasklists", "get", tasklistID, "--project", projectID)
 		if r.ExitCode == 0 {
-			t.Logf("tasklist %s still accessible after delete (eventual consistency)", tasklistID)
+			t.Errorf("tasklist %s still accessible after delete", tasklistID)
 		}
 		tasklistID = ""
 	})
@@ -3281,7 +3233,7 @@ func TestProjects(t *testing.T) {
 		tl := getTimelog(t, timelogID, projectID)
 		hours := fmt.Sprintf("%v", tl["log_hour"])
 		if hours != "3" && hours != "03:00" && hours != "3:00" {
-			t.Logf("timelog hours after update: %s (format may vary)", hours)
+			t.Errorf("expected timelog hours=3 after update, got %s", hours)
 		}
 	})
 
@@ -3595,27 +3547,11 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("forum-comments/best-answer-known-limitation", func(t *testing.T) {
-		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
-		r := runZoho(t, "projects", "forum-comments", "best-answer", forumCommentID,
-			"--project", projectID,
-			"--forum", forumID)
-		if r.ExitCode == 0 {
-			t.Errorf("forum-comments best-answer succeeded unexpectedly")
-			return
-		}
-		t.Logf("forum-comments best-answer failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("best-answer endpoint returns error")
 	})
 
 	t.Run("forum-comments/unbest-answer-known-limitation", func(t *testing.T) {
-		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
-		r := runZoho(t, "projects", "forum-comments", "unbest-answer", forumCommentID,
-			"--project", projectID,
-			"--forum", forumID)
-		if r.ExitCode == 0 {
-			t.Errorf("forum-comments unbest-answer succeeded unexpectedly")
-			return
-		}
-		t.Logf("forum-comments unbest-answer failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("unbest-answer endpoint returns error")
 	})
 
 	t.Run("forum-comments/delete", func(t *testing.T) {
@@ -3645,25 +3581,11 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("forum-followers/follow-known-limitation", func(t *testing.T) {
-		requireID(t, forumID, "forums/create must have succeeded")
-		r := runZoho(t, "projects", "forum-followers", "follow", forumID,
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Errorf("forum-followers follow succeeded unexpectedly")
-			return
-		}
-		t.Logf("forum-followers follow failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("forum follower endpoint requires body")
 	})
 
 	t.Run("forum-followers/unfollow-known-limitation", func(t *testing.T) {
-		requireID(t, forumID, "forums/create must have succeeded")
-		r := runZoho(t, "projects", "forum-followers", "unfollow", forumID,
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Errorf("forum-followers unfollow succeeded unexpectedly")
-			return
-		}
-		t.Logf("forum-followers unfollow failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("forum follower endpoint requires body")
 	})
 
 	t.Run("forums/delete", func(t *testing.T) {
@@ -3976,13 +3898,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("roles/set-default-known-broken", func(t *testing.T) {
-		requireID(t, roleID, "roles/create must have succeeded")
-		r := runZoho(t, "projects", "roles", "set-default", roleID)
-		if r.ExitCode == 0 {
-			t.Errorf("roles set-default succeeded unexpectedly")
-			return
-		}
-		t.Logf("roles set-default failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("roles set-default endpoint returns error")
 	})
 
 	t.Run("roles/delete", func(t *testing.T) {
@@ -4022,29 +3938,11 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("dependencies/add-known-broken", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		requireID(t, tlTaskID, "timelogs/add must have succeeded")
-		r := runZoho(t, "projects", "dependencies", "add", tlTaskID,
-			"--project", projectID,
-			"--depends-on", tlTaskID,
-			"--type", "FS")
-		if r.ExitCode == 0 {
-			t.Errorf("dependencies add succeeded unexpectedly")
-			return
-		}
-		t.Logf("dependencies add failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("dependencies endpoint not functional")
 	})
 
 	t.Run("dependencies/remove-known-broken", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		requireID(t, tlTaskID, "timelogs/add must have succeeded")
-		r := runZoho(t, "projects", "dependencies", "remove", tlTaskID, "999999999999",
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Errorf("dependencies remove succeeded unexpectedly")
-			return
-		}
-		t.Logf("dependencies remove failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("dependencies endpoint not functional")
 	})
 
 	t.Run("task-customviews/list", func(t *testing.T) {
@@ -4150,15 +4048,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("task-statustimeline/project-known-broken", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		r := runZoho(t, "projects", "task-statustimeline", "project",
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Logf("task-statustimeline project succeeded: %s", truncate(r.Stdout, 200))
-			return
-		}
-		t.Logf("task-statustimeline project failed as expected (endpoint may not exist in V3): %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("task-statustimeline project endpoint may not exist in V3")
 	})
 
 	t.Run("task-statustimeline/portal", func(t *testing.T) {
@@ -4187,62 +4077,19 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("attachments/upload-known-broken", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		testFile := tmpDir + "/test-upload.txt"
-		if err := os.WriteFile(testFile, []byte("zoho-cli test"), 0644); err != nil {
-			t.Fatalf("failed to create test file: %v", err)
-		}
-		r := runZoho(t, "projects", "attachments", "upload",
-			"--file", testFile)
-		if r.ExitCode == 0 {
-			t.Logf("attachments upload succeeded unexpectedly: %s",
-				truncate(r.Stdout, 300))
-			return
-		}
-		t.Logf("attachments upload failed (needs WorkDrive integration): %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("attachments upload needs WorkDrive integration")
 	})
 
 	t.Run("attachments/get-known-broken", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		r := runZoho(t, "projects", "attachments", "get", "999999999",
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Logf("attachments get with fake ID succeeded: %s",
-				truncate(r.Stdout, 300))
-			return
-		}
-		t.Logf("attachments get failed as expected: %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("no real project attachment ID available")
 	})
 
 	t.Run("attachments/associate-known-broken", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		requireID(t, tlTaskID, "timelogs/add must have succeeded")
-		r := runZoho(t, "projects", "attachments", "associate", "999999999",
-			"--project", projectID,
-			"--type", "task",
-			"--entity-id", tlTaskID)
-		if r.ExitCode == 0 {
-			t.Logf("attachments associate with fake ID succeeded: %s",
-				truncate(r.Stdout, 300))
-			return
-		}
-		t.Logf("attachments associate failed as expected: %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("no real project attachment ID available")
 	})
 
 	t.Run("attachments/dissociate-known-broken", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		r := runZoho(t, "projects", "attachments", "dissociate", "999999999",
-			"--project", projectID)
-		if r.ExitCode == 0 {
-			t.Logf("attachments dissociate with fake ID succeeded: %s",
-				truncate(r.Stdout, 300))
-			return
-		}
-		t.Logf("attachments dissociate failed as expected: %s",
-			truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("no real project attachment ID available")
 	})
 
 	t.Run("phases/create", func(t *testing.T) {
@@ -4352,17 +4199,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("phases/move-known-broken", func(t *testing.T) {
-		requireID(t, clonedPhaseID, "phases/clone must have succeeded")
-		requireID(t, project2ID, "second project must exist")
-		r := runZoho(t, "projects", "phases", "move", clonedPhaseID,
-			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"project_id": project2ID}))
-		if r.ExitCode != 0 {
-			t.Logf("phases move failed (known Zoho 500 error): %s",
-				truncate(r.Stderr+r.Stdout, 300))
-			return
-		}
-		t.Logf("phases move succeeded: %s", truncate(r.Stdout, 300))
+		t.Skip("phases move endpoint returns Zoho 500 error")
 	})
 
 	t.Run("phase-followers/add", func(t *testing.T) {
@@ -4406,10 +4243,11 @@ func TestProjects(t *testing.T) {
 			"--project", projectID,
 			"--json", toJSON(t, map[string]any{"followers": []string{ownerZPUID}}))
 
+		time.Sleep(2 * time.Second)
 		out := zoho(t, "projects", "phase-followers", "list", phaseID,
 			"--project", projectID)
 		if strings.Contains(out, ownerZPUID) {
-			t.Logf("follower still present after remove (eventual consistency)")
+			t.Errorf("follower %s still present after phase-followers remove", ownerZPUID)
 		}
 	})
 
@@ -4584,15 +4422,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("event-comments/get-known-broken", func(t *testing.T) {
-		requireID(t, eventCommentID, "event-comments/add must have succeeded")
-		r := runZoho(t, "projects", "event-comments", "get", eventCommentID,
-			"--event", eventID, "--project", projectID)
-		if r.ExitCode != 0 {
-			t.Logf("event-comments get returned error (known INVALID_METHOD): %s",
-				truncate(r.Stderr+r.Stdout, 300))
-			return
-		}
-		t.Logf("event-comments get succeeded unexpectedly: %s", truncate(r.Stdout, 300))
+		t.Skip("event-comments get endpoint returns INVALID_METHOD")
 	})
 
 	t.Run("event-comments/update", func(t *testing.T) {
@@ -4681,22 +4511,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("timers/setup", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		requireID(t, ownerZPUID, "owner zpuid must be available")
-		timerTaskName := testName(t) + "_timertask"
-		taskOut := zoho(t, "projects", "tasks", "create",
-			"--name", timerTaskName, "--project", projectID)
-		timerTaskID = extractProjectsID(t, taskOut)
-		cleanup.trackTask(timerTaskID, projectID)
-		t.Logf("created timer task %s", timerTaskID)
-
-		zoho(t, "projects", "tasks", "update", timerTaskID,
-			"--project", projectID,
-			"--json", toJSON(t, map[string]any{
-				"owners_and_work": map[string]any{
-					"owners": []map[string]string{{"zpuid": ownerZPUID}},
-				},
-			}))
+		t.Skip("all timer tests are broken (Zoho 500)")
 	})
 
 	t.Run("timers/running-empty", func(t *testing.T) {
@@ -4709,121 +4524,27 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("timers/start-known-broken", func(t *testing.T) {
-		requireID(t, timerTaskID, "timers/setup must have succeeded")
-		out, err := zohoMayFail(t, "projects", "timelog-timers", "start",
-			"--json", toJSON(t, map[string]any{
-				"entity_id":  timerTaskID,
-				"project_id": projectID,
-			}))
-		if err != nil {
-			t.Logf("timer start failed (Zoho returns 500): %v", err)
-			t.Logf("response: %s", truncate(out, 500))
-			return
-		}
-		m := parseJSON(t, out)
-		timerID = fmt.Sprintf("%v", m["id"])
-		if timerID == "" || timerID == "<nil>" {
-			if tid, ok := m["timer_id"]; ok {
-				timerID = fmt.Sprintf("%v", tid)
-			}
-		}
-		if timerID != "" && timerID != "<nil>" {
-			t.Logf("started timer %s", timerID)
-		} else {
-			t.Logf("timer started but no id in response:\n%s", truncate(out, 300))
-		}
+		t.Skip("timelog-timers start endpoint returns Zoho 500")
 	})
 
 	t.Run("timers/pause", func(t *testing.T) {
-		requireID(t, timerID, "timers/start-known-broken must have succeeded")
-		out, err := zohoMayFail(t, "projects", "timelog-timers", "pause", timerID,
-			"--json", toJSON(t, map[string]any{
-				"entity_id": timerTaskID,
-				"notes":     "-",
-				"type":      "Task",
-			}))
-		if err != nil {
-			t.Logf("timer pause failed: %v", err)
-			t.Logf("response: %s", truncate(out, 500))
-			return
-		}
-		t.Logf("paused timer %s", timerID)
+		t.Skip("depends on timers/start which returns Zoho 500")
 	})
 
 	t.Run("timers/resume", func(t *testing.T) {
-		requireID(t, timerID, "timers/start-known-broken must have succeeded")
-		out, err := zohoMayFail(t, "projects", "timelog-timers", "resume", timerID,
-			"--json", toJSON(t, map[string]any{
-				"entity_id": timerTaskID,
-			}))
-		if err != nil {
-			t.Logf("timer resume failed: %v", err)
-			t.Logf("response: %s", truncate(out, 500))
-			return
-		}
-		t.Logf("resumed timer %s", timerID)
+		t.Skip("depends on timers/start which returns Zoho 500")
 	})
 
 	t.Run("timers/stop", func(t *testing.T) {
-		requireID(t, timerID, "timers/start-known-broken must have succeeded")
-		out, err := zohoMayFail(t, "projects", "timelog-timers", "stop", timerID,
-			"--json", toJSON(t, map[string]any{
-				"entity_id": timerTaskID,
-				"notes":     testPrefix + "_timer_stop",
-				"type":      "Task",
-			}))
-		if err != nil {
-			t.Logf("timer stop failed: %v", err)
-			t.Logf("response: %s", truncate(out, 500))
-			return
-		}
-		m := parseJSON(t, out)
-		if logID := fmt.Sprintf("%v", m["log_id"]); logID != "" && logID != "<nil>" {
-			timerTimelogID = logID
-			t.Logf("stopped timer, created timelog %s", timerTimelogID)
-		} else {
-			t.Logf("stopped timer %s", timerID)
-		}
+		t.Skip("depends on timers/start which returns Zoho 500")
 	})
 
 	t.Run("timers/delete", func(t *testing.T) {
-		requireID(t, timerID, "timers/start-known-broken must have succeeded")
-		r := runZoho(t, "projects", "timelog-timers", "delete", timerID)
-		if r.ExitCode != 0 {
-			t.Logf("timer delete failed (may already be cleaned up after stop): %s",
-				truncate(r.Stderr+r.Stdout, 300))
-		}
-		timerID = ""
+		t.Skip("depends on timers/start which returns Zoho 500")
 	})
 
 	t.Run("pins/setup", func(t *testing.T) {
-		requireID(t, projectID, "core/create must have succeeded")
-		requireID(t, ownerZPUID, "owner zpuid must be available")
-		pinTaskName := testName(t) + "_pintask"
-		pinTaskOut := zoho(t, "projects", "tasks", "create",
-			"--name", pinTaskName, "--project", projectID)
-		pinTaskID := extractProjectsID(t, pinTaskOut)
-		cleanup.trackTask(pinTaskID, projectID)
-
-		zoho(t, "projects", "tasks", "update", pinTaskID,
-			"--project", projectID,
-			"--json", toJSON(t, map[string]any{
-				"owners_and_work": map[string]any{
-					"owners": []map[string]string{{"zpuid": ownerZPUID}},
-				},
-			}))
-
-		today := time.Now().Format("2006-01-02")
-		pinTLOut := zoho(t, "projects", "timelogs", "add",
-			"--date", today,
-			"--hours", "1",
-			"--task", pinTaskID,
-			"--owner", ownerZPUID,
-			"--notes", testPrefix+"_pin_timelog",
-			"--project", projectID)
-		pinTimelogID = extractProjectsID(t, pinTLOut)
-		cleanup.trackTimelog(pinTimelogID, projectID)
-		t.Logf("created pin timelog %s", pinTimelogID)
+		t.Skip("all pin tests are broken (create rejects all fields)")
 	})
 
 	t.Run("pins/list-empty", func(t *testing.T) {
@@ -4835,47 +4556,15 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("pins/create-known-broken", func(t *testing.T) {
-		requireID(t, pinTimelogID, "pins/setup must have succeeded")
-		out, err := zohoMayFail(t, "projects", "timelog-pins", "create",
-			"--json", toJSON(t, map[string]any{
-				"log_id":      pinTimelogID,
-				"module_type": "task",
-			}))
-		if err != nil {
-			t.Logf("pin create failed (Zoho rejects all JSON fields): %v", err)
-			t.Logf("response: %s", truncate(out, 500))
-			return
-		}
-		m := parseJSON(t, out)
-		pinID = fmt.Sprintf("%v", m["id"])
-		if pinID == "" || pinID == "<nil>" {
-			if pins, ok := m["pins"].([]any); ok && len(pins) > 0 {
-				if pm, ok := pins[0].(map[string]any); ok {
-					pinID = fmt.Sprintf("%v", pm["id"])
-				}
-			}
-		}
-		if pinID != "" && pinID != "<nil>" {
-			t.Logf("created pin %s", pinID)
-		} else {
-			t.Logf("pin created but no id found in response:\n%s", truncate(out, 300))
-		}
+		t.Skip("timelog-pins create endpoint rejects all fields")
 	})
 
 	t.Run("pins/list-after-create", func(t *testing.T) {
-		requireID(t, pinID, "pins/create-known-broken must have succeeded")
-		out := zoho(t, "projects", "timelog-pins", "list")
-		assertContains(t, out, pinID)
+		t.Skip("depends on pins/create which is broken")
 	})
 
 	t.Run("pins/delete", func(t *testing.T) {
-		requireID(t, pinID, "pins/create-known-broken must have succeeded")
-		r := runZoho(t, "projects", "timelog-pins", "delete", pinID)
-		if r.ExitCode != 0 {
-			t.Logf("pin delete failed: %s", truncate(r.Stderr+r.Stdout, 300))
-			return
-		}
-		pinID = ""
+		t.Skip("depends on pins/create which is broken")
 	})
 
 	t.Run("timelog-bulk/list-missing-module", func(t *testing.T) {
@@ -4956,23 +4645,11 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("trash/restore-known-broken", func(t *testing.T) {
-		r := runZoho(t, "projects", "trash", "restore",
-			"--json", `{"record_ids":["999999999999"]}`)
-		if r.ExitCode == 0 {
-			t.Log("trash restore succeeded unexpectedly")
-			return
-		}
-		t.Logf("trash restore failed (known issue): %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("trash restore with fake IDs always fails")
 	})
 
 	t.Run("trash/delete-known-broken", func(t *testing.T) {
-		r := runZoho(t, "projects", "trash", "delete",
-			"--json", `{"record_ids":["999999999999"]}`)
-		if r.ExitCode == 0 {
-			t.Log("trash delete succeeded unexpectedly")
-			return
-		}
-		t.Logf("trash delete failed (known issue): %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("trash delete with fake IDs always fails")
 	})
 
 	t.Run("core/trash-and-delete-second", func(t *testing.T) {
@@ -5060,7 +4737,7 @@ func TestProjectsProfiles(t *testing.T) {
 		out := zoho(t, "projects", "profiles", "get", profileID)
 		m := parseJSON(t, out)
 		if fmt.Sprintf("%v", m["is_default"]) != "true" {
-			t.Log("profile is_default not set to true after set-default")
+			t.Errorf("profile is_default not set to true after set-default, got %v", m["is_default"])
 		}
 
 		zoho(t, "projects", "profiles", "set-default", "1212503000000015149")
@@ -5095,12 +4772,7 @@ func TestProjectsDashboards(t *testing.T) {
 	})
 
 	t.Run("reports/workload-known-broken", func(t *testing.T) {
-		r := runZoho(t, "projects", "reports", "workload")
-		if r.ExitCode == 0 {
-			t.Log("workload succeeded unexpectedly (Zoho 500 may be fixed)")
-			return
-		}
-		t.Logf("workload failed (known Zoho 500): %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("reports workload endpoint returns Zoho 500")
 	})
 
 	t.Run("reports/dashboards-list", func(t *testing.T) {
@@ -5137,13 +4809,11 @@ func TestProjectsDashboards(t *testing.T) {
 	t.Run("reports/dashboard-update", func(t *testing.T) {
 		requireID(t, dashboardID, "dashboard-create must have succeeded")
 		updatedName := dashboardName + "_upd"
-		out := zoho(t, "projects", "reports", "dashboard-update", dashboardID,
+		zoho(t, "projects", "reports", "dashboard-update", dashboardID,
 			"--json", toJSON(t, map[string]any{"name": updatedName}))
-		m := parseJSON(t, out)
-		nameGot := fmt.Sprintf("%v", m["name"])
-		if nameGot != updatedName {
-			t.Logf("dashboard-update returned name=%s (expected %s, may need re-fetch)", nameGot, updatedName)
-		}
+		getOut := zoho(t, "projects", "reports", "dashboard-get", dashboardID)
+		gm := parseJSON(t, getOut)
+		assertStringField(t, gm, "name", updatedName)
 		dashboardName = updatedName
 	})
 
@@ -5237,13 +4907,7 @@ func TestProjectsTeams(t *testing.T) {
 	})
 
 	t.Run("teams/get-known-broken", func(t *testing.T) {
-		requireID(t, teamID, "teams/create must have succeeded")
-		r := runZoho(t, "projects", "teams", "get", teamID)
-		if r.ExitCode == 0 {
-			t.Log("teams get succeeded unexpectedly (INVALID_METHOD may be fixed)")
-			return
-		}
-		t.Logf("teams get failed (known issue, INVALID_METHOD): %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("teams get endpoint returns INVALID_METHOD")
 	})
 
 	t.Run("teams/update", func(t *testing.T) {
@@ -5266,23 +4930,11 @@ func TestProjectsTeams(t *testing.T) {
 	})
 
 	t.Run("teams/users-known-broken", func(t *testing.T) {
-		requireID(t, teamID, "teams/create must have succeeded")
-		r := runZoho(t, "projects", "teams", "users", teamID)
-		if r.ExitCode == 0 {
-			t.Log("teams users succeeded unexpectedly (URL_RULE_NOT_CONFIGURED may be fixed)")
-			return
-		}
-		t.Logf("teams users failed (known issue): %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("teams users endpoint returns URL_RULE_NOT_CONFIGURED")
 	})
 
 	t.Run("teams/projects-known-broken", func(t *testing.T) {
-		requireID(t, teamID, "teams/create must have succeeded")
-		r := runZoho(t, "projects", "teams", "projects", teamID)
-		if r.ExitCode == 0 {
-			t.Log("teams projects succeeded unexpectedly")
-			return
-		}
-		t.Logf("teams projects failed (known issue): %s", truncate(r.Stderr+r.Stdout, 300))
+		t.Skip("teams projects endpoint not functional")
 	})
 
 	t.Run("teams/add-to-project", func(t *testing.T) {
