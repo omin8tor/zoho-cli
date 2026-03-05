@@ -3828,7 +3828,7 @@ func forumCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.String("forum") + "/comments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -3854,7 +3854,7 @@ func forumCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.String("forum") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -3903,7 +3903,7 @@ func forumCommentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.String("forum") + "/comments/" + cmd.Args().First() + "/bestanswer"
+					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.String("forum") + "/comments/" + cmd.Args().First() + "/markbestanswer"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -3928,7 +3928,7 @@ func forumCommentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.String("forum") + "/comments/" + cmd.Args().First() + "/bestanswer"
+					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.String("forum") + "/comments/" + cmd.Args().First() + "/markbestanswer"
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
@@ -3958,7 +3958,7 @@ func forumCategoriesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/forums/categories"
+					url := base(c, portal, cmd.String("project")) + "/categories"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -3984,7 +3984,7 @@ func forumCategoriesCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/forums/categories"
+					url := base(c, portal, cmd.String("project")) + "/categories"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -4011,7 +4011,7 @@ func forumCategoriesCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := base(c, portal, cmd.String("project")) + "/forums/categories/" + cmd.Args().First()
+					url := base(c, portal, cmd.String("project")) + "/categories/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -4033,7 +4033,7 @@ func forumCategoriesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/forums/categories/" + cmd.Args().First()
+					url := base(c, portal, cmd.String("project")) + "/categories/" + cmd.Args().First()
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err
@@ -4086,7 +4086,7 @@ func forumFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.Args().First() + "/followers"
+					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.Args().First() + "/follow"
 					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
@@ -4108,8 +4108,8 @@ func forumFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("DELETE", url, nil)
+					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.Args().First() + "/unfollow"
+					raw, err := c.Request("POST", url, nil)
 					if err != nil {
 						return err
 					}

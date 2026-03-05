@@ -664,6 +664,18 @@ func (c *testCleanup) trackRole(id string) {
 	})
 }
 
+func (c *testCleanup) trackForumCategory(id, projectID string) {
+	c.add("delete forum-category "+id, func() {
+		zohoIgnoreError(c.t, "projects", "forum-categories", "delete", id, "--project", projectID)
+	})
+}
+
+func (c *testCleanup) trackForum(id, projectID string) {
+	c.add("delete forum "+id, func() {
+		zohoIgnoreError(c.t, "projects", "forums", "delete", id, "--project", projectID)
+	})
+}
+
 func TestCRMModules(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "crm", "modules", "list")
@@ -2122,6 +2134,9 @@ func TestProjects(t *testing.T) {
 	var projectGroupID string
 	var tagID string
 	var roleID string
+	var forumCategoryID string
+	var forumID string
+	var forumCommentID string
 
 	t.Run("core/create", func(t *testing.T) {
 		projectName = testName(t)
@@ -3105,6 +3120,340 @@ func TestProjects(t *testing.T) {
 			t.Errorf("comment %s still found in list after delete", projectCommentID)
 		}
 		projectCommentID = ""
+	})
+
+	t.Run("forum-categories/create", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		categoryName := testName(t) + "_forum_category"
+		out := zoho(t, "projects", "forum-categories", "create",
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"name": categoryName}))
+		m := parseJSON(t, out)
+		categories, ok := m["categories"].([]any)
+		if !ok || len(categories) == 0 {
+			t.Fatalf("expected categories array in create response:\n%s", truncate(out, 500))
+		}
+		cm, _ := categories[0].(map[string]any)
+		forumCategoryID = fmt.Sprintf("%v", cm["id"])
+		if forumCategoryID == "" || forumCategoryID == "<nil>" {
+			t.Fatalf("no id in forum-categories create response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, cm, "name", categoryName)
+		cleanup.trackForumCategory(forumCategoryID, projectID)
+		t.Logf("created forum category %s", forumCategoryID)
+	})
+
+	t.Run("forum-categories/list", func(t *testing.T) {
+		requireID(t, forumCategoryID, "forum-categories/create must have succeeded")
+		out := zoho(t, "projects", "forum-categories", "list", "--project", projectID)
+		arr := parseJSONArray(t, out)
+		found := false
+		for _, c := range arr {
+			if fmt.Sprintf("%v", c["id"]) == forumCategoryID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("forum category %s not found in list", forumCategoryID)
+		}
+	})
+
+	t.Run("forums/create", func(t *testing.T) {
+		requireID(t, forumCategoryID, "forum-categories/create must have succeeded")
+		forumTitle := testName(t) + "_forum"
+		forumContent := testPrefix + "_forum_content"
+		out := zoho(t, "projects", "forums", "create",
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{
+				"title":       forumTitle,
+				"content":     forumContent,
+				"category_id": forumCategoryID,
+			}))
+		m := parseJSON(t, out)
+		forums, ok := m["forums"].([]any)
+		if !ok || len(forums) == 0 {
+			t.Fatalf("expected forums array in create response:\n%s", truncate(out, 500))
+		}
+		fm, _ := forums[0].(map[string]any)
+		forumID = fmt.Sprintf("%v", fm["id"])
+		if forumID == "" || forumID == "<nil>" {
+			t.Fatalf("no id in forums create response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, fm, "title", forumTitle)
+		assertStringField(t, fm, "content", forumContent)
+		cleanup.trackForum(forumID, projectID)
+		t.Logf("created forum %s", forumID)
+	})
+
+	t.Run("forums/get", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		out := zoho(t, "projects", "forums", "get", forumID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		forums, ok := m["forums"].([]any)
+		if !ok || len(forums) == 0 {
+			t.Fatalf("expected forums array in get response:\n%s", truncate(out, 500))
+		}
+		fm, _ := forums[0].(map[string]any)
+		assertEqual(t, fmt.Sprintf("%v", fm["id"]), forumID)
+	})
+
+	t.Run("forums/list", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		out := zoho(t, "projects", "forums", "list",
+			"--project", projectID)
+		m := parseJSON(t, out)
+		forums, ok := m["forums"].([]any)
+		if !ok {
+			t.Fatalf("expected forums array in list response:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, f := range forums {
+			fm, _ := f.(map[string]any)
+			if fmt.Sprintf("%v", fm["id"]) == forumID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("forum %s not found in forums list", forumID)
+		}
+	})
+
+	t.Run("forums/update", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		updatedTitle := testName(t) + "_forum_upd"
+		updatedContent := testPrefix + "_forum_content_upd"
+		out := zoho(t, "projects", "forums", "update", forumID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"title": updatedTitle, "content": updatedContent}))
+		m := parseJSON(t, out)
+		forums, ok := m["forums"].([]any)
+		if !ok || len(forums) == 0 {
+			t.Fatalf("expected forums array in update response:\n%s", truncate(out, 500))
+		}
+		fm, _ := forums[0].(map[string]any)
+		assertStringField(t, fm, "title", updatedTitle)
+		assertStringField(t, fm, "content", updatedContent)
+
+		getOut := zoho(t, "projects", "forums", "get", forumID,
+			"--project", projectID)
+		getM := parseJSON(t, getOut)
+		getForums, ok := getM["forums"].([]any)
+		if !ok || len(getForums) == 0 {
+			t.Fatalf("expected forums array in get response after update:\n%s", truncate(getOut, 500))
+		}
+		getFM, _ := getForums[0].(map[string]any)
+		assertStringField(t, getFM, "title", updatedTitle)
+		assertStringField(t, getFM, "content", updatedContent)
+	})
+
+	t.Run("forum-comments/add", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		commentText := testPrefix + "_forum_comment"
+		out := zoho(t, "projects", "forum-comments", "add",
+			"--project", projectID,
+			"--forum", forumID,
+			"--comment", commentText)
+		m := parseJSON(t, out)
+		comment, ok := m["forum_comments"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected forum_comments object in add response:\n%s", truncate(out, 500))
+		}
+		forumCommentID = fmt.Sprintf("%v", comment["id"])
+		if forumCommentID == "" || forumCommentID == "<nil>" {
+			t.Fatalf("no id in forum-comments add response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, comment, "content", commentText)
+		t.Logf("created forum comment %s", forumCommentID)
+	})
+
+	t.Run("forum-comments/get", func(t *testing.T) {
+		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
+		out := zoho(t, "projects", "forum-comments", "get", forumCommentID,
+			"--project", projectID,
+			"--forum", forumID)
+		m := parseJSON(t, out)
+		comments, ok := m["forum_comments"].([]any)
+		if !ok || len(comments) == 0 {
+			t.Fatalf("expected forum_comments array in get response:\n%s", truncate(out, 500))
+		}
+		cm, _ := comments[0].(map[string]any)
+		assertEqual(t, fmt.Sprintf("%v", cm["id"]), forumCommentID)
+	})
+
+	t.Run("forum-comments/list", func(t *testing.T) {
+		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
+		out := zoho(t, "projects", "forum-comments", "list",
+			"--project", projectID,
+			"--forum", forumID)
+		m := parseJSON(t, out)
+		comments, ok := m["forum_comments"].([]any)
+		if !ok {
+			t.Fatalf("expected forum_comments array in list response:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, c := range comments {
+			cm, _ := c.(map[string]any)
+			if fmt.Sprintf("%v", cm["id"]) == forumCommentID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("forum comment %s not found in list", forumCommentID)
+		}
+	})
+
+	t.Run("forum-comments/update", func(t *testing.T) {
+		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
+		updatedComment := testPrefix + "_forum_comment_upd"
+		out := zoho(t, "projects", "forum-comments", "update", forumCommentID,
+			"--project", projectID,
+			"--forum", forumID,
+			"--comment", updatedComment)
+		m := parseJSON(t, out)
+		comments, ok := m["forum_comments"].([]any)
+		if !ok || len(comments) == 0 {
+			t.Fatalf("expected forum_comments array in update response:\n%s", truncate(out, 500))
+		}
+		cm, _ := comments[0].(map[string]any)
+		assertStringField(t, cm, "content", updatedComment)
+
+		getOut := zoho(t, "projects", "forum-comments", "get", forumCommentID,
+			"--project", projectID,
+			"--forum", forumID)
+		getM := parseJSON(t, getOut)
+		getComments, ok := getM["forum_comments"].([]any)
+		if !ok || len(getComments) == 0 {
+			t.Fatalf("expected forum_comments array in get response after update:\n%s", truncate(getOut, 500))
+		}
+		getCM, _ := getComments[0].(map[string]any)
+		assertStringField(t, getCM, "content", updatedComment)
+	})
+
+	t.Run("forum-comments/best-answer-known-limitation", func(t *testing.T) {
+		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
+		r := runZoho(t, "projects", "forum-comments", "best-answer", forumCommentID,
+			"--project", projectID,
+			"--forum", forumID)
+		if r.ExitCode == 0 {
+			t.Errorf("forum-comments best-answer succeeded unexpectedly")
+			return
+		}
+		t.Logf("forum-comments best-answer failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("forum-comments/unbest-answer-known-limitation", func(t *testing.T) {
+		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
+		r := runZoho(t, "projects", "forum-comments", "unbest-answer", forumCommentID,
+			"--project", projectID,
+			"--forum", forumID)
+		if r.ExitCode == 0 {
+			t.Errorf("forum-comments unbest-answer succeeded unexpectedly")
+			return
+		}
+		t.Logf("forum-comments unbest-answer failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("forum-comments/delete", func(t *testing.T) {
+		requireID(t, forumCommentID, "forum-comments/add must have succeeded")
+		out := zoho(t, "projects", "forum-comments", "delete", forumCommentID,
+			"--project", projectID,
+			"--forum", forumID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "forum-comments", "list",
+			"--project", projectID,
+			"--forum", forumID)
+		if strings.Contains(listOut, forumCommentID) {
+			t.Errorf("forum comment %s still found in list after delete", forumCommentID)
+		}
+		forumCommentID = ""
+	})
+
+	t.Run("forum-followers/list", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		out := zoho(t, "projects", "forum-followers", "list", forumID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		if _, ok := m["followers"].([]any); !ok {
+			t.Fatalf("expected followers array in list response:\n%s", truncate(out, 500))
+		}
+	})
+
+	t.Run("forum-followers/follow-known-limitation", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		r := runZoho(t, "projects", "forum-followers", "follow", forumID,
+			"--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("forum-followers follow succeeded unexpectedly")
+			return
+		}
+		t.Logf("forum-followers follow failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("forum-followers/unfollow-known-limitation", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		r := runZoho(t, "projects", "forum-followers", "unfollow", forumID,
+			"--project", projectID)
+		if r.ExitCode == 0 {
+			t.Errorf("forum-followers unfollow succeeded unexpectedly")
+			return
+		}
+		t.Logf("forum-followers unfollow failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("forums/delete", func(t *testing.T) {
+		requireID(t, forumID, "forums/create must have succeeded")
+		out := zoho(t, "projects", "forums", "delete", forumID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "forums", "list",
+			"--project", projectID)
+		if strings.Contains(listOut, forumID) {
+			t.Errorf("forum %s still found in list after delete", forumID)
+		}
+		forumID = ""
+	})
+
+	t.Run("forum-categories/update", func(t *testing.T) {
+		requireID(t, forumCategoryID, "forum-categories/create must have succeeded")
+		updatedName := testName(t) + "_forum_category_upd"
+		out := zoho(t, "projects", "forum-categories", "update", forumCategoryID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"name": updatedName}))
+		m := parseJSON(t, out)
+		categories, ok := m["categories"].([]any)
+		if !ok || len(categories) == 0 {
+			t.Fatalf("expected categories array in update response:\n%s", truncate(out, 500))
+		}
+		cm, _ := categories[0].(map[string]any)
+		assertEqual(t, fmt.Sprintf("%v", cm["id"]), forumCategoryID)
+		assertStringField(t, cm, "name", updatedName)
+	})
+
+	t.Run("forum-categories/delete", func(t *testing.T) {
+		requireID(t, forumCategoryID, "forum-categories/create must have succeeded")
+		out := zoho(t, "projects", "forum-categories", "delete", forumCategoryID,
+			"--project", projectID)
+		parseJSON(t, out)
+	})
+
+	t.Run("forum-categories/list-verify-deleted", func(t *testing.T) {
+		requireID(t, forumCategoryID, "forum-categories/create must have succeeded")
+		out := zoho(t, "projects", "forum-categories", "list",
+			"--project", projectID)
+		arr := parseJSONArray(t, out)
+		for _, c := range arr {
+			if fmt.Sprintf("%v", c["id"]) == forumCategoryID {
+				t.Errorf("forum category %s still found after delete", forumCategoryID)
+				break
+			}
+		}
+		forumCategoryID = ""
 	})
 
 	t.Run("project-groups/create", func(t *testing.T) {
