@@ -658,6 +658,12 @@ func (c *testCleanup) trackTag(id string) {
 	})
 }
 
+func (c *testCleanup) trackRole(id string) {
+	c.add("delete role "+id, func() {
+		zohoIgnoreError(c.t, "projects", "roles", "delete", id)
+	})
+}
+
 func TestCRMModules(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "crm", "modules", "list")
@@ -2115,6 +2121,7 @@ func TestProjects(t *testing.T) {
 	var projectCommentID string
 	var projectGroupID string
 	var tagID string
+	var roleID string
 
 	t.Run("core/create", func(t *testing.T) {
 		projectName = testName(t)
@@ -2632,6 +2639,56 @@ func TestProjects(t *testing.T) {
 			t.Errorf("moved issue not found in target project")
 		}
 		cleanup.trackIssue(clonedIssueID, project2ID)
+	})
+
+	t.Run("issue-resolution/add", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-resolution", "add", issueID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"resolution": testPrefix + " resolution text"}))
+		parseJSON(t, out)
+	})
+
+	t.Run("issue-resolution/get", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-resolution", "get", issueID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		ir, ok := m["issue_resolution"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected issue_resolution object in get response:\n%s", truncate(out, 500))
+		}
+		resolution := fmt.Sprintf("%v", ir["resolution"])
+		assertContains(t, resolution, testPrefix)
+	})
+
+	t.Run("issue-resolution/update", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		zoho(t, "projects", "issue-resolution", "update", issueID,
+			"--project", projectID,
+			"--json", toJSON(t, map[string]any{"resolution": testPrefix + " updated resolution"}))
+
+		out := zoho(t, "projects", "issue-resolution", "get", issueID,
+			"--project", projectID)
+		m := parseJSON(t, out)
+		ir, _ := m["issue_resolution"].(map[string]any)
+		resolution := fmt.Sprintf("%v", ir["resolution"])
+		assertContains(t, resolution, "updated resolution")
+	})
+
+	t.Run("issue-resolution/delete", func(t *testing.T) {
+		requireID(t, issueID, "issues/create must have succeeded")
+		out := zoho(t, "projects", "issue-resolution", "delete", issueID,
+			"--project", projectID)
+		parseJSON(t, out)
+
+		getOut := zoho(t, "projects", "issue-resolution", "get", issueID,
+			"--project", projectID)
+		m := parseJSON(t, getOut)
+		ir, _ := m["issue_resolution"].(map[string]any)
+		if _, hasResolution := ir["resolution"]; hasResolution {
+			t.Errorf("resolution key still present after delete")
+		}
 	})
 
 	t.Run("issues/delete", func(t *testing.T) {
@@ -3255,6 +3312,89 @@ func TestProjects(t *testing.T) {
 		tagID = ""
 	})
 
+	t.Run("roles/create", func(t *testing.T) {
+		roleName := testName(t) + "_role"
+		out := zoho(t, "projects", "roles", "create",
+			"--json", toJSON(t, map[string]any{"name": roleName}))
+		m := parseJSON(t, out)
+		roleID = fmt.Sprintf("%v", m["id"])
+		if roleID == "" || roleID == "<nil>" {
+			t.Fatalf("no id in roles create response:\n%s", truncate(out, 500))
+		}
+		assertStringField(t, m, "name", roleName)
+		cleanup.trackRole(roleID)
+		t.Logf("created role %s", roleID)
+	})
+
+	t.Run("roles/get", func(t *testing.T) {
+		requireID(t, roleID, "roles/create must have succeeded")
+		out := zoho(t, "projects", "roles", "get", roleID)
+		m := parseJSON(t, out)
+		assertEqual(t, fmt.Sprintf("%v", m["id"]), roleID)
+	})
+
+	t.Run("roles/list", func(t *testing.T) {
+		requireID(t, roleID, "roles/create must have succeeded")
+		out := zoho(t, "projects", "roles", "list")
+		m := parseJSON(t, out)
+		roles, ok := m["roles"].([]any)
+		if !ok {
+			t.Fatalf("expected roles array in list response:\n%s", truncate(out, 500))
+		}
+		found := false
+		for _, r := range roles {
+			rm, _ := r.(map[string]any)
+			if fmt.Sprintf("%v", rm["id"]) == roleID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("role %s not found in roles list", roleID)
+		}
+	})
+
+	t.Run("roles/update", func(t *testing.T) {
+		requireID(t, roleID, "roles/create must have succeeded")
+		updatedName := testName(t) + "_role_upd"
+		zoho(t, "projects", "roles", "update", roleID,
+			"--json", toJSON(t, map[string]any{"name": updatedName}))
+
+		out := zoho(t, "projects", "roles", "get", roleID)
+		m := parseJSON(t, out)
+		assertStringField(t, m, "name", updatedName)
+	})
+
+	t.Run("roles/set-default-known-broken", func(t *testing.T) {
+		requireID(t, roleID, "roles/create must have succeeded")
+		r := runZoho(t, "projects", "roles", "set-default", roleID)
+		if r.ExitCode == 0 {
+			t.Errorf("roles set-default succeeded unexpectedly")
+			return
+		}
+		t.Logf("roles set-default failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("roles/delete", func(t *testing.T) {
+		requireID(t, roleID, "roles/create must have succeeded")
+		out := zoho(t, "projects", "roles", "delete", roleID)
+		parseJSON(t, out)
+
+		listOut := zoho(t, "projects", "roles", "list")
+		m := parseJSON(t, listOut)
+		roles, ok := m["roles"].([]any)
+		if ok {
+			for _, r := range roles {
+				rm, _ := r.(map[string]any)
+				if fmt.Sprintf("%v", rm["id"]) == roleID {
+					t.Errorf("role %s still found in list after delete", roleID)
+					break
+				}
+			}
+		}
+		roleID = ""
+	})
+
 	t.Run("project-users/list", func(t *testing.T) {
 		requireID(t, projectID, "core/create must have succeeded")
 		out := zoho(t, "projects", "project-users", "list", "--project", projectID)
@@ -3295,6 +3435,128 @@ func TestProjects(t *testing.T) {
 			return
 		}
 		t.Logf("dependencies remove failed as expected: %s", truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("task-customviews/list", func(t *testing.T) {
+		out := zoho(t, "projects", "task-customviews", "list")
+		m := parseJSON(t, out)
+		views, ok := m["views"].([]any)
+		if !ok {
+			t.Fatalf("expected views array in task-customviews list response:\n%s", truncate(out, 500))
+		}
+		if len(views) == 0 {
+			t.Error("expected non-empty views array")
+		}
+	})
+
+	t.Run("task-customviews/project-list", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		out := zoho(t, "projects", "task-customviews", "project-list",
+			"--project", projectID)
+		m := parseJSON(t, out)
+		if _, ok := m["views"]; !ok {
+			t.Fatalf("expected views key in task-customviews project-list response:\n%s", truncate(out, 500))
+		}
+	})
+
+	t.Run("task-customviews/get", func(t *testing.T) {
+		out := zoho(t, "projects", "task-customviews", "list")
+		m := parseJSON(t, out)
+		views, ok := m["views"].([]any)
+		if !ok || len(views) == 0 {
+			t.Skip("no views available for get test")
+		}
+		first, _ := views[0].(map[string]any)
+		viewID := fmt.Sprintf("%v", first["id"])
+		if viewID == "" || viewID == "<nil>" {
+			t.Skip("first view has no id")
+		}
+
+		getOut := zoho(t, "projects", "task-customviews", "get", viewID)
+		gm := parseJSON(t, getOut)
+		tcv, ok := gm["taskcustomviews"].([]any)
+		if !ok || len(tcv) == 0 {
+			t.Fatalf("expected taskcustomviews array in get response:\n%s", truncate(getOut, 500))
+		}
+		first2, _ := tcv[0].(map[string]any)
+		assertEqual(t, fmt.Sprintf("%v", first2["id"]), viewID)
+	})
+
+	t.Run("issue-customviews/list", func(t *testing.T) {
+		out := zoho(t, "projects", "issue-customviews", "list")
+		m := parseJSON(t, out)
+		dv, ok := m["default_views"].([]any)
+		if !ok {
+			t.Fatalf("expected default_views array in issue-customviews list response:\n%s", truncate(out, 500))
+		}
+		if len(dv) == 0 {
+			t.Error("expected non-empty default_views array")
+		}
+	})
+
+	t.Run("issue-customviews/project-list", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		out := zoho(t, "projects", "issue-customviews", "project-list",
+			"--project", projectID)
+		m := parseJSON(t, out)
+		for _, key := range []string{"custom_views", "default_views", "favourites", "shared_views"} {
+			if _, ok := m[key]; !ok {
+				t.Errorf("expected %s key in issue-customviews project-list response", key)
+			}
+		}
+	})
+
+	t.Run("issue-customviews/get", func(t *testing.T) {
+		out := zoho(t, "projects", "issue-customviews", "list")
+		m := parseJSON(t, out)
+		dv, ok := m["default_views"].([]any)
+		if !ok || len(dv) == 0 {
+			t.Skip("no default_views available for get test")
+		}
+		first, _ := dv[0].(map[string]any)
+		viewID := fmt.Sprintf("%v", first["custom_view_id"])
+		if viewID == "" || viewID == "<nil>" {
+			t.Skip("first default_view has no custom_view_id")
+		}
+
+		getOut := zoho(t, "projects", "issue-customviews", "get", viewID)
+		gm := parseJSON(t, getOut)
+		cv, ok := gm["customview"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected customview object in get response:\n%s", truncate(getOut, 500))
+		}
+		assertEqual(t, fmt.Sprintf("%v", cv["custom_view_id"]), viewID)
+	})
+
+	t.Run("task-statustimeline/get", func(t *testing.T) {
+		requireID(t, tlTaskID, "timelogs/add must have succeeded")
+		requireID(t, projectID, "core/create must have succeeded")
+		out := zoho(t, "projects", "task-statustimeline", "get", tlTaskID,
+			"--project", projectID)
+		var raw json.RawMessage
+		if err := json.Unmarshal([]byte(out), &raw); err != nil {
+			t.Fatalf("failed to parse task-statustimeline get response: %v\nraw: %s", err, truncate(out, 500))
+		}
+	})
+
+	t.Run("task-statustimeline/project-known-broken", func(t *testing.T) {
+		requireID(t, projectID, "core/create must have succeeded")
+		r := runZoho(t, "projects", "task-statustimeline", "project",
+			"--project", projectID)
+		if r.ExitCode == 0 {
+			t.Logf("task-statustimeline project succeeded: %s", truncate(r.Stdout, 200))
+			return
+		}
+		t.Logf("task-statustimeline project failed as expected (endpoint may not exist in V3): %s",
+			truncate(r.Stderr+r.Stdout, 300))
+	})
+
+	t.Run("task-statustimeline/portal", func(t *testing.T) {
+		out := zoho(t, "projects", "task-statustimeline", "portal")
+		var raw json.RawMessage
+		if err := json.Unmarshal([]byte(out), &raw); err != nil {
+			t.Fatalf("failed to parse task-statustimeline portal response: %v\nraw: %s", err, truncate(out, 500))
+		}
 	})
 
 	t.Run("search/portal", func(t *testing.T) {

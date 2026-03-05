@@ -914,7 +914,7 @@ func taskStatusTimelineCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/statustimeline"
+					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/status-timeline"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -935,7 +935,7 @@ func taskStatusTimelineCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := base(c, portal, cmd.String("project")) + "/tasks/statustimeline"
+					url := base(c, portal, cmd.String("project")) + "/tasks/status-timeline"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -956,7 +956,7 @@ func taskStatusTimelineCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/tasks/statustimeline"
+					url := c.ProjectsBase + "/portal/" + portal + "/taskstatushistory"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -1626,7 +1626,7 @@ func issueResolutionCmd() *cli.Command {
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/resolution"
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request("PUT", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -4549,7 +4549,7 @@ func leavesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/leaves"
+					url := c.ProjectsBase + "/portal/" + portal + "/leave"
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -4571,7 +4571,7 @@ func leavesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/leaves/" + cmd.Args().First()
+					url := c.ProjectsBase + "/portal/" + portal + "/leave/" + cmd.Args().First()
 					raw, err := c.Request("GET", url, nil)
 					if err != nil {
 						return err
@@ -4597,7 +4597,7 @@ func leavesCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := c.ProjectsBase + "/portal/" + portal + "/leaves"
+					url := c.ProjectsBase + "/portal/" + portal + "/leave"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -4624,7 +4624,7 @@ func leavesCmd() *cli.Command {
 					}
 					var body any
 					json.Unmarshal([]byte(cmd.String("json")), &body)
-					url := c.ProjectsBase + "/portal/" + portal + "/leaves/" + cmd.Args().First()
+					url := c.ProjectsBase + "/portal/" + portal + "/leave/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
@@ -4646,7 +4646,7 @@ func leavesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					url := c.ProjectsBase + "/portal/" + portal + "/leaves/" + cmd.Args().First()
+					url := c.ProjectsBase + "/portal/" + portal + "/leave/" + cmd.Args().First()
 					raw, err := c.Request("DELETE", url, nil)
 					if err != nil {
 						return err

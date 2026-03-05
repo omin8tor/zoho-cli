@@ -24,6 +24,7 @@ const DefaultScopes = "ZohoCliq.Webhooks.CREATE,ZohoCliq.Channels.ALL,ZohoCliq.M
 	"ZohoProjects.events.ALL,ZohoProjects.forums.ALL,ZohoProjects.milestones.ALL," +
 	"ZohoProjects.documents.ALL,ZohoProjects.users.ALL," +
 	"ZohoProjects.projectgroups.ALL,ZohoProjects.tags.ALL," +
+	"ZohoProjects.leave.ALL," +
 	"ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.ALL,ZohoCRM.org.ALL," +
 	"ZohoCRM.coql.READ,ZohoCRM.bulk.ALL,ZohoCRM.notifications.ALL," +
 	"ZohoCRM.change_owner.CREATE," +
