@@ -4,6 +4,7 @@ type DCConfig struct {
 	Accounts  string
 	Cliq      string
 	CRM       string
+	Desk      string
 	Expense   string
 	Projects  string
 	Sheet     string
@@ -17,6 +18,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.com",
 		Cliq:      "https://cliq.zoho.com",
 		CRM:       "https://zohoapis.com",
+		Desk:      "https://desk.zoho.com",
 		Expense:   "https://www.zohoapis.com",
 		Projects:  "https://projectsapi.zoho.com",
 		Sheet:     "https://sheet.zoho.com",
@@ -28,6 +30,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.eu",
 		Cliq:      "https://cliq.zoho.eu",
 		CRM:       "https://zohoapis.eu",
+		Desk:      "https://desk.zoho.eu",
 		Expense:   "https://www.zohoapis.eu",
 		Projects:  "https://projectsapi.zoho.eu",
 		Sheet:     "https://sheet.zoho.eu",
@@ -39,6 +42,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.in",
 		Cliq:      "https://cliq.zoho.in",
 		CRM:       "https://zohoapis.in",
+		Desk:      "https://desk.zoho.in",
 		Expense:   "https://www.zohoapis.in",
 		Projects:  "https://projectsapi.zoho.in",
 		Sheet:     "https://sheet.zoho.in",
@@ -50,6 +54,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.com.au",
 		Cliq:      "https://cliq.zoho.com.au",
 		CRM:       "https://zohoapis.com.au",
+		Desk:      "https://desk.zoho.com.au",
 		Expense:   "https://www.zohoapis.com.au",
 		Projects:  "https://projectsapi.zoho.com.au",
 		Sheet:     "https://sheet.zoho.com.au",
@@ -61,6 +66,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.jp",
 		Cliq:      "https://cliq.zoho.jp",
 		CRM:       "https://zohoapis.jp",
+		Desk:      "https://desk.zoho.jp",
 		Expense:   "https://www.zohoapis.jp",
 		Projects:  "https://projectsapi.zoho.jp",
 		Sheet:     "https://sheet.zoho.jp",
@@ -72,6 +78,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zohocloud.ca",
 		Cliq:      "https://cliq.zohocloud.ca",
 		CRM:       "https://zohoapis.ca",
+		Desk:      "https://desk.zohocloud.ca",
 		Expense:   "https://www.zohoapis.ca",
 		Projects:  "https://projectsapi.zohocloud.ca",
 		Sheet:     "https://sheet.zohocloud.ca",
@@ -83,6 +90,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.sa",
 		Cliq:      "https://cliq.zoho.sa",
 		CRM:       "https://zohoapis.sa",
+		Desk:      "https://desk.zoho.sa",
 		Expense:   "https://www.zohoapis.sa",
 		Projects:  "https://projectsapi.zoho.sa",
 		Sheet:     "https://sheet.zoho.sa",
@@ -94,6 +102,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.uk",
 		Cliq:      "https://cliq.zoho.uk",
 		CRM:       "https://zohoapis.uk",
+		Desk:      "https://desk.zoho.uk",
 		Expense:   "https://www.zohoapis.uk",
 		Projects:  "https://projectsapi.zoho.uk",
 		Sheet:     "https://sheet.zoho.uk",
@@ -105,6 +114,7 @@ var dcMap = map[string]DCConfig{
 		Accounts:  "https://accounts.zoho.com.cn",
 		Cliq:      "https://cliq.zoho.com.cn",
 		CRM:       "https://zohoapis.com.cn",
+		Desk:      "https://desk.zoho.com.cn",
 		Expense:   "https://www.zohoapis.com.cn",
 		Projects:  "https://projectsapi.zoho.com.cn",
 		Sheet:     "https://sheet.zoho.com.cn",
@@ -126,6 +136,7 @@ func GetDC(dc string) DCConfig {
 func AccountsURL(dc string) string  { return GetDC(dc).Accounts }
 func CliqURL(dc string) string      { return GetDC(dc).Cliq }
 func CRMURL(dc string) string       { return GetDC(dc).CRM }
+func DeskURL(dc string) string      { return GetDC(dc).Desk }
 func ExpenseURL(dc string) string   { return GetDC(dc).Expense }
 func ProjectsURL(dc string) string  { return GetDC(dc).Projects }
 func SheetURL(dc string) string     { return GetDC(dc).Sheet }

@@ -21,6 +21,7 @@ type Client struct {
 	HTTP          *http.Client
 	accessToken   string
 	CRMBase       string
+	DeskBase      string
 	ProjectsBase  string
 	SheetBase     string
 	WorkDriveBase string
@@ -42,6 +43,7 @@ func NewClient(config *auth.AuthConfig) (*Client, error) {
 		HTTP:          &http.Client{Timeout: 60 * time.Second},
 		accessToken:   token,
 		CRMBase:       dc.CRMURL(d) + "/crm/v8",
+		DeskBase:      dc.DeskURL(d) + "/api/v1",
 		ProjectsBase:  dc.ProjectsURL(d) + "/api/v3",
 		SheetBase:     dc.SheetURL(d) + "/api/v2",
 		WorkDriveBase: dc.WorkDriveURL(d) + "/api/v1",
