@@ -24,6 +24,7 @@ type Client struct {
 	DeskBase      string
 	ProjectsBase  string
 	SheetBase     string
+	SignBase      string
 	WorkDriveBase string
 	WriterBase    string
 	CliqBase      string
@@ -46,6 +47,7 @@ func NewClient(config *auth.AuthConfig) (*Client, error) {
 		DeskBase:      dc.DeskURL(d) + "/api/v1",
 		ProjectsBase:  dc.ProjectsURL(d) + "/api/v3",
 		SheetBase:     dc.SheetURL(d) + "/api/v2",
+		SignBase:      dc.SignURL(d) + "/api/v1",
 		WorkDriveBase: dc.WorkDriveURL(d) + "/api/v1",
 		WriterBase:    dc.WriterURL(d) + "/api/v1",
 		CliqBase:      dc.CliqURL(d),
