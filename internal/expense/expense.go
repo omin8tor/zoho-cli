@@ -230,6 +230,28 @@ func expensesCmd() *cli.Command {
 				},
 			},
 			{
+				Name:      "get",
+				Usage:     "Get an expense",
+				ArgsUsage: "<expense-id>",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					c, err := getClient()
+					if err != nil {
+						return err
+					}
+					orgID, err := resolveOrgID(cmd)
+					if err != nil {
+						return err
+					}
+					raw, err := c.Request("GET", c.ExpenseBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
+						Headers: orgHeaders(orgID),
+					})
+					if err != nil {
+						return err
+					}
+					return output.JSONRaw(raw)
+				},
+			},
+			{
 				Name:  "create",
 				Usage: "Create an expense",
 				Flags: []cli.Flag{
@@ -276,6 +298,28 @@ func expensesCmd() *cli.Command {
 					json.Unmarshal([]byte(cmd.String("json")), &body)
 					raw, err := c.Request("PUT", c.ExpenseBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
+						Headers: orgHeaders(orgID),
+					})
+					if err != nil {
+						return err
+					}
+					return output.JSONRaw(raw)
+				},
+			},
+			{
+				Name:      "delete",
+				Usage:     "Delete an expense",
+				ArgsUsage: "<expense-id>",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					c, err := getClient()
+					if err != nil {
+						return err
+					}
+					orgID, err := resolveOrgID(cmd)
+					if err != nil {
+						return err
+					}
+					raw, err := c.Request("DELETE", c.ExpenseBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -531,6 +575,28 @@ func reportsCmd() *cli.Command {
 						return err
 					}
 					raw, err := c.Request("GET", c.ExpenseBase+"/expensereports/"+cmd.Args().First()+"/approvalhistory", &zohttp.RequestOpts{
+						Headers: orgHeaders(orgID),
+					})
+					if err != nil {
+						return err
+					}
+					return output.JSONRaw(raw)
+				},
+			},
+			{
+				Name:      "delete",
+				Usage:     "Delete an expense report",
+				ArgsUsage: "<report-id>",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					c, err := getClient()
+					if err != nil {
+						return err
+					}
+					orgID, err := resolveOrgID(cmd)
+					if err != nil {
+						return err
+					}
+					raw, err := c.Request("DELETE", c.ExpenseBase+"/expensereports/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {

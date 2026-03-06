@@ -409,6 +409,18 @@ func (c *testCleanup) trackExpenseTrip(id, orgID string) {
 	})
 }
 
+func (c *testCleanup) trackExpenseReport(id, orgID string) {
+	c.add("delete expense report "+id, func() {
+		zohoIgnoreError(c.t, "expense", "reports", "delete", id, "--org", orgID)
+	})
+}
+
+func (c *testCleanup) trackExpenseExpense(id, orgID string) {
+	c.add("delete expense expense "+id, func() {
+		zohoIgnoreError(c.t, "expense", "expenses", "delete", id, "--org", orgID)
+	})
+}
+
 func (c *testCleanup) trackContact(id string) {
 	c.add("delete contact "+id, func() {
 		zohoIgnoreError(c.t, "crm", "records", "delete", "Contacts", id)
@@ -2350,9 +2362,11 @@ func TestProjects(t *testing.T) {
 
 	t.Run("tasks/my", func(t *testing.T) {
 		out := zoho(t, "projects", "tasks", "my")
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("failed to parse tasks/my response: %v", err)
+		m := parseJSON(t, out)
+		if _, ok := m["tasks"]; !ok {
+			if _, ok2 := m["page_info"]; !ok2 {
+				t.Errorf("expected tasks or page_info key in my-tasks response:\n%s", truncate(out, 500))
+			}
 		}
 	})
 
@@ -2604,16 +2618,23 @@ func TestProjects(t *testing.T) {
 		requireID(t, issueID, "issues/create must have succeeded")
 		out := zoho(t, "projects", "issues", "description", issueID,
 			"--project", projectID)
-		parseJSON(t, out)
+		m := parseJSON(t, out)
+		if _, ok := m["description"]; !ok {
+			if _, ok2 := m["content"]; !ok2 {
+				t.Errorf("expected description or content key in response:\n%s", truncate(out, 500))
+			}
+		}
 	})
 
 	t.Run("issues/activities", func(t *testing.T) {
 		requireID(t, issueID, "issues/create must have succeeded")
 		out := zoho(t, "projects", "issues", "activities", issueID,
 			"--project", projectID)
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("failed to parse activities response: %v\nraw: %s", err, truncate(out, 500))
+		m := parseJSON(t, out)
+		if _, ok := m["activities"]; !ok {
+			if _, ok2 := m["page_info"]; !ok2 {
+				t.Errorf("expected activities or page_info key in response:\n%s", truncate(out, 500))
+			}
 		}
 	})
 
@@ -4041,9 +4062,11 @@ func TestProjects(t *testing.T) {
 		requireID(t, projectID, "core/create must have succeeded")
 		out := zoho(t, "projects", "task-statustimeline", "get", tlTaskID,
 			"--project", projectID)
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("failed to parse task-statustimeline get response: %v\nraw: %s", err, truncate(out, 500))
+		m := parseJSON(t, out)
+		if _, ok := m["timeline"]; !ok {
+			if _, ok2 := m["status_timeline"]; !ok2 {
+				t.Errorf("expected timeline or status_timeline key in response:\n%s", truncate(out, 500))
+			}
 		}
 	})
 
@@ -4053,9 +4076,13 @@ func TestProjects(t *testing.T) {
 
 	t.Run("task-statustimeline/portal", func(t *testing.T) {
 		out := zoho(t, "projects", "task-statustimeline", "portal")
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("failed to parse task-statustimeline portal response: %v\nraw: %s", err, truncate(out, 500))
+		m := parseJSON(t, out)
+		if _, ok := m["timeline"]; !ok {
+			if _, ok2 := m["status_timeline"]; !ok2 {
+				if _, ok3 := m["page_info"]; !ok3 {
+					t.Errorf("expected timeline, status_timeline, or page_info key in response:\n%s", truncate(out, 500))
+				}
+			}
 		}
 	})
 
@@ -4067,13 +4094,11 @@ func TestProjects(t *testing.T) {
 			"--type", "task",
 			"--entity-id", tlTaskID)
 		m := parseJSON(t, out)
-		t.Logf("attachments list response keys: %v", func() []string {
-			keys := make([]string, 0, len(m))
-			for k := range m {
-				keys = append(keys, k)
+		if _, ok := m["attachments"]; !ok {
+			if _, ok2 := m["page_info"]; !ok2 {
+				t.Errorf("expected attachments or page_info key in response:\n%s", truncate(out, 500))
 			}
-			return keys
-		}())
+		}
 	})
 
 	t.Run("attachments/upload-known-broken", func(t *testing.T) {
@@ -4549,9 +4574,11 @@ func TestProjects(t *testing.T) {
 
 	t.Run("pins/list-empty", func(t *testing.T) {
 		out := zoho(t, "projects", "timelog-pins", "list")
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("failed to parse pins list: %v\nraw: %s", err, truncate(out, 500))
+		m := parseJSON(t, out)
+		if _, ok := m["pins"]; !ok {
+			if _, ok2 := m["page_info"]; !ok2 {
+				t.Errorf("expected pins or page_info key in response:\n%s", truncate(out, 500))
+			}
 		}
 	})
 
@@ -4575,16 +4602,13 @@ func TestProjects(t *testing.T) {
 
 	t.Run("timelog-bulk/project-list", func(t *testing.T) {
 		requireID(t, projectID, "core/create must have succeeded")
-		out, err := zohoMayFail(t, "projects", "timelog-bulk", "project-list",
+		out := zoho(t, "projects", "timelog-bulk", "project-list",
 			"--project", projectID, "--module", "task")
-		if err != nil {
-			t.Logf("timelog-bulk project-list failed: %v", err)
-			t.Logf("response: %s", truncate(out, 500))
-			return
-		}
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("failed to parse response: %v\nraw: %s", err, truncate(out, 500))
+		m := parseJSON(t, out)
+		if _, ok := m["timelogs"]; !ok {
+			if _, ok2 := m["page_info"]; !ok2 {
+				t.Errorf("expected timelogs or page_info key in response:\n%s", truncate(out, 500))
+			}
 		}
 	})
 
@@ -4638,9 +4662,11 @@ func TestProjects(t *testing.T) {
 
 	t.Run("trash/list", func(t *testing.T) {
 		out := zoho(t, "projects", "trash", "list")
-		var raw json.RawMessage
-		if err := json.Unmarshal([]byte(out), &raw); err != nil {
-			t.Fatalf("trash list returned non-JSON: %v\nraw: %s", err, truncate(out, 500))
+		m := parseJSON(t, out)
+		if _, ok := m["trash"]; !ok {
+			if _, ok2 := m["page_info"]; !ok2 {
+				t.Errorf("expected trash or page_info key in response:\n%s", truncate(out, 500))
+			}
 		}
 	})
 
@@ -5194,6 +5220,13 @@ func TestExpenseCategories(t *testing.T) {
 		out := zoho(t, "expense", "categories", "disable", categoryID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		out = zoho(t, "expense", "categories", "get", categoryID, "--org", orgID)
+		m2 := parseJSON(t, out)
+		assertExpenseCodeZero(t, m2)
+		cat, _ := m2["expense_category"].(map[string]any)
+		if s := fmt.Sprintf("%v", cat["status"]); s != "inactive" {
+			t.Errorf("expected category status=inactive after disable, got %s", s)
+		}
 	})
 
 	t.Run("enable", func(t *testing.T) {
@@ -5201,6 +5234,13 @@ func TestExpenseCategories(t *testing.T) {
 		out := zoho(t, "expense", "categories", "enable", categoryID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		out = zoho(t, "expense", "categories", "get", categoryID, "--org", orgID)
+		m2 := parseJSON(t, out)
+		assertExpenseCodeZero(t, m2)
+		cat, _ := m2["expense_category"].(map[string]any)
+		if s := fmt.Sprintf("%v", cat["status"]); s != "active" {
+			t.Errorf("expected category status=active after enable, got %s", s)
+		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -5208,6 +5248,10 @@ func TestExpenseCategories(t *testing.T) {
 		out := zoho(t, "expense", "categories", "delete", categoryID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		r := runZoho(t, "expense", "categories", "get", categoryID, "--org", orgID)
+		if r.ExitCode == 0 {
+			t.Errorf("category %s still accessible after delete", categoryID)
+		}
 		categoryID = ""
 	})
 }
@@ -5284,6 +5328,10 @@ func TestExpenseCustomers(t *testing.T) {
 		out := zoho(t, "expense", "customers", "delete", customerID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		r := runZoho(t, "expense", "customers", "get", customerID, "--org", orgID)
+		if r.ExitCode == 0 {
+			t.Errorf("customer %s still accessible after delete", customerID)
+		}
 		customerID = ""
 	})
 }
@@ -5347,6 +5395,13 @@ func TestExpenseCurrencies(t *testing.T) {
 			"--json", toJSON(t, map[string]any{"currency_symbol": "Mex$", "currency_format": "1,234,567.89", "price_precision": 2}))
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "currencies", "get", currencyID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		cur, _ := gm["currency"].(map[string]any)
+		if s := fmt.Sprintf("%v", cur["currency_symbol"]); s != "Mex$" {
+			t.Errorf("expected currency_symbol=Mex$ after update, got %s", s)
+		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -5354,6 +5409,10 @@ func TestExpenseCurrencies(t *testing.T) {
 		out := zoho(t, "expense", "currencies", "delete", currencyID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		r := runZoho(t, "expense", "currencies", "get", currencyID, "--org", orgID)
+		if r.ExitCode == 0 {
+			t.Errorf("currency %s still accessible after delete", currencyID)
+		}
 		currencyID = ""
 	})
 }
@@ -5465,6 +5524,13 @@ func TestExpenseTaxes(t *testing.T) {
 			"--json", toJSON(t, map[string]any{"tax_name": updatedName, "tax_percentage": createdTaxRate, "tax_type": "tax"}))
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "taxes", "get", taxID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		tax, _ := gm["tax"].(map[string]any)
+		if got := fmt.Sprintf("%v", tax["tax_name"]); got != updatedName {
+			t.Errorf("expected tax_name=%q after update, got %q", updatedName, got)
+		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -5475,6 +5541,10 @@ func TestExpenseTaxes(t *testing.T) {
 		out := zoho(t, "expense", "taxes", "delete", taxID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		r := runZoho(t, "expense", "taxes", "get", taxID, "--org", orgID)
+		if r.ExitCode == 0 {
+			t.Errorf("tax %s still accessible after delete", taxID)
+		}
 		taxID = ""
 	})
 
@@ -5570,6 +5640,13 @@ func TestExpenseProjects(t *testing.T) {
 			"--json", toJSON(t, map[string]any{"project_name": updatedName}))
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "projects", "get", projectID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		proj, _ := gm["project"].(map[string]any)
+		if got := fmt.Sprintf("%v", proj["project_name"]); got != updatedName {
+			t.Errorf("expected project_name=%q after update, got %q", updatedName, got)
+		}
 		projectName = updatedName
 	})
 
@@ -5580,6 +5657,13 @@ func TestExpenseProjects(t *testing.T) {
 		out := zoho(t, "expense", "projects", "deactivate", projectID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "projects", "get", projectID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		proj, _ := gm["project"].(map[string]any)
+		if s := fmt.Sprintf("%v", proj["status"]); s != "inactive" {
+			t.Errorf("expected project status=inactive after deactivate, got %s", s)
+		}
 	})
 
 	t.Run("activate", func(t *testing.T) {
@@ -5589,6 +5673,13 @@ func TestExpenseProjects(t *testing.T) {
 		out := zoho(t, "expense", "projects", "activate", projectID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "projects", "get", projectID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		proj, _ := gm["project"].(map[string]any)
+		if s := fmt.Sprintf("%v", proj["status"]); s != "active" {
+			t.Errorf("expected project status=active after activate, got %s", s)
+		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -5598,6 +5689,10 @@ func TestExpenseProjects(t *testing.T) {
 		out := zoho(t, "expense", "projects", "delete", projectID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		r := runZoho(t, "expense", "projects", "get", projectID, "--org", orgID)
+		if r.ExitCode == 0 {
+			t.Errorf("project %s still accessible after delete", projectID)
+		}
 		projectID = ""
 		_ = projectName
 	})
@@ -5659,12 +5754,20 @@ func TestExpenseTrips(t *testing.T) {
 
 	t.Run("update", func(t *testing.T) {
 		requireID(t, tripID, "create must have succeeded")
+		updatedPurpose := fmt.Sprintf("%s trip updated %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "trips", "update", tripID, "--org", orgID,
 			"--json", toJSON(t, map[string]any{
-				"business_purpose": fmt.Sprintf("%s trip updated %s", testPrefix, randomSuffix()),
+				"business_purpose": updatedPurpose,
 			}))
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "trips", "get", tripID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		trip, _ := gm["trip"].(map[string]any)
+		if got := fmt.Sprintf("%v", trip["business_purpose"]); got != updatedPurpose {
+			t.Errorf("expected business_purpose=%q after update, got %q", updatedPurpose, got)
+		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -5672,6 +5775,10 @@ func TestExpenseTrips(t *testing.T) {
 		out := zoho(t, "expense", "trips", "delete", tripID, "--org", orgID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		r := runZoho(t, "expense", "trips", "get", tripID, "--org", orgID)
+		if r.ExitCode == 0 {
+			t.Errorf("trip %s still accessible after delete", tripID)
+		}
 		tripID = ""
 	})
 }
@@ -5679,6 +5786,7 @@ func TestExpenseTrips(t *testing.T) {
 func TestExpenseReports(t *testing.T) {
 	t.Parallel()
 	orgID := requireExpenseOrgID(t)
+	cleanup := newCleanup(t)
 
 	var reportID string
 
@@ -5705,6 +5813,7 @@ func TestExpenseReports(t *testing.T) {
 		if reportID == "" || reportID == "<nil>" {
 			t.Fatalf("expected report_id in create response:\n%s", truncate(out, 500))
 		}
+		cleanup.trackExpenseReport(reportID, orgID)
 	})
 
 	t.Run("get", func(t *testing.T) {
@@ -5726,6 +5835,13 @@ func TestExpenseReports(t *testing.T) {
 			"--json", toJSON(t, map[string]any{"report_name": updatedName}))
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "reports", "get", reportID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		report, _ := gm["expense_report"].(map[string]any)
+		if got := fmt.Sprintf("%v", report["report_name"]); got != updatedName {
+			t.Errorf("expected report_name=%q after update, got %q", updatedName, got)
+		}
 	})
 
 	t.Run("approval-history", func(t *testing.T) {
@@ -5743,6 +5859,7 @@ func TestExpenseReports(t *testing.T) {
 func TestExpenseExpenses(t *testing.T) {
 	t.Parallel()
 	orgID := requireExpenseOrgID(t)
+	cleanup := newCleanup(t)
 
 	var currencyID string
 	var categoryID string
@@ -5815,6 +5932,7 @@ func TestExpenseExpenses(t *testing.T) {
 		if expenseID == "" || expenseID == "<nil>" {
 			t.Fatalf("expected expense_id in create response:\n%s", truncate(out, 500))
 		}
+		cleanup.trackExpenseExpense(expenseID, orgID)
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -5830,6 +5948,10 @@ func TestExpenseExpenses(t *testing.T) {
 			}))
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
+		getOut := zoho(t, "expense", "expenses", "get", expenseID, "--org", orgID)
+		gm := parseJSON(t, getOut)
+		assertExpenseCodeZero(t, gm)
+		assertEqual(t, fmt.Sprintf("%v", gm["expense"].(map[string]any)["expense_id"]), expenseID)
 	})
 }
 
@@ -6052,6 +6174,9 @@ func TestSheetWorkbooks(t *testing.T) {
 		out := zoho(t, "sheet", "workbooks", "list")
 		m := parseJSON(t, out)
 		assertSheetSuccess(t, m)
+		if !strings.Contains(fmt.Sprintf("%v", m), workbookID) {
+			t.Errorf("workbook %s not found in list response", workbookID)
+		}
 	})
 
 	t.Run("copy", func(t *testing.T) {
@@ -6088,6 +6213,9 @@ func TestSheetWorkbooks(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
 		m := parseJSON(t, zoho(t, "sheet", "workbooks", "versions", "--workbook", workbookID))
 		assertSheetSuccess(t, m)
+		if !strings.Contains(fmt.Sprintf("%v", m), "version") {
+			t.Errorf("expected version data in versions response")
+		}
 	})
 
 	t.Run("revert-version", func(t *testing.T) {
@@ -6145,12 +6273,22 @@ func TestSheetWorksheets(t *testing.T) {
 
 	t.Run("list", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "worksheets", "list", "--workbook", workbookID)))
+		m := parseJSON(t, zoho(t, "sheet", "worksheets", "list", "--workbook", workbookID))
+		assertSheetSuccess(t, m)
+		if !strings.Contains(fmt.Sprintf("%v", m), "Sheet1") {
+			t.Errorf("expected Sheet1 in worksheets list")
+		}
 	})
 
 	t.Run("create", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "worksheets", "create", "--workbook", workbookID, "--worksheet-name", newWorksheet)))
+		m := parseJSON(t, zoho(t, "sheet", "worksheets", "create", "--workbook", workbookID, "--worksheet-name", newWorksheet))
+		assertSheetSuccess(t, m)
+		listM := parseJSON(t, zoho(t, "sheet", "worksheets", "list", "--workbook", workbookID))
+		assertSheetSuccess(t, listM)
+		if !strings.Contains(fmt.Sprintf("%v", listM), newWorksheet) {
+			t.Errorf("newly created worksheet %s not found in list", newWorksheet)
+		}
 	})
 
 	t.Run("copy", func(t *testing.T) {
@@ -6161,12 +6299,24 @@ func TestSheetWorksheets(t *testing.T) {
 
 	t.Run("rename", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "worksheets", "rename", "--workbook", workbookID, "--worksheet", newWorksheet, "--new-worksheet-name", renamedWorksheet)))
+		m := parseJSON(t, zoho(t, "sheet", "worksheets", "rename", "--workbook", workbookID, "--worksheet", newWorksheet, "--new-worksheet-name", renamedWorksheet))
+		assertSheetSuccess(t, m)
+		listM := parseJSON(t, zoho(t, "sheet", "worksheets", "list", "--workbook", workbookID))
+		assertSheetSuccess(t, listM)
+		if !strings.Contains(fmt.Sprintf("%v", listM), renamedWorksheet) {
+			t.Errorf("renamed worksheet %s not found in list", renamedWorksheet)
+		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "worksheets", "delete", "--workbook", workbookID, "--worksheet", renamedWorksheet)))
+		m := parseJSON(t, zoho(t, "sheet", "worksheets", "delete", "--workbook", workbookID, "--worksheet", renamedWorksheet))
+		assertSheetSuccess(t, m)
+		listM := parseJSON(t, zoho(t, "sheet", "worksheets", "list", "--workbook", workbookID))
+		assertSheetSuccess(t, listM)
+		if strings.Contains(fmt.Sprintf("%v", listM), renamedWorksheet) {
+			t.Errorf("deleted worksheet %s still in list", renamedWorksheet)
+		}
 	})
 }
 
@@ -6210,7 +6360,12 @@ func TestSheetCells(t *testing.T) {
 
 	t.Run("get-range", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "cells", "get-range", "--workbook", workbookID, "--worksheet", worksheetName, "--start-row", "1", "--start-column", "1", "--end-row", "3", "--end-column", "3")))
+		m := parseJSON(t, zoho(t, "sheet", "cells", "get-range", "--workbook", workbookID, "--worksheet", worksheetName, "--start-row", "3", "--start-column", "1", "--end-row", "4", "--end-column", "3"))
+		assertSheetSuccess(t, m)
+		resp := fmt.Sprintf("%v", m)
+		if !strings.Contains(resp, "a") || !strings.Contains(resp, "f") {
+			t.Errorf("expected set-range data (a,f) in get-range response: %s", truncate(resp, 500))
+		}
 	})
 
 	t.Run("set-row", func(t *testing.T) {
@@ -6220,7 +6375,12 @@ func TestSheetCells(t *testing.T) {
 
 	t.Run("get-worksheet", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "cells", "get-worksheet", "--workbook", workbookID, "--worksheet", worksheetName, "--start-row", "1", "--start-column", "1", "--end-row", "5", "--end-column", "3")))
+		m := parseJSON(t, zoho(t, "sheet", "cells", "get-worksheet", "--workbook", workbookID, "--worksheet", worksheetName, "--start-row", "1", "--start-column", "1", "--end-row", "5", "--end-column", "3"))
+		assertSheetSuccess(t, m)
+		resp := fmt.Sprintf("%v", m)
+		if !strings.Contains(resp, "r4c1") {
+			t.Errorf("expected set-row data (r4c1) in get-worksheet response: %s", truncate(resp, 500))
+		}
 	})
 
 	t.Run("get-used-area", func(t *testing.T) {
@@ -6251,7 +6411,11 @@ func TestSheetNamedRanges(t *testing.T) {
 
 	t.Run("list", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "named-ranges", "list", "--workbook", workbookID)))
+		m := parseJSON(t, zoho(t, "sheet", "named-ranges", "list", "--workbook", workbookID))
+		assertSheetSuccess(t, m)
+		if !strings.Contains(fmt.Sprintf("%v", m), rangeName) {
+			t.Errorf("named range %s not found in list", rangeName)
+		}
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -6302,7 +6466,16 @@ func TestSheetContent(t *testing.T) {
 
 	t.Run("find", func(t *testing.T) {
 		requireID(t, workbookID, "seed must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "content", "find", "--workbook", workbookID, "--worksheet", worksheetName, "--search", "X", "--scope", "worksheet")))
+		m := parseJSON(t, zoho(t, "sheet", "content", "find", "--workbook", workbookID, "--worksheet", worksheetName, "--search", "X", "--scope", "worksheet"))
+		assertSheetSuccess(t, m)
+		resp := fmt.Sprintf("%v", m)
+		if cnt, ok := m["count"]; ok {
+			if fmt.Sprintf("%v", cnt) == "0" {
+				t.Errorf("find returned 0 results for 'X'")
+			}
+		} else if !strings.Contains(resp, "X") {
+			t.Errorf("expected find response to contain search term or results: %s", truncate(resp, 500))
+		}
 	})
 
 	t.Run("find-replace", func(t *testing.T) {
@@ -6421,7 +6594,16 @@ func TestSheetTables(t *testing.T) {
 		if !tableReady || !tableVisible {
 			t.Skip("table create did not succeed")
 		}
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "tables", "fetch-records", "--workbook", workbookID, "--table-name", tableName, "--criteria", `"Name"="A"`)))
+		m := parseJSON(t, zoho(t, "sheet", "tables", "fetch-records", "--workbook", workbookID, "--table-name", tableName, "--criteria", `"Name"="A"`))
+		assertSheetSuccess(t, m)
+		if records, ok := m["records"]; ok {
+			arr, _ := records.([]any)
+			if len(arr) == 0 {
+				t.Errorf("expected at least one record matching Name=A")
+			}
+		} else if !strings.Contains(fmt.Sprintf("%v", m), "A") {
+			t.Errorf("expected record data containing 'A' in fetch-records response")
+		}
 	})
 
 	t.Run("add-records", func(t *testing.T) {
