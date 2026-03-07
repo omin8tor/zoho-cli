@@ -29,6 +29,7 @@ type Client struct {
 	WriterBase    string
 	CliqBase      string
 	ExpenseBase   string
+	MailBase      string
 	DownloadBase  string
 }
 
@@ -52,6 +53,7 @@ func NewClient(config *auth.AuthConfig) (*Client, error) {
 		WriterBase:    dc.WriterURL(d) + "/api/v1",
 		CliqBase:      dc.CliqURL(d),
 		ExpenseBase:   dc.ExpenseURL(d) + "/expense/v1",
+		MailBase:      dc.MailURL(d),
 		DownloadBase:  dc.DownloadURL(d),
 	}, nil
 }
