@@ -20,14 +20,9 @@ type Client struct {
 	Config              *auth.AuthConfig
 	HTTP                *http.Client
 	accessToken         string
-	AnalyticsBase       string
-	AssistBase          string
-	BackstageBase       string
 	BiginBase           string
 	BillingBase         string
-	BookingsBase        string
 	BooksBase           string
-	CampaignsBase       string
 	CliqBase            string
 	CRMBase             string
 	CreatorBase         string
@@ -36,21 +31,13 @@ type Client struct {
 	ExpenseBase         string
 	InventoryBase       string
 	InvoiceBase         string
-	LearnBase           string
 	MailBase            string
-	MarketingAutoBase   string
-	MeetingBase         string
-	PageSenseBase       string
 	PeopleBase          string
 	ProjectsBase        string
 	RecruitBase         string
-	SalesIQBase         string
 	SheetBase           string
-	ShowtimeBase        string
 	SignBase            string
 	SprintsBase         string
-	VaultBase           string
-	VoiceBase           string
 	WorkDriveBase       string
 	WriterBase          string
 }
@@ -67,14 +54,9 @@ func NewClient(config *auth.AuthConfig) (*Client, error) {
 		Config:            config,
 		HTTP:              &http.Client{Timeout: 60 * time.Second},
 		accessToken:       token,
-		AnalyticsBase:     api + "/analytics/v2",
-		AssistBase:        api + "/assist/v1",
-		BackstageBase:     api + "/backstage/v1",
 		BiginBase:         api + "/bigin/v2",
 		BillingBase:       api + "/billing/v1",
-		BookingsBase:      api + "/bookings/v1",
 		BooksBase:         api + "/books/v3",
-		CampaignsBase:     api + "/campaigns/v1",
 		CliqBase:          dc.CliqURL(d),
 		CRMBase:           dc.CRMURL(d) + "/crm/v8",
 		CreatorBase:       api + "/creator/v2.1",
@@ -83,21 +65,13 @@ func NewClient(config *auth.AuthConfig) (*Client, error) {
 		ExpenseBase:       api + "/expense/v1",
 		InventoryBase:     api + "/inventory/v1",
 		InvoiceBase:       api + "/invoice/v3",
-		LearnBase:         api + "/learn/v1",
 		MailBase:          dc.MailURL(d),
-		MarketingAutoBase: api + "/marketingautomation/v1",
-		MeetingBase:       api + "/meeting/v1",
-		PageSenseBase:     api + "/pagesense/v1",
 		PeopleBase:        dc.PeopleURL(d) + "/people/api",
 		ProjectsBase:      dc.ProjectsURL(d) + "/api/v3",
 		RecruitBase:       api + "/recruit/v2",
-		SalesIQBase:       api + "/salesiq/v2",
 		SheetBase:         dc.SheetURL(d) + "/api/v2",
-		ShowtimeBase:      api + "/showtime/v1",
 		SignBase:          dc.SignURL(d) + "/api/v1",
 		SprintsBase:       dc.SprintsURL(d) + "/zsapi",
-		VaultBase:         api + "/vault/v1",
-		VoiceBase:         api + "/voice/v1",
 		WorkDriveBase:     dc.WorkDriveURL(d) + "/api/v1",
 		WriterBase:        dc.WriterURL(d) + "/api/v1",
 	}, nil
