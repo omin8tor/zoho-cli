@@ -388,6 +388,9 @@ func attachmentsCmd() *cli.Command {
 				Name:      "upload",
 				Usage:     "Upload an attachment to a record",
 				ArgsUsage: "<module> <record-id> <file-path>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "category", Usage: "Attachment category (e.g. Resume, Cover Letter, Offer, Others)"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module name, record ID, and file path required")
@@ -405,8 +408,13 @@ func attachmentsCmd() *cli.Command {
 					if idx := strings.LastIndexAny(filePath, "/\\"); idx >= 0 {
 						name = filePath[idx+1:]
 					}
+					params := map[string]string{}
+					if v := cmd.String("category"); v != "" {
+						params["attachments_category"] = v
+					}
 					raw, err := c.Request("POST", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
-						Files: map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
+						Params: params,
+						Files:  map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
 					})
 					if err != nil {
 						return err

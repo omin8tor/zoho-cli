@@ -17,29 +17,29 @@ import (
 )
 
 type Client struct {
-	Config              *auth.AuthConfig
-	HTTP                *http.Client
-	accessToken         string
-	BiginBase           string
-	BillingBase         string
-	BooksBase           string
-	CliqBase            string
-	CRMBase             string
-	CreatorBase         string
-	DeskBase            string
-	DownloadBase        string
-	ExpenseBase         string
-	InventoryBase       string
-	InvoiceBase         string
-	MailBase            string
-	PeopleBase          string
-	ProjectsBase        string
-	RecruitBase         string
-	SheetBase           string
-	SignBase            string
-	SprintsBase         string
-	WorkDriveBase       string
-	WriterBase          string
+	Config        *auth.AuthConfig
+	HTTP          *http.Client
+	accessToken   string
+	BiginBase     string
+	BillingBase   string
+	BooksBase     string
+	CliqBase      string
+	CRMBase       string
+	CreatorBase   string
+	DeskBase      string
+	DownloadBase  string
+	ExpenseBase   string
+	InventoryBase string
+	InvoiceBase   string
+	MailBase      string
+	PeopleBase    string
+	ProjectsBase  string
+	RecruitBase   string
+	SheetBase     string
+	SignBase      string
+	SprintsBase   string
+	WorkDriveBase string
+	WriterBase    string
 }
 
 func NewClient(config *auth.AuthConfig) (*Client, error) {
@@ -51,29 +51,29 @@ func NewClient(config *auth.AuthConfig) (*Client, error) {
 	d := config.DC
 	api := dc.APIURL(d)
 	return &Client{
-		Config:            config,
-		HTTP:              &http.Client{Timeout: 60 * time.Second},
-		accessToken:       token,
-		BiginBase:         api + "/bigin/v2",
-		BillingBase:       api + "/billing/v1",
-		BooksBase:         api + "/books/v3",
-		CliqBase:          dc.CliqURL(d),
-		CRMBase:           dc.CRMURL(d) + "/crm/v8",
-		CreatorBase:       api + "/creator/v2.1",
-		DeskBase:          dc.DeskURL(d) + "/api/v1",
-		DownloadBase:      dc.DownloadURL(d),
-		ExpenseBase:       api + "/expense/v1",
-		InventoryBase:     api + "/inventory/v1",
-		InvoiceBase:       api + "/invoice/v3",
-		MailBase:          dc.MailURL(d),
-		PeopleBase:        dc.PeopleURL(d) + "/people/api",
-		ProjectsBase:      dc.ProjectsURL(d) + "/api/v3",
-		RecruitBase:       api + "/recruit/v2",
-		SheetBase:         dc.SheetURL(d) + "/api/v2",
-		SignBase:          dc.SignURL(d) + "/api/v1",
-		SprintsBase:       dc.SprintsURL(d) + "/zsapi",
-		WorkDriveBase:     dc.WorkDriveURL(d) + "/api/v1",
-		WriterBase:        dc.WriterURL(d) + "/api/v1",
+		Config:        config,
+		HTTP:          &http.Client{Timeout: 60 * time.Second},
+		accessToken:   token,
+		BiginBase:     api + "/bigin/v2",
+		BillingBase:   api + "/billing/v1",
+		BooksBase:     api + "/books/v3",
+		CliqBase:      dc.CliqURL(d),
+		CRMBase:       dc.CRMURL(d) + "/crm/v8",
+		CreatorBase:   api + "/creator/v2.1",
+		DeskBase:      dc.DeskURL(d) + "/api/v1",
+		DownloadBase:  dc.DownloadURL(d),
+		ExpenseBase:   api + "/expense/v1",
+		InventoryBase: api + "/inventory/v1",
+		InvoiceBase:   api + "/invoice/v3",
+		MailBase:      dc.MailURL(d),
+		PeopleBase:    dc.PeopleURL(d) + "/people/api",
+		ProjectsBase:  dc.ProjectsURL(d) + "/api/v3",
+		RecruitBase:   dc.RecruitURL(d) + "/recruit/v2",
+		SheetBase:     dc.SheetURL(d) + "/api/v2",
+		SignBase:      dc.SignURL(d) + "/api/v1",
+		SprintsBase:   dc.SprintsURL(d) + "/zsapi",
+		WorkDriveBase: dc.WorkDriveURL(d) + "/api/v1",
+		WriterBase:    dc.WriterURL(d) + "/api/v1",
 	}, nil
 }
 

@@ -108,8 +108,7 @@ func TestMailFolders(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		folderName := testPrefix + " Folder " + suffix
-		body := toJSON(t, map[string]any{"folderName": folderName})
-		out := zoho(t, "mail", "folders", "create", "--account", accountID, "--json", body)
+		out := zoho(t, "mail", "folders", "create", "--account", accountID, "--folderName", folderName)
 		m := parseJSON(t, out)
 		data, ok := m["data"].(map[string]any)
 		if !ok {
@@ -140,8 +139,8 @@ func TestMailFolders(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		requireID(t, folderID, "create must have succeeded")
 		newName := testPrefix + " Folder Updated " + suffix
-		body := toJSON(t, map[string]any{"mode": "rename", "folderName": newName})
-		out := zoho(t, "mail", "folders", "update", folderID, "--account", accountID, "--json", body)
+		body := toJSON(t, map[string]any{"mode": "rename"})
+		out := zoho(t, "mail", "folders", "update", folderID, "--account", accountID, "--folderName", newName, "--json", body)
 		m := parseJSON(t, out)
 		if status, ok := m["status"].(map[string]any); ok {
 			code := fmt.Sprintf("%v", status["code"])
@@ -186,8 +185,7 @@ func TestMailLabels(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		labelName := "ZT " + suffix
-		body := toJSON(t, map[string]any{"displayName": labelName, "color": "#FF0000"})
-		out := zoho(t, "mail", "labels", "create", "--account", accountID, "--json", body)
+		out := zoho(t, "mail", "labels", "create", "--account", accountID, "--displayName", labelName, "--color", "#FF0000")
 		m := parseJSON(t, out)
 		data, ok := m["data"].(map[string]any)
 		if !ok {
@@ -219,8 +217,7 @@ func TestMailLabels(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		requireID(t, labelID, "create must have succeeded")
 		newName := "ZT Lbl " + suffix
-		body := toJSON(t, map[string]any{"displayName": newName})
-		zoho(t, "mail", "labels", "update", labelID, "--account", accountID, "--json", body)
+		zoho(t, "mail", "labels", "update", labelID, "--account", accountID, "--displayName", newName)
 		t.Logf("updated label name to: %s", newName)
 	})
 
@@ -449,5 +446,3 @@ func TestMailEmergencyCleanup(t *testing.T) {
 		}
 	}
 }
-
-

@@ -353,7 +353,7 @@ func TestSheetContent(t *testing.T) {
 	t.Run("append-json", func(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
 		jsonData := `[{"A":"X","B":"Y"}]`
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "content", "append-json", "--workbook", workbookID, "--worksheet", worksheetName, "--json", jsonData)))
+		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "content", "append-json", "--workbook", workbookID, "--worksheet", worksheetName, "--data", jsonData)))
 	})
 
 	t.Run("find", func(t *testing.T) {
@@ -500,12 +500,12 @@ func TestSheetTables(t *testing.T) {
 
 	t.Run("add-records", func(t *testing.T) {
 		requireID(t, workbookID, "create must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "tables", "add-records", "--workbook", workbookID, "--table-name", tableName, "--json", `[{"Name":"C","Value":"3"}]`)))
+		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "tables", "add-records", "--workbook", workbookID, "--table-name", tableName, "--data", `[{"Name":"C","Value":"3"}]`)))
 	})
 
 	t.Run("update-records", func(t *testing.T) {
 		requireID(t, workbookID, "create must have succeeded")
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "tables", "update-records", "--workbook", workbookID, "--table-name", tableName, "--criteria", `"Name"="C"`, "--json", `{"Value":"4"}`)))
+		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "tables", "update-records", "--workbook", workbookID, "--table-name", tableName, "--criteria", `"Name"="C"`, "--data", `{"Value":"4"}`)))
 	})
 
 	t.Run("delete-records", func(t *testing.T) {
@@ -554,7 +554,7 @@ func TestSheetRecords(t *testing.T) {
 		requireID(t, workbookID, "setup must have succeeded")
 		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "cells", "set-range", "--workbook", workbookID, "--worksheet", worksheetName, "--row", "1", "--column", "1", "--data", "Name,Email\n")))
 		jsonData := `[{"Name":"Alice","Email":"alice@example.com"}]`
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "records", "add", "--workbook", workbookID, "--worksheet", worksheetName, "--header-row", "1", "--json", jsonData)))
+		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "records", "add", "--workbook", workbookID, "--worksheet", worksheetName, "--header-row", "1", "--data", jsonData)))
 	})
 
 	t.Run("fetch", func(t *testing.T) {
@@ -565,7 +565,7 @@ func TestSheetRecords(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		requireID(t, workbookID, "add must have succeeded")
 		jsonData := `{"Email":"alice+updated@example.com"}`
-		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "records", "update", "--workbook", workbookID, "--worksheet", worksheetName, "--criteria", `"Name"="Alice"`, "--header-row", "1", "--json", jsonData)))
+		assertSheetSuccess(t, parseJSON(t, zoho(t, "sheet", "records", "update", "--workbook", workbookID, "--worksheet", worksheetName, "--criteria", `"Name"="Alice"`, "--header-row", "1", "--data", jsonData)))
 	})
 
 	t.Run("delete", func(t *testing.T) {
@@ -600,7 +600,7 @@ func TestSheetPremium(t *testing.T) {
 		if err != nil {
 			t.Skip("premium pre-seed failed")
 		}
-		out, err := zohoMayFail(t, "sheet", "premium", "add-records", "--workbook", workbookID, "--worksheet", worksheetName, "--header-row", "1", "--json", `[{"Name":"P1"}]`)
+		out, err := zohoMayFail(t, "sheet", "premium", "add-records", "--workbook", workbookID, "--worksheet", worksheetName, "--header-row", "1", "--data", `[{"Name":"P1"}]`)
 		if err != nil {
 			t.Skip("premium APIs not available on this account")
 		}
@@ -625,7 +625,7 @@ func TestSheetPremium(t *testing.T) {
 		if !premiumAvailable {
 			t.Skip("premium APIs not available on this account")
 		}
-		out, err := zohoMayFail(t, "sheet", "premium", "update-records", "--workbook", workbookID, "--worksheet", worksheetName, "--header-row", "1", "--criteria", "Name=\"P1\"", "--json", `[{"Name":"P2"}]`)
+		out, err := zohoMayFail(t, "sheet", "premium", "update-records", "--workbook", workbookID, "--worksheet", worksheetName, "--header-row", "1", "--criteria", "Name=\"P1\"", "--data", `[{"Name":"P2"}]`)
 		if err != nil {
 			t.Skip("premium APIs not available on this account")
 		}
@@ -737,5 +737,3 @@ func TestSheetEmergencyCleanup(t *testing.T) {
 		zohoIgnoreError(t, "sheet", "workbooks", "delete", "--workbook", resourceID)
 	}
 }
-
-

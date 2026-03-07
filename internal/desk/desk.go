@@ -2,7 +2,6 @@ package desk
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 
 	"github.com/omin8tor/zoho-cli/internal"
@@ -269,7 +268,19 @@ func ticketsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a ticket",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "subject", Required: true, Usage: "Ticket subject"},
+					&cli.StringFlag{Name: "departmentId", Required: true, Usage: "Department ID"},
+					&cli.StringFlag{Name: "contactId", Usage: "Contact ID"},
+					&cli.StringFlag{Name: "email", Usage: "Contact email"},
+					&cli.StringFlag{Name: "phone", Usage: "Contact phone"},
+					&cli.StringFlag{Name: "description", Usage: "Ticket description"},
+					&cli.StringFlag{Name: "priority", Usage: "Ticket priority"},
+					&cli.StringFlag{Name: "status", Usage: "Ticket status"},
+					&cli.StringFlag{Name: "channel", Usage: "Ticket channel"},
+					&cli.StringFlag{Name: "category", Usage: "Ticket category"},
+					&cli.StringFlag{Name: "assigneeId", Usage: "Assignee ID"},
+					&cli.StringFlag{Name: "dueDate", Usage: "Due date (ISO 8601)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -280,8 +291,42 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["subject"] = cmd.String("subject")
+					body["departmentId"] = cmd.String("departmentId")
+					if cmd.IsSet("contactId") {
+						body["contactId"] = cmd.String("contactId")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if cmd.IsSet("phone") {
+						body["phone"] = cmd.String("phone")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("priority") {
+						body["priority"] = cmd.String("priority")
+					}
+					if cmd.IsSet("status") {
+						body["status"] = cmd.String("status")
+					}
+					if cmd.IsSet("channel") {
+						body["channel"] = cmd.String("channel")
+					}
+					if cmd.IsSet("category") {
+						body["category"] = cmd.String("category")
+					}
+					if cmd.IsSet("assigneeId") {
+						body["assigneeId"] = cmd.String("assigneeId")
+					}
+					if cmd.IsSet("dueDate") {
+						body["dueDate"] = cmd.String("dueDate")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.DeskBase+"/tickets", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -297,7 +342,20 @@ func ticketsCmd() *cli.Command {
 				Usage:     "Update a ticket",
 				ArgsUsage: "<ticket-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "subject", Usage: "Ticket subject"},
+					&cli.StringFlag{Name: "departmentId", Usage: "Department ID"},
+					&cli.StringFlag{Name: "contactId", Usage: "Contact ID"},
+					&cli.StringFlag{Name: "email", Usage: "Contact email"},
+					&cli.StringFlag{Name: "phone", Usage: "Contact phone"},
+					&cli.StringFlag{Name: "description", Usage: "Ticket description"},
+					&cli.StringFlag{Name: "priority", Usage: "Ticket priority"},
+					&cli.StringFlag{Name: "status", Usage: "Ticket status"},
+					&cli.StringFlag{Name: "channel", Usage: "Ticket channel"},
+					&cli.StringFlag{Name: "category", Usage: "Ticket category"},
+					&cli.StringFlag{Name: "assigneeId", Usage: "Assignee ID"},
+					&cli.StringFlag{Name: "dueDate", Usage: "Due date (ISO 8601)"},
+					&cli.StringFlag{Name: "resolution", Usage: "Ticket resolution"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -308,8 +366,49 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("subject") {
+						body["subject"] = cmd.String("subject")
+					}
+					if cmd.IsSet("departmentId") {
+						body["departmentId"] = cmd.String("departmentId")
+					}
+					if cmd.IsSet("contactId") {
+						body["contactId"] = cmd.String("contactId")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if cmd.IsSet("phone") {
+						body["phone"] = cmd.String("phone")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("priority") {
+						body["priority"] = cmd.String("priority")
+					}
+					if cmd.IsSet("status") {
+						body["status"] = cmd.String("status")
+					}
+					if cmd.IsSet("channel") {
+						body["channel"] = cmd.String("channel")
+					}
+					if cmd.IsSet("category") {
+						body["category"] = cmd.String("category")
+					}
+					if cmd.IsSet("assigneeId") {
+						body["assigneeId"] = cmd.String("assigneeId")
+					}
+					if cmd.IsSet("dueDate") {
+						body["dueDate"] = cmd.String("dueDate")
+					}
+					if cmd.IsSet("resolution") {
+						body["resolution"] = cmd.String("resolution")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PATCH", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -434,7 +533,13 @@ func ticketsCmd() *cli.Command {
 				Usage:     "Send a ticket reply",
 				ArgsUsage: "<ticket-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "content", Required: true, Usage: "Reply content"},
+					&cli.StringFlag{Name: "contentType", Usage: "Reply content type"},
+					&cli.StringFlag{Name: "channel", Usage: "Reply channel"},
+					&cli.StringFlag{Name: "to", Usage: "Reply recipient"},
+					&cli.StringFlag{Name: "fromEmailAddress", Usage: "Sender email"},
+					&cli.BoolFlag{Name: "isForward", Usage: "Send as forward"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -445,8 +550,26 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["content"] = cmd.String("content")
+					if cmd.IsSet("contentType") {
+						body["contentType"] = cmd.String("contentType")
+					}
+					if cmd.IsSet("channel") {
+						body["channel"] = cmd.String("channel")
+					}
+					if cmd.IsSet("to") {
+						body["to"] = cmd.String("to")
+					}
+					if cmd.IsSet("fromEmailAddress") {
+						body["fromEmailAddress"] = cmd.String("fromEmailAddress")
+					}
+					if cmd.IsSet("isForward") {
+						body["isForward"] = cmd.Bool("isForward")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.DeskBase+"/tickets/"+cmd.Args().First()+"/sendReply", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -496,7 +619,9 @@ func ticketsCmd() *cli.Command {
 				Usage:     "Add a ticket comment",
 				ArgsUsage: "<ticket-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "content", Required: true, Usage: "Comment content"},
+					&cli.BoolFlag{Name: "isPublic", Usage: "Whether the comment is public"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -507,8 +632,14 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["content"] = cmd.String("content")
+					if cmd.IsSet("isPublic") {
+						body["isPublic"] = cmd.Bool("isPublic")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.DeskBase+"/tickets/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -647,7 +778,19 @@ func contactsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a contact",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "lastName", Required: true, Usage: "Last name"},
+					&cli.StringFlag{Name: "email", Required: true, Usage: "Email address"},
+					&cli.StringFlag{Name: "firstName", Usage: "First name"},
+					&cli.StringFlag{Name: "phone", Usage: "Phone number"},
+					&cli.StringFlag{Name: "mobile", Usage: "Mobile number"},
+					&cli.StringFlag{Name: "accountId", Usage: "Account ID"},
+					&cli.StringFlag{Name: "title", Usage: "Job title"},
+					&cli.StringFlag{Name: "city", Usage: "City"},
+					&cli.StringFlag{Name: "state", Usage: "State"},
+					&cli.StringFlag{Name: "country", Usage: "Country"},
+					&cli.StringFlag{Name: "zip", Usage: "ZIP code"},
+					&cli.StringFlag{Name: "street", Usage: "Street"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -658,8 +801,42 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["lastName"] = cmd.String("lastName")
+					body["email"] = cmd.String("email")
+					if cmd.IsSet("firstName") {
+						body["firstName"] = cmd.String("firstName")
+					}
+					if cmd.IsSet("phone") {
+						body["phone"] = cmd.String("phone")
+					}
+					if cmd.IsSet("mobile") {
+						body["mobile"] = cmd.String("mobile")
+					}
+					if cmd.IsSet("accountId") {
+						body["accountId"] = cmd.String("accountId")
+					}
+					if cmd.IsSet("title") {
+						body["title"] = cmd.String("title")
+					}
+					if cmd.IsSet("city") {
+						body["city"] = cmd.String("city")
+					}
+					if cmd.IsSet("state") {
+						body["state"] = cmd.String("state")
+					}
+					if cmd.IsSet("country") {
+						body["country"] = cmd.String("country")
+					}
+					if cmd.IsSet("zip") {
+						body["zip"] = cmd.String("zip")
+					}
+					if cmd.IsSet("street") {
+						body["street"] = cmd.String("street")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.DeskBase+"/contacts", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -675,7 +852,19 @@ func contactsCmd() *cli.Command {
 				Usage:     "Update a contact",
 				ArgsUsage: "<contact-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "lastName", Usage: "Last name"},
+					&cli.StringFlag{Name: "email", Usage: "Email address"},
+					&cli.StringFlag{Name: "firstName", Usage: "First name"},
+					&cli.StringFlag{Name: "phone", Usage: "Phone number"},
+					&cli.StringFlag{Name: "mobile", Usage: "Mobile number"},
+					&cli.StringFlag{Name: "accountId", Usage: "Account ID"},
+					&cli.StringFlag{Name: "title", Usage: "Job title"},
+					&cli.StringFlag{Name: "city", Usage: "City"},
+					&cli.StringFlag{Name: "state", Usage: "State"},
+					&cli.StringFlag{Name: "country", Usage: "Country"},
+					&cli.StringFlag{Name: "zip", Usage: "ZIP code"},
+					&cli.StringFlag{Name: "street", Usage: "Street"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -686,8 +875,46 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("lastName") {
+						body["lastName"] = cmd.String("lastName")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if cmd.IsSet("firstName") {
+						body["firstName"] = cmd.String("firstName")
+					}
+					if cmd.IsSet("phone") {
+						body["phone"] = cmd.String("phone")
+					}
+					if cmd.IsSet("mobile") {
+						body["mobile"] = cmd.String("mobile")
+					}
+					if cmd.IsSet("accountId") {
+						body["accountId"] = cmd.String("accountId")
+					}
+					if cmd.IsSet("title") {
+						body["title"] = cmd.String("title")
+					}
+					if cmd.IsSet("city") {
+						body["city"] = cmd.String("city")
+					}
+					if cmd.IsSet("state") {
+						body["state"] = cmd.String("state")
+					}
+					if cmd.IsSet("country") {
+						body["country"] = cmd.String("country")
+					}
+					if cmd.IsSet("zip") {
+						body["zip"] = cmd.String("zip")
+					}
+					if cmd.IsSet("street") {
+						body["street"] = cmd.String("street")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PATCH", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -833,7 +1060,13 @@ func accountsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an account",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "accountName", Required: true, Usage: "Account name"},
+					&cli.StringFlag{Name: "email", Usage: "Account email"},
+					&cli.StringFlag{Name: "phone", Usage: "Account phone"},
+					&cli.StringFlag{Name: "website", Usage: "Account website"},
+					&cli.StringFlag{Name: "industry", Usage: "Industry"},
+					&cli.StringFlag{Name: "description", Usage: "Account description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -844,8 +1077,26 @@ func accountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["accountName"] = cmd.String("accountName")
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if cmd.IsSet("phone") {
+						body["phone"] = cmd.String("phone")
+					}
+					if cmd.IsSet("website") {
+						body["website"] = cmd.String("website")
+					}
+					if cmd.IsSet("industry") {
+						body["industry"] = cmd.String("industry")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.DeskBase+"/accounts", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -861,7 +1112,13 @@ func accountsCmd() *cli.Command {
 				Usage:     "Update an account",
 				ArgsUsage: "<account-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "accountName", Usage: "Account name"},
+					&cli.StringFlag{Name: "email", Usage: "Account email"},
+					&cli.StringFlag{Name: "phone", Usage: "Account phone"},
+					&cli.StringFlag{Name: "website", Usage: "Account website"},
+					&cli.StringFlag{Name: "industry", Usage: "Industry"},
+					&cli.StringFlag{Name: "description", Usage: "Account description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -872,8 +1129,28 @@ func accountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("accountName") {
+						body["accountName"] = cmd.String("accountName")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if cmd.IsSet("phone") {
+						body["phone"] = cmd.String("phone")
+					}
+					if cmd.IsSet("website") {
+						body["website"] = cmd.String("website")
+					}
+					if cmd.IsSet("industry") {
+						body["industry"] = cmd.String("industry")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PATCH", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),

@@ -33,7 +33,6 @@ type Result struct {
 	ExitCode int
 }
 
-
 func runZoho(t *testing.T, args ...string) Result {
 	t.Helper()
 	return runZohoWithEnv(t, nil, args...)
@@ -191,6 +190,20 @@ func retryUntil(t *testing.T, timeout time.Duration, fn func() bool) {
 	t.Error("timed out waiting for condition")
 }
 
+func retryUntilSkip(t *testing.T, timeout time.Duration, fn func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	interval := 2 * time.Second
+	for time.Now().Before(deadline) {
+		if fn() {
+			return
+		}
+		t.Logf("retrying in %v...", interval)
+		time.Sleep(interval)
+	}
+	t.Skipf("timed out waiting for condition (API indexing delay)")
+}
+
 func assertEqual(t *testing.T, got any, want any) {
 	t.Helper()
 	gotStr := fmt.Sprintf("%v", got)
@@ -334,14 +347,12 @@ func TestHelpAll(t *testing.T) {
 	}
 }
 
-
 func assertExpenseCodeZero(t *testing.T, m map[string]any) {
 	t.Helper()
 	if fmt.Sprintf("%v", m["code"]) != "0" {
 		t.Fatalf("expected expense code=0, got %v", m["code"])
 	}
 }
-
 
 func assertSheetSuccess(t *testing.T, m map[string]any) {
 	t.Helper()
@@ -359,11 +370,8 @@ func (c *testCleanup) trackSheetWorkbook(resourceID string) {
 	})
 }
 
-
 func (c *testCleanup) trackSignRequest(id string) {
 	c.add("delete sign request "+id, func() {
 		zohoIgnoreError(c.t, "sign", "requests", "delete", id)
 	})
 }
-
-

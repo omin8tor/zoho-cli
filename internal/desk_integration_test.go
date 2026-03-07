@@ -38,7 +38,6 @@ func requireDeskOrgID(t *testing.T) string {
 	return id
 }
 
-
 func TestDeskDepartments(t *testing.T) {
 	t.Parallel()
 	orgID := requireDeskOrgID(t)
@@ -147,11 +146,10 @@ func TestDesk(t *testing.T) {
 	t.Run("contacts/create", func(t *testing.T) {
 		requireID(t, departmentID, "setup must have succeeded")
 		contactName := fmt.Sprintf("%s Contact %s", testPrefix, randomSuffix())
+		contactEmail := fmt.Sprintf("%s@zohotest.example.com", randomSuffix())
 		out := zoho(t, "desk", "contacts", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"lastName": contactName,
-				"email":    fmt.Sprintf("%s@zohotest.example.com", randomSuffix()),
-			}))
+			"--lastName", contactName,
+			"--email", contactEmail)
 		m := parseJSON(t, out)
 		contactID = fmt.Sprintf("%v", m["id"])
 		if contactID == "" || contactID == "<nil>" {
@@ -171,7 +169,7 @@ func TestDesk(t *testing.T) {
 		requireID(t, contactID, "contacts/create must have succeeded")
 		updatedName := fmt.Sprintf("%s Contact Upd %s", testPrefix, randomSuffix())
 		zoho(t, "desk", "contacts", "update", contactID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"lastName": updatedName}))
+			"--lastName", updatedName)
 
 		out := zoho(t, "desk", "contacts", "get", contactID, "--org", orgID)
 		m := parseJSON(t, out)
@@ -205,8 +203,16 @@ func TestDesk(t *testing.T) {
 		if contactID != "" && contactID != "<nil>" {
 			body["contactId"] = contactID
 		}
-		out := zoho(t, "desk", "tickets", "create", "--org", orgID,
-			"--json", toJSON(t, body))
+		args := []string{"desk", "tickets", "create", "--org", orgID,
+			"--subject", fmt.Sprintf("%v", body["subject"]),
+			"--departmentId", fmt.Sprintf("%v", body["departmentId"]),
+			"--priority", fmt.Sprintf("%v", body["priority"]),
+			"--status", fmt.Sprintf("%v", body["status"]),
+		}
+		if v, ok := body["contactId"]; ok {
+			args = append(args, "--contactId", fmt.Sprintf("%v", v))
+		}
+		out := zoho(t, args...)
 		m := parseJSON(t, out)
 		ticketID = fmt.Sprintf("%v", m["id"])
 		if ticketID == "" || ticketID == "<nil>" {
@@ -227,10 +233,8 @@ func TestDesk(t *testing.T) {
 		requireID(t, ticketID, "tickets/create must have succeeded")
 		updatedSubject := fmt.Sprintf("%s Ticket Upd %s", testPrefix, randomSuffix())
 		zoho(t, "desk", "tickets", "update", ticketID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"subject":  updatedSubject,
-				"priority": "High",
-			}))
+			"--subject", updatedSubject,
+			"--priority", "High")
 
 		out := zoho(t, "desk", "tickets", "get", ticketID, "--org", orgID)
 		m := parseJSON(t, out)
@@ -279,10 +283,8 @@ func TestDesk(t *testing.T) {
 		requireID(t, ticketID, "tickets/create must have succeeded")
 		commentContent := fmt.Sprintf("%s comment %s", testPrefix, randomSuffix())
 		out := zoho(t, "desk", "tickets", "add-comment", ticketID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"content":  commentContent,
-				"isPublic": false,
-			}))
+			"--content", commentContent,
+			"--isPublic=false")
 		m := parseJSON(t, out)
 		commentID = fmt.Sprintf("%v", m["id"])
 		if commentID == "" || commentID == "<nil>" {
@@ -429,5 +431,3 @@ func TestDeskEmergencyCleanup(t *testing.T) {
 		}
 	}
 }
-
-

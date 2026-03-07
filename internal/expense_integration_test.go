@@ -66,7 +66,6 @@ func requireExpenseOrgID(t *testing.T) string {
 	return id
 }
 
-
 func TestExpenseOrganizations(t *testing.T) {
 	t.Parallel()
 	orgID := requireExpenseOrgID(t)
@@ -123,7 +122,7 @@ func TestExpenseCategories(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		categoryName = fmt.Sprintf("%s Cat %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "categories", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"category_name": categoryName}))
+			"--category_name", categoryName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		cat, ok := m["expense_category"].(map[string]any)
@@ -153,7 +152,7 @@ func TestExpenseCategories(t *testing.T) {
 		requireID(t, categoryID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Cat Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "categories", "update", categoryID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"category_name": updatedName}))
+			"--category_name", updatedName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		cat, ok := m["expense_category"].(map[string]any)
@@ -231,7 +230,7 @@ func TestExpenseCustomers(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		customerName = fmt.Sprintf("%s Customer %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "customers", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": customerName}))
+			"--contact_name", customerName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		contact, ok := m["contact"].(map[string]any)
@@ -261,7 +260,7 @@ func TestExpenseCustomers(t *testing.T) {
 		requireID(t, customerID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Customer Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "customers", "update", customerID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": updatedName}))
+			"--contact_name", updatedName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		contact, ok := m["contact"].(map[string]any)
@@ -309,12 +308,10 @@ func TestExpenseCurrencies(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		out := zoho(t, "expense", "currencies", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"currency_code":   "MXN",
-				"currency_symbol": "$",
-				"currency_format": "1,234,567.89",
-				"price_precision": 2,
-			}))
+			"--currency_code", "MXN",
+			"--currency_symbol", "$",
+			"--currency_format", "1,234,567.89",
+			"--price_precision", "2")
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		currency, ok := m["currency"].(map[string]any)
@@ -343,7 +340,9 @@ func TestExpenseCurrencies(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		requireID(t, currencyID, "create must have succeeded")
 		out := zoho(t, "expense", "currencies", "update", currencyID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"currency_symbol": "Mex$", "currency_format": "1,234,567.89", "price_precision": 2}))
+			"--currency_symbol", "Mex$",
+			"--currency_format", "1,234,567.89",
+			"--price_precision", "2")
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		getOut := zoho(t, "expense", "currencies", "get", currencyID, "--org", orgID)
@@ -422,11 +421,9 @@ func TestExpenseTaxes(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		for _, rate := range []int{0, 15} {
 			out, err := zohoMayFail(t, "expense", "taxes", "create", "--org", orgID,
-				"--json", toJSON(t, map[string]any{
-					"tax_name":       fmt.Sprintf("%s Tax %s", testPrefix, randomSuffix()),
-					"tax_percentage": rate,
-					"tax_type":       "tax",
-				}))
+				"--tax_name", fmt.Sprintf("%s Tax %s", testPrefix, randomSuffix()),
+				"--tax_percentage", fmt.Sprintf("%d", rate),
+				"--tax_type", "tax")
 			if err != nil {
 				t.Logf("tax create with rate %d failed: %v", rate, err)
 				t.Logf("response: %s", truncate(out, 500))
@@ -472,7 +469,9 @@ func TestExpenseTaxes(t *testing.T) {
 		}
 		updatedName := fmt.Sprintf("%s Tax Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "taxes", "update", taxID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"tax_name": updatedName, "tax_percentage": createdTaxRate, "tax_type": "tax"}))
+			"--tax_name", updatedName,
+			"--tax_percentage", fmt.Sprintf("%d", createdTaxRate),
+			"--tax_type", "tax")
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		getOut := zoho(t, "expense", "taxes", "get", taxID, "--org", orgID)
@@ -543,7 +542,7 @@ func TestExpenseProjects(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		projectName = fmt.Sprintf("%s Proj %s", testPrefix, randomSuffix())
 		out, err := zohoMayFail(t, "expense", "projects", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"project_name": projectName}))
+			"--project_name", projectName)
 		if err != nil {
 			t.Logf("project create failed (org restriction): %v", err)
 			t.Logf("response: %s", truncate(out, 500))
@@ -588,7 +587,7 @@ func TestExpenseProjects(t *testing.T) {
 		}
 		updatedName := fmt.Sprintf("%s Proj Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "projects", "update", projectID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"project_name": updatedName}))
+			"--project_name", updatedName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		getOut := zoho(t, "expense", "projects", "get", projectID, "--org", orgID)
@@ -655,6 +654,8 @@ func TestExpenseTrips(t *testing.T) {
 	cleanup := newCleanup(t)
 
 	var tripID string
+	var tripNumber string
+	destinationCountry := "South Africa"
 
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "expense", "trips", "list", "--org", orgID)
@@ -670,14 +671,13 @@ func TestExpenseTrips(t *testing.T) {
 	})
 
 	t.Run("create", func(t *testing.T) {
+		purpose := fmt.Sprintf("%s trip %s", testPrefix, randomSuffix())
+		tripNumber = fmt.Sprintf("TRIP-%s", randomSuffix())
 		out := zoho(t, "expense", "trips", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"is_international":    false,
-				"destination_country": "South Africa",
-				"start_date":          "2026-06-01",
-				"end_date":            "2026-06-05",
-				"business_purpose":    fmt.Sprintf("%s trip %s", testPrefix, randomSuffix()),
-			}))
+			"--trip_number", tripNumber,
+			"--is_international", "true",
+			"--destination_country", destinationCountry,
+			"--business_purpose", purpose)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		trip, ok := m["trip"].(map[string]any)
@@ -705,11 +705,13 @@ func TestExpenseTrips(t *testing.T) {
 
 	t.Run("update", func(t *testing.T) {
 		requireID(t, tripID, "create must have succeeded")
+		requireID(t, tripNumber, "create must have succeeded")
 		updatedPurpose := fmt.Sprintf("%s trip updated %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "trips", "update", tripID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"business_purpose": updatedPurpose,
-			}))
+			"--trip_number", tripNumber,
+			"--is_international", "true",
+			"--destination_country", destinationCountry,
+			"--business_purpose", updatedPurpose)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		getOut := zoho(t, "expense", "trips", "get", tripID, "--org", orgID)
@@ -753,7 +755,7 @@ func TestExpenseReports(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		reportName := fmt.Sprintf("%s Report %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "reports", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"report_name": reportName}))
+			"--report_name", reportName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		report, ok := m["expense_report"].(map[string]any)
@@ -783,7 +785,7 @@ func TestExpenseReports(t *testing.T) {
 		requireID(t, reportID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Report Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "expense", "reports", "update", reportID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"report_name": updatedName}))
+			"--report_name", updatedName)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		getOut := zoho(t, "expense", "reports", "get", reportID, "--org", orgID)
@@ -860,14 +862,10 @@ func TestExpenseExpenses(t *testing.T) {
 		requireID(t, currencyID, "setup must have succeeded")
 		requireID(t, categoryID, "setup must have succeeded")
 		out := zoho(t, "expense", "expenses", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"currency_id": currencyID,
-				"line_items": []map[string]any{{
-					"category_id": categoryID,
-					"amount":      25.50,
-				}},
-				"date": "2026-03-01",
-			}))
+			"--category_id", categoryID,
+			"--date", "2026-03-01",
+			"--amount", "25.50",
+			"--currency_id", currencyID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		if expense, ok := m["expense"].(map[string]any); ok {
@@ -889,14 +887,10 @@ func TestExpenseExpenses(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		requireID(t, expenseID, "create must have succeeded")
 		out := zoho(t, "expense", "expenses", "update", expenseID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"currency_id": currencyID,
-				"line_items": []map[string]any{{
-					"category_id": categoryID,
-					"amount":      31.75,
-				}},
-				"date": "2026-03-02",
-			}))
+			"--category_id", categoryID,
+			"--date", "2026-03-02",
+			"--amount", "31.75",
+			"--currency_id", currencyID)
 		m := parseJSON(t, out)
 		assertExpenseCodeZero(t, m)
 		getOut := zoho(t, "expense", "expenses", "get", expenseID, "--org", orgID)
@@ -1050,5 +1044,3 @@ func TestExpenseEmergencyCleanup(t *testing.T) {
 	cleanupList("currencies", []string{"expense", "currencies", "list", "--org", orgID}, "currencies", []string{"currency_id"}, []string{"currency_name", "currency_code", "name"})
 	cleanupList("taxes", []string{"expense", "taxes", "list", "--org", orgID}, "taxes", []string{"tax_id"}, []string{"tax_name", "name"})
 }
-
-

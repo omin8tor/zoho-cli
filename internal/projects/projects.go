@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/omin8tor/zoho-cli/internal"
 	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
@@ -198,12 +199,8 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					body := map[string]any{"name": cmd.String("name")}
-					if j := cmd.String("json"); j != "" {
-						var extra map[string]any
-						json.Unmarshal([]byte(j), &extra)
-						for k, v := range extra {
-							body[k] = v
-						}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
@@ -219,7 +216,10 @@ func projectsCoreCmd() *cli.Command {
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Project name"},
+					&cli.StringFlag{Name: "description", Usage: "Project description"},
+					&cli.StringFlag{Name: "status", Usage: "Project status"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -230,10 +230,21 @@ func projectsCoreCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("status") {
+						body["status"] = cmd.String("status")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: parsed})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -419,12 +430,8 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					body := map[string]any{"name": cmd.String("name")}
-					if j := cmd.String("json"); j != "" {
-						var extra map[string]any
-						json.Unmarshal([]byte(j), &extra)
-						for k, v := range extra {
-							body[k] = v
-						}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
@@ -440,7 +447,12 @@ func tasksCmd() *cli.Command {
 				ArgsUsage: "<task-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Task name"},
+					&cli.StringFlag{Name: "description", Usage: "Task description"},
+					&cli.StringFlag{Name: "priority", Usage: "Priority: none, low, medium, high"},
+					&cli.StringFlag{Name: "start-date", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "end-date", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -451,10 +463,27 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("priority") {
+						body["priority"] = cmd.String("priority")
+					}
+					if cmd.IsSet("start-date") {
+						body["start_date"] = cmd.String("start-date")
+					}
+					if cmd.IsSet("end-date") {
+						body["end_date"] = cmd.String("end-date")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: parsed})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -529,12 +558,8 @@ func tasksCmd() *cli.Command {
 							"parent_task_id": cmd.String("parent"),
 						},
 					}
-					if j := cmd.String("json"); j != "" {
-						var extra map[string]any
-						json.Unmarshal([]byte(j), &extra)
-						for k, v := range extra {
-							body[k] = v
-						}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
@@ -586,7 +611,8 @@ func tasksCmd() *cli.Command {
 				ArgsUsage: "<task-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Move details as JSON"},
+					&cli.StringFlag{Name: "target_tasklist_id", Usage: "Target tasklist ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -597,8 +623,13 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("target_tasklist_id") {
+						body["target_tasklist_id"] = cmd.String("target_tasklist_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/move"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -775,7 +806,8 @@ func taskFollowersCmd() *cli.Command {
 				ArgsUsage: "<task-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Follower details as JSON"},
+					&cli.StringFlag{Name: "followers", Usage: "Comma-separated follower ZPUIDs"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -786,8 +818,15 @@ func taskFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("followers") {
+						var arr any
+						json.Unmarshal([]byte(cmd.String("followers")), &arr)
+						body["followers"] = arr
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/followers"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1034,12 +1073,8 @@ func issuesCmd() *cli.Command {
 						return err
 					}
 					body := map[string]any{"name": cmd.String("name")}
-					if j := cmd.String("json"); j != "" {
-						var extra map[string]any
-						json.Unmarshal([]byte(j), &extra)
-						for k, v := range extra {
-							body[k] = v
-						}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/issues"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
@@ -1055,7 +1090,10 @@ func issuesCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Issue title"},
+					&cli.StringFlag{Name: "description", Usage: "Issue description"},
+					&cli.StringFlag{Name: "priority", Usage: "Priority"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1066,10 +1104,21 @@ func issuesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("priority") {
+						body["priority"] = cmd.String("priority")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: parsed})
+					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1127,7 +1176,8 @@ func issuesCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Move details as JSON"},
+					&cli.StringFlag{Name: "to_project", Usage: "Target project ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1138,8 +1188,13 @@ func issuesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("to_project") {
+						body["to_project"] = cmd.String("to_project")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/move"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1359,7 +1414,7 @@ func issueFollowersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: map[string]string{"page": "1", "per_page": "200"}})
 					if err != nil {
 						return err
 					}
@@ -1394,7 +1449,8 @@ func issueFollowersCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Follower IDs as JSON"},
+					&cli.StringFlag{Name: "followers", Usage: "Comma-separated follower ZPUIDs"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1405,8 +1461,15 @@ func issueFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("followers") {
+						var arr any
+						json.Unmarshal([]byte(cmd.String("followers")), &arr)
+						body["followers"] = arr
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/followers"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1452,7 +1515,9 @@ func issueLinkingCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Link details as JSON"},
+					&cli.StringFlag{Name: "link_type", Usage: "Link type (relate, blocks, is_blocked_by, duplicate)"},
+					&cli.StringFlag{Name: "issue_ids", Usage: "Issue IDs as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1463,8 +1528,18 @@ func issueLinkingCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("link_type") {
+						body["link_type"] = cmd.String("link_type")
+					}
+					if cmd.IsSet("issue_ids") {
+						var v any
+						json.Unmarshal([]byte(cmd.String("issue_ids")), &v)
+						body["issue_ids"] = v
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/link"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1478,7 +1553,10 @@ func issueLinkingCmd() *cli.Command {
 				Usage: "Bulk link issues",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Bulk link details as JSON"},
+					&cli.StringFlag{Name: "link_type", Usage: "Link type (relate, blocks, is_blocked_by, duplicate)"},
+					&cli.StringFlag{Name: "issue_ids", Usage: "Source issue IDs as JSON array"},
+					&cli.StringFlag{Name: "linking_issue_ids", Usage: "Target issue IDs as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1489,8 +1567,23 @@ func issueLinkingCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("link_type") {
+						body["link_type"] = cmd.String("link_type")
+					}
+					if cmd.IsSet("issue_ids") {
+						var v any
+						json.Unmarshal([]byte(cmd.String("issue_ids")), &v)
+						body["issue_ids"] = v
+					}
+					if cmd.IsSet("linking_issue_ids") {
+						var v any
+						json.Unmarshal([]byte(cmd.String("linking_issue_ids")), &v)
+						body["linking_issue_ids"] = v
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/bulk-link-bugs"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1505,7 +1598,8 @@ func issueLinkingCmd() *cli.Command {
 				ArgsUsage: "<issue-id> <link-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Link type as JSON"},
+					&cli.StringFlag{Name: "link_type", Usage: "New link type (relate, blocks, is_blocked_by, duplicate)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1516,8 +1610,13 @@ func issueLinkingCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("link_type") {
+						body["link_type"] = cmd.String("link_type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().Get(0) + "/link/" + cmd.Args().Get(1)
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1585,7 +1684,8 @@ func issueResolutionCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Resolution details as JSON"},
+					&cli.StringFlag{Name: "resolution", Usage: "Resolution text"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1596,8 +1696,13 @@ func issueResolutionCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("resolution") {
+						body["resolution"] = cmd.String("resolution")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/resolution"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1612,7 +1717,8 @@ func issueResolutionCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Resolution details as JSON"},
+					&cli.StringFlag{Name: "resolution", Usage: "Resolution text"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1623,8 +1729,13 @@ func issueResolutionCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("resolution") {
+						body["resolution"] = cmd.String("resolution")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/resolution"
 					raw, err := c.Request("PUT", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -1692,7 +1803,8 @@ func issueAttachmentsCmd() *cli.Command {
 				ArgsUsage: "<issue-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Attachment details as JSON"},
+					&cli.StringFlag{Name: "attachment-ids", Usage: "Attachment IDs as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1703,9 +1815,16 @@ func issueAttachmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
+					form := map[string]string{}
+					if cmd.IsSet("attachment-ids") {
+						form["attachment_ids"] = cmd.String("attachment-ids")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/issues/" + cmd.Args().First() + "/attachments"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
-						Form: map[string]string{"attachment_ids": cmd.String("json")},
+						Form: form,
 					})
 					if err != nil {
 						return err
@@ -1878,12 +1997,8 @@ func tasklistsCmd() *cli.Command {
 						return err
 					}
 					body := map[string]any{"name": cmd.String("name")}
-					if j := cmd.String("json"); j != "" {
-						var extra map[string]any
-						json.Unmarshal([]byte(j), &extra)
-						for k, v := range extra {
-							body[k] = v
-						}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasklists"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
@@ -1899,7 +2014,10 @@ func tasklistsCmd() *cli.Command {
 				ArgsUsage: "<tasklist-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Tasklist name"},
+					&cli.StringFlag{Name: "flag", Usage: "Flag: internal or external"},
+					&cli.StringFlag{Name: "status", Usage: "Status: active or archived"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1910,8 +2028,19 @@ func tasklistsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("flag") {
+						body["flag"] = cmd.String("flag")
+					}
+					if cmd.IsSet("status") {
+						body["status"] = cmd.String("status")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/tasklists/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2289,7 +2418,11 @@ func timelogsCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "type", Value: "task", Usage: "task, issue, or general"},
 					&cli.StringFlag{Name: "task", Usage: "Task ID (for module)"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.FloatFlag{Name: "hours", Usage: "Hours (e.g. 2, 1.5, 0:30)"},
+					&cli.StringFlag{Name: "date", Usage: "Date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes for time entry"},
+					&cli.StringFlag{Name: "bill-status", Usage: "Billable or Non Billable"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2300,10 +2433,21 @@ func timelogsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
-					if body == nil {
-						body = map[string]any{}
+					body := map[string]any{}
+					if cmd.IsSet("hours") {
+						body["hours"] = cmd.Float("hours")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("bill-status") {
+						body["bill_status"] = cmd.String("bill-status")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					if _, ok := body["module"]; !ok {
 						mod := map[string]string{"type": cmd.String("type")}
@@ -2411,7 +2555,8 @@ func timelogBulkCmd() *cli.Command {
 				Usage: "Bulk add timelogs",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Timelogs as JSON (log_object array)"},
+					&cli.StringFlag{Name: "log-object", Required: true, Usage: "Timelogs as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2422,11 +2567,13 @@ func timelogBulkCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
+					form := map[string]string{"log_object": cmd.String("log-object")}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/addbulktimelogs"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
-						Form: map[string]string{
-							"log_object": cmd.String("json"),
-						},
+						Form: form,
 					})
 					if err != nil {
 						return err
@@ -2439,7 +2586,7 @@ func timelogBulkCmd() *cli.Command {
 				Usage: "Bulk delete timelogs",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Array of {id, module} objects as JSON"},
+					&cli.StringFlag{Name: "ids", Required: true, Usage: "JSON array of {id, module} objects"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2451,7 +2598,7 @@ func timelogBulkCmd() *cli.Command {
 						return err
 					}
 					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					json.Unmarshal([]byte(cmd.String("ids")), &body)
 					url := c.ProjectsBase + "/portal/" + portal + "/timelogs/bulkdelete"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2495,7 +2642,10 @@ func timelogTimersCmd() *cli.Command {
 				Usage: "Start a timer",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Timer details as JSON"},
+					&cli.StringFlag{Name: "entity_id", Usage: "Entity ID (task/issue)"},
+					&cli.StringFlag{Name: "project_id", Usage: "Project ID"},
+					&cli.StringFlag{Name: "module_id", Usage: "Module ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2506,8 +2656,19 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("entity_id") {
+						body["entity_id"] = cmd.String("entity_id")
+					}
+					if cmd.IsSet("project_id") {
+						body["project_id"] = cmd.String("project_id")
+					}
+					if cmd.IsSet("module_id") {
+						body["module_id"] = cmd.String("module_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2544,7 +2705,11 @@ func timelogTimersCmd() *cli.Command {
 				ArgsUsage: "<timer-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Pause details as JSON"},
+					&cli.StringFlag{Name: "notes", Usage: "Timer notes"},
+					&cli.StringFlag{Name: "type", Usage: "Timer entity type"},
+					&cli.StringFlag{Name: "log_id", Usage: "Timelog ID"},
+					&cli.StringFlag{Name: "entity_id", Usage: "Task or issue entity ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2555,8 +2720,22 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("type") {
+						body["type"] = cmd.String("type")
+					}
+					if cmd.IsSet("log_id") {
+						body["log_id"] = cmd.String("log_id")
+					}
+					if cmd.IsSet("entity_id") {
+						body["entity_id"] = cmd.String("entity_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First() + "/pause"
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2571,7 +2750,11 @@ func timelogTimersCmd() *cli.Command {
 				ArgsUsage: "<timer-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Resume details as JSON"},
+					&cli.StringFlag{Name: "notes", Usage: "Timer notes"},
+					&cli.StringFlag{Name: "type", Usage: "Timer entity type"},
+					&cli.StringFlag{Name: "log_id", Usage: "Timelog ID"},
+					&cli.StringFlag{Name: "entity_id", Usage: "Task or issue entity ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2582,8 +2765,22 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("type") {
+						body["type"] = cmd.String("type")
+					}
+					if cmd.IsSet("log_id") {
+						body["log_id"] = cmd.String("log_id")
+					}
+					if cmd.IsSet("entity_id") {
+						body["entity_id"] = cmd.String("entity_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First() + "/resume"
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2598,7 +2795,17 @@ func timelogTimersCmd() *cli.Command {
 				ArgsUsage: "<timer-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Stop details as JSON"},
+					&cli.StringFlag{Name: "item_id", Usage: "Item ID"},
+					&cli.StringFlag{Name: "log_name", Usage: "Timelog name"},
+					&cli.StringFlag{Name: "date", Usage: "Date"},
+					&cli.StringFlag{Name: "project_id", Usage: "Project ID"},
+					&cli.StringFlag{Name: "type", Usage: "Timer entity type"},
+					&cli.FloatFlag{Name: "hours", Usage: "Total hours"},
+					&cli.StringFlag{Name: "start_time", Usage: "Start time"},
+					&cli.StringFlag{Name: "end_time", Usage: "End time"},
+					&cli.StringFlag{Name: "bill_status", Usage: "Bill status"},
+					&cli.StringFlag{Name: "notes", Usage: "Timer notes"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2609,8 +2816,40 @@ func timelogTimersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("item_id") {
+						body["item_id"] = cmd.String("item_id")
+					}
+					if cmd.IsSet("log_name") {
+						body["log_name"] = cmd.String("log_name")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("project_id") {
+						body["project_id"] = cmd.String("project_id")
+					}
+					if cmd.IsSet("type") {
+						body["type"] = cmd.String("type")
+					}
+					if cmd.IsSet("hours") {
+						body["hours"] = cmd.Float("hours")
+					}
+					if cmd.IsSet("start_time") {
+						body["start_time"] = cmd.String("start_time")
+					}
+					if cmd.IsSet("end_time") {
+						body["end_time"] = cmd.String("end_time")
+					}
+					if cmd.IsSet("bill_status") {
+						body["bill_status"] = cmd.String("bill_status")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/timers/" + cmd.Args().First() + "/stop"
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2676,7 +2915,11 @@ func timelogPinsCmd() *cli.Command {
 				Usage: "Pin a timelog",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Pin details as JSON (log_id, module_type)"},
+					&cli.StringFlag{Name: "project_id", Usage: "Project ID"},
+					&cli.StringFlag{Name: "module", Usage: "Module type"},
+					&cli.StringFlag{Name: "zpuid", Usage: "User ZPUID"},
+					&cli.IntFlag{Name: "sequence", Usage: "Pin sequence"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2687,8 +2930,22 @@ func timelogPinsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("project_id") {
+						body["project_id"] = cmd.String("project_id")
+					}
+					if cmd.IsSet("module") {
+						body["module"] = cmd.String("module")
+					}
+					if cmd.IsSet("zpuid") {
+						body["zpuid"] = cmd.String("zpuid")
+					}
+					if cmd.IsSet("sequence") {
+						body["sequence"] = cmd.Int("sequence")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/pin"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2703,7 +2960,8 @@ func timelogPinsCmd() *cli.Command {
 				ArgsUsage: "<pin-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Pin details as JSON"},
+					&cli.IntFlag{Name: "sequence", Usage: "Pin sequence"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2714,8 +2972,13 @@ func timelogPinsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("sequence") {
+						body["sequence"] = cmd.Int("sequence")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/timesheet/pin/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2803,7 +3066,8 @@ func usersCmd() *cli.Command {
 				Usage: "Add a user to portal",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "User details as JSON"},
+					&cli.StringFlag{Name: "userdetails", Usage: "User details as JSON string"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2814,11 +3078,16 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
+					form := map[string]string{}
+					if cmd.IsSet("userdetails") {
+						form["userdetails"] = cmd.String("userdetails")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/users"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
-						Form: map[string]string{
-							"userdetails": cmd.String("json"),
-						},
+						Form: form,
 					})
 					if err != nil {
 						return err
@@ -2949,7 +3218,9 @@ func projectUsersCmd() *cli.Command {
 				Usage: "Add a user to project",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "User details as JSON"},
+					&cli.StringFlag{Name: "zpuid", Usage: "User ZPUID"},
+					&cli.StringFlag{Name: "role", Usage: "Role in project"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2960,8 +3231,16 @@ func projectUsersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("zpuid") {
+						body["zpuid"] = cmd.String("zpuid")
+					}
+					if cmd.IsSet("role") {
+						body["role"] = cmd.String("role")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/users"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -2976,7 +3255,8 @@ func projectUsersCmd() *cli.Command {
 				ArgsUsage: "<user-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "User details as JSON"},
+					&cli.StringFlag{Name: "role", Usage: "Role in project"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2987,8 +3267,13 @@ func projectUsersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("role") {
+						body["role"] = cmd.String("role")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/users/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3095,12 +3380,8 @@ func milestonesCmd() *cli.Command {
 						"start_date": convertDate(cmd.String("start")),
 						"end_date":   convertDate(cmd.String("end")),
 					}
-					if j := cmd.String("json"); j != "" {
-						var extra map[string]any
-						json.Unmarshal([]byte(j), &extra)
-						for k, v := range extra {
-							body[k] = v
-						}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/milestones"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
@@ -3116,7 +3397,10 @@ func milestonesCmd() *cli.Command {
 				ArgsUsage: "<milestone-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Milestone name"},
+					&cli.StringFlag{Name: "start", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "end", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3127,10 +3411,21 @@ func milestonesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("start") {
+						body["start_date"] = convertDate(cmd.String("start"))
+					}
+					if cmd.IsSet("end") {
+						body["end_date"] = convertDate(cmd.String("end"))
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/milestones/" + cmd.Args().First()
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: parsed})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -3237,7 +3532,8 @@ func phasesCmd() *cli.Command {
 				Usage: "Create a phase",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Phase details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Phase name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3248,8 +3544,10 @@ func phasesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/phases"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3264,7 +3562,8 @@ func phasesCmd() *cli.Command {
 				ArgsUsage: "<phase-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Phase name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3275,8 +3574,13 @@ func phasesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First()
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3313,7 +3617,8 @@ func phasesCmd() *cli.Command {
 				ArgsUsage: "<phase-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Move details as JSON"},
+					&cli.StringFlag{Name: "to_project", Usage: "Target project ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3324,8 +3629,13 @@ func phasesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("to_project") {
+						body["to_project"] = cmd.String("to_project")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/move"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3415,7 +3725,8 @@ func phaseFollowersCmd() *cli.Command {
 				ArgsUsage: "<phase-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Follower details as JSON"},
+					&cli.StringFlag{Name: "followers", Usage: "Comma-separated follower ZPUIDs"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3426,8 +3737,15 @@ func phaseFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("followers") {
+						var arr any
+						json.Unmarshal([]byte(cmd.String("followers")), &arr)
+						body["followers"] = arr
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/follow"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3442,7 +3760,8 @@ func phaseFollowersCmd() *cli.Command {
 				ArgsUsage: "<phase-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Follower IDs as JSON"},
+					&cli.StringFlag{Name: "followers", Usage: "Comma-separated follower ZPUIDs"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3453,8 +3772,15 @@ func phaseFollowersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("followers") {
+						var arr any
+						json.Unmarshal([]byte(cmd.String("followers")), &arr)
+						body["followers"] = arr
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/phases/" + cmd.Args().First() + "/unfollow"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3692,7 +4018,10 @@ func forumsCmd() *cli.Command {
 				Usage: "Create a forum",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Forum details as JSON"},
+					&cli.StringFlag{Name: "title", Required: true, Usage: "Forum title"},
+					&cli.StringFlag{Name: "content", Usage: "Forum content"},
+					&cli.StringFlag{Name: "category-id", Usage: "Category ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3703,8 +4032,16 @@ func forumsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"title": cmd.String("title")}
+					if cmd.IsSet("content") {
+						body["content"] = cmd.String("content")
+					}
+					if cmd.IsSet("category-id") {
+						body["category_id"] = cmd.String("category-id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/forums"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3719,7 +4056,9 @@ func forumsCmd() *cli.Command {
 				ArgsUsage: "<forum-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "title", Usage: "Forum title"},
+					&cli.StringFlag{Name: "content", Usage: "Forum content"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3730,8 +4069,16 @@ func forumsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("title") {
+						body["title"] = cmd.String("title")
+					}
+					if cmd.IsSet("content") {
+						body["content"] = cmd.String("content")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/forums/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -3981,7 +4328,8 @@ func forumCategoriesCmd() *cli.Command {
 				Usage: "Create a forum category",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Category details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Category name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -3992,8 +4340,10 @@ func forumCategoriesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/categories"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4008,7 +4358,8 @@ func forumCategoriesCmd() *cli.Command {
 				ArgsUsage: "<category-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Category details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Category name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4019,8 +4370,13 @@ func forumCategoriesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/categories/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4183,7 +4539,10 @@ func eventsCmd() *cli.Command {
 				Usage: "Create an event",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Event details as JSON"},
+					&cli.StringFlag{Name: "title", Required: true, Usage: "Event title"},
+					&cli.StringFlag{Name: "starts-at", Usage: "Start datetime (ISO 8601)"},
+					&cli.StringFlag{Name: "ends-at", Usage: "End datetime (ISO 8601)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4194,8 +4553,16 @@ func eventsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"title": cmd.String("title")}
+					if cmd.IsSet("starts-at") {
+						body["starts_at"] = cmd.String("starts-at")
+					}
+					if cmd.IsSet("ends-at") {
+						body["ends_at"] = cmd.String("ends-at")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/events"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4210,7 +4577,10 @@ func eventsCmd() *cli.Command {
 				ArgsUsage: "<event-id>",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
+					&cli.StringFlag{Name: "title", Usage: "Event title"},
+					&cli.StringFlag{Name: "starts-at", Usage: "Start datetime (ISO 8601)"},
+					&cli.StringFlag{Name: "ends-at", Usage: "End datetime (ISO 8601)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4221,8 +4591,19 @@ func eventsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("title") {
+						body["title"] = cmd.String("title")
+					}
+					if cmd.IsSet("starts-at") {
+						body["starts_at"] = cmd.String("starts-at")
+					}
+					if cmd.IsSet("ends-at") {
+						body["ends_at"] = cmd.String("ends-at")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4596,7 +4977,11 @@ func leavesCmd() *cli.Command {
 				Usage: "Create a leave",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Leave details as JSON"},
+					&cli.StringFlag{Name: "from-date", Usage: "From date (ISO 8601)"},
+					&cli.StringFlag{Name: "to-date", Usage: "To date (ISO 8601)"},
+					&cli.StringFlag{Name: "reason", Usage: "Reason for leave"},
+					&cli.StringFlag{Name: "leave-type", Usage: "Leave type"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4607,8 +4992,22 @@ func leavesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("reason") {
+						body["reason"] = cmd.String("reason")
+					}
+					if cmd.IsSet("from-date") {
+						body["from_date"] = cmd.String("from-date")
+					}
+					if cmd.IsSet("to-date") {
+						body["to_date"] = cmd.String("to-date")
+					}
+					if cmd.IsSet("leave-type") {
+						body["type"] = cmd.String("leave-type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/leave"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4623,7 +5022,11 @@ func leavesCmd() *cli.Command {
 				ArgsUsage: "<leave-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Leave details as JSON"},
+					&cli.StringFlag{Name: "from-date", Usage: "From date (ISO 8601)"},
+					&cli.StringFlag{Name: "to-date", Usage: "To date (ISO 8601)"},
+					&cli.StringFlag{Name: "reason", Usage: "Reason for leave"},
+					&cli.StringFlag{Name: "leave-type", Usage: "Leave type"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4634,8 +5037,22 @@ func leavesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("reason") {
+						body["reason"] = cmd.String("reason")
+					}
+					if cmd.IsSet("from-date") {
+						body["from_date"] = cmd.String("from-date")
+					}
+					if cmd.IsSet("to-date") {
+						body["to_date"] = cmd.String("to-date")
+					}
+					if cmd.IsSet("leave-type") {
+						body["type"] = cmd.String("leave-type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/leave/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4722,7 +5139,8 @@ func tagsCmd() *cli.Command {
 				Usage: "Create a tag",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Tag details as JSON"},
+					&cli.StringFlag{Name: "tags", Required: true, Usage: "Tags as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4733,8 +5151,12 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
+					form := map[string]string{"tags": cmd.String("tags")}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/tags"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{Form: map[string]string{"tags": cmd.String("json")}})
+					raw, err := c.Request("POST", url, &zohttp.RequestOpts{Form: form})
 					if err != nil {
 						return err
 					}
@@ -4747,7 +5169,9 @@ func tagsCmd() *cli.Command {
 				ArgsUsage: "<tag-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Tag details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Tag name"},
+					&cli.StringFlag{Name: "color-class", Usage: "Color class (e.g. bg-tag1)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4758,8 +5182,16 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("color-class") {
+						body["color_class"] = cmd.String("color-class")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/tags/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4915,7 +5347,7 @@ func trashCmd() *cli.Command {
 				Usage: "Permanently delete trash items",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Record IDs as JSON"},
+					&cli.StringFlag{Name: "ids", Required: true, Usage: "Record IDs as JSON array"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4927,7 +5359,7 @@ func trashCmd() *cli.Command {
 						return err
 					}
 					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					json.Unmarshal([]byte(cmd.String("ids")), &body)
 					url := c.ProjectsBase + "/portal/" + portal + "/bin"
 					raw, err := c.Request("DELETE", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -4941,7 +5373,7 @@ func trashCmd() *cli.Command {
 				Usage: "Restore trash items",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Record IDs as JSON"},
+					&cli.StringFlag{Name: "ids", Required: true, Usage: "Record IDs as JSON array"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -4953,7 +5385,7 @@ func trashCmd() *cli.Command {
 						return err
 					}
 					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					json.Unmarshal([]byte(cmd.String("ids")), &body)
 					url := c.ProjectsBase + "/portal/" + portal + "/bin/restore"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5085,7 +5517,8 @@ func feedCmd() *cli.Command {
 				Usage: "Post a status update",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Status details as JSON"},
+					&cli.StringFlag{Name: "content", Required: true, Usage: "Status content"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5096,8 +5529,10 @@ func feedCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"content": cmd.String("content")}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/status"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5285,7 +5720,9 @@ func projectGroupsCmd() *cli.Command {
 				Usage: "Create a project group",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Group details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Group name"},
+					&cli.StringFlag{Name: "group-type", Usage: "Group type (public or private)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5296,8 +5733,13 @@ func projectGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if cmd.IsSet("group-type") {
+						body["type"] = cmd.String("group-type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/project-groups"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5312,7 +5754,8 @@ func projectGroupsCmd() *cli.Command {
 				ArgsUsage: "<group-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Group details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Group name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5323,8 +5766,13 @@ func projectGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/project-groups/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5477,7 +5925,9 @@ func teamsCmd() *cli.Command {
 				Usage: "Create a team",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Team details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Team name"},
+					&cli.StringFlag{Name: "lead", Usage: "Team lead ZPUID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5488,8 +5938,13 @@ func teamsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if cmd.IsSet("lead") {
+						body["lead"] = cmd.String("lead")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/teams"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5504,7 +5959,9 @@ func teamsCmd() *cli.Command {
 				ArgsUsage: "<team-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Team details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Team name"},
+					&cli.StringFlag{Name: "lead", Usage: "Team lead ZPUID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5515,8 +5972,16 @@ func teamsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("lead") {
+						body["lead"] = cmd.String("lead")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/teams/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5552,7 +6017,8 @@ func teamsCmd() *cli.Command {
 				Usage: "Add a team to a project",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Team details as JSON (team_ids array)"},
+					&cli.StringFlag{Name: "team-ids", Required: true, Usage: "Team IDs as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5563,11 +6029,13 @@ func teamsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
+					form := map[string]string{"team_ids": cmd.String("team-ids")}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/associate-teams"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
-						Form: map[string]string{
-							"team_ids": cmd.String("json"),
-						},
+						Form: form,
 					})
 					if err != nil {
 						return err
@@ -5654,7 +6122,9 @@ func profilesCmd() *cli.Command {
 				Usage: "Create a profile",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Profile details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Profile name"},
+					&cli.StringFlag{Name: "profile-type", Usage: "Profile type"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5665,8 +6135,13 @@ func profilesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if cmd.IsSet("profile-type") {
+						body["type"] = cmd.String("profile-type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/profiles"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5681,7 +6156,8 @@ func profilesCmd() *cli.Command {
 				ArgsUsage: "<profile-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Profile details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Profile name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5692,8 +6168,13 @@ func profilesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/profiles/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5803,7 +6284,8 @@ func rolesCmd() *cli.Command {
 				Usage: "Create a role",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Role details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Role name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5814,8 +6296,10 @@ func rolesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/roles"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5830,7 +6314,8 @@ func rolesCmd() *cli.Command {
 				ArgsUsage: "<role-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Role details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Role name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5841,8 +6326,13 @@ func rolesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/roles/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5959,7 +6449,8 @@ func customRecordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "module", Required: true, Usage: "Module name"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Record details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Record name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5970,8 +6461,13 @@ func customRecordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/modules/" + cmd.String("module") + "/records"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -5987,7 +6483,8 @@ func customRecordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "module", Required: true, Usage: "Module name"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Record details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Record name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -5998,8 +6495,13 @@ func customRecordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := base(c, portal, cmd.String("project")) + "/modules/" + cmd.String("module") + "/records/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -6182,7 +6684,8 @@ func reportsCmd() *cli.Command {
 				Usage: "Create a dashboard",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Dashboard details as JSON"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Dashboard name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -6193,8 +6696,10 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/dashboards"
 					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
@@ -6209,7 +6714,8 @@ func reportsCmd() *cli.Command {
 				ArgsUsage: "<dashboard-id>",
 				Flags: []cli.Flag{
 					portalFlag,
-					&cli.StringFlag{Name: "json", Required: true, Usage: "Dashboard details as JSON"},
+					&cli.StringFlag{Name: "name", Usage: "Dashboard name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -6220,8 +6726,13 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					url := c.ProjectsBase + "/portal/" + portal + "/dashboards/" + cmd.Args().First()
 					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {

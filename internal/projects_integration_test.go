@@ -289,7 +289,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, projectID, "core/create must have succeeded")
 		updatedName := projectName + "_updated"
 		out := zoho(t, "projects", "core", "update", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedName)
 
@@ -331,7 +331,7 @@ func TestProjects(t *testing.T) {
 		updatedTaskName := taskName + "_upd"
 		out := zoho(t, "projects", "tasks", "update", taskID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedTaskName}))
+			"--name", updatedTaskName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedTaskName)
 
@@ -513,10 +513,9 @@ func TestProjects(t *testing.T) {
 			"--name", testName(t)+"_tl", "--project", project2ID)
 		targetTL := extractProjectsID(t, tlOut)
 		cleanup.trackTasklist(targetTL, project2ID)
-		moveJSON := toJSON(t, map[string]any{"target_tasklist_id": targetTL})
 		zoho(t, "projects", "tasks", "move", clonedTaskID,
 			"--project", projectID,
-			"--json", moveJSON)
+			"--target_tasklist_id", targetTL)
 
 		movedTask := getTask(t, clonedTaskID, project2ID)
 		movedName := fmt.Sprintf("%v", movedTask["name"])
@@ -578,7 +577,7 @@ func TestProjects(t *testing.T) {
 		updatedIssueName := issueName + "_upd"
 		out := zoho(t, "projects", "issues", "update", issueID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedIssueName}))
+			"--name", updatedIssueName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedIssueName)
 
@@ -755,10 +754,8 @@ func TestProjects(t *testing.T) {
 		requireID(t, clonedIssueID, "issues/clone must have succeeded")
 		out := zoho(t, "projects", "issue-linking", "link", issueID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{
-				"link_type": "relate",
-				"issue_ids": []string{clonedIssueID},
-			}))
+			"--link_type", "relate",
+			"--issue_ids", toJSON(t, []string{clonedIssueID}))
 		parseJSON(t, out)
 
 		listOut := zoho(t, "projects", "issue-linking", "list", issueID,
@@ -800,7 +797,7 @@ func TestProjects(t *testing.T) {
 		out := zoho(t, "projects", "issue-linking", "change-type",
 			issueID, issueLinkID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"link_type": "blocks"}))
+			"--link_type", "blocks")
 		parseJSON(t, out)
 
 		listOut := zoho(t, "projects", "issue-linking", "list", issueID,
@@ -829,11 +826,9 @@ func TestProjects(t *testing.T) {
 		requireID(t, clonedIssueID, "issues/clone must have succeeded")
 		r := runZoho(t, "projects", "issue-linking", "bulk-link",
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{
-				"link_type":         "relate",
-				"issue_ids":         []string{issueID},
-				"linking_issue_ids": []string{clonedIssueID},
-			}))
+			"--link_type", "relate",
+			"--issue_ids", toJSON(t, []string{issueID}),
+			"--linking_issue_ids", toJSON(t, []string{clonedIssueID}))
 		if r.ExitCode != 0 {
 			t.Logf("bulk-link failed: %s",
 				truncate(r.Stderr+r.Stdout, 300))
@@ -849,10 +844,9 @@ func TestProjects(t *testing.T) {
 	t.Run("issues/move", func(t *testing.T) {
 		requireID(t, clonedIssueID, "issues/clone must have succeeded")
 		requireID(t, project2ID, "second project must exist")
-		moveJSON := toJSON(t, map[string]any{"to_project": project2ID})
 		zoho(t, "projects", "issues", "move", clonedIssueID,
 			"--project", projectID,
-			"--json", moveJSON)
+			"--to_project", project2ID)
 
 		movedIssue := getIssue(t, clonedIssueID, project2ID)
 		movedName := fmt.Sprintf("%v", movedIssue["name"])
@@ -866,7 +860,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, issueID, "issues/create must have succeeded")
 		out := zoho(t, "projects", "issue-resolution", "add", issueID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"resolution": testPrefix + " resolution text"}))
+			"--resolution", testPrefix+" resolution text")
 		parseJSON(t, out)
 	})
 
@@ -887,7 +881,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, issueID, "issues/create must have succeeded")
 		zoho(t, "projects", "issue-resolution", "update", issueID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"resolution": testPrefix + " updated resolution"}))
+			"--resolution", testPrefix+" updated resolution")
 
 		out := zoho(t, "projects", "issue-resolution", "get", issueID,
 			"--project", projectID)
@@ -979,7 +973,7 @@ func TestProjects(t *testing.T) {
 		updatedTLName := tasklistName + "_upd"
 		out := zoho(t, "projects", "tasklists", "update", tasklistID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedTLName}))
+			"--name", updatedTLName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedTLName)
 
@@ -1165,7 +1159,7 @@ func TestProjects(t *testing.T) {
 		updatedMSName := milestoneName + "_upd"
 		out := zoho(t, "projects", "milestones", "update", milestoneID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedMSName}))
+			"--name", updatedMSName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedMSName)
 
@@ -1239,7 +1233,7 @@ func TestProjects(t *testing.T) {
 			"--project", projectID,
 			"--type", "task",
 			"--task", tlTaskID,
-			"--json", toJSON(t, map[string]any{"hours": "3"}))
+			"--hours", "3")
 		parseJSON(t, out)
 
 		tl := getTimelog(t, timelogID, projectID)
@@ -1352,7 +1346,7 @@ func TestProjects(t *testing.T) {
 		categoryName := testName(t) + "_forum_category"
 		out := zoho(t, "projects", "forum-categories", "create",
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": categoryName}))
+			"--name", categoryName)
 		m := parseJSON(t, out)
 		categories, ok := m["categories"].([]any)
 		if !ok || len(categories) == 0 {
@@ -1390,11 +1384,9 @@ func TestProjects(t *testing.T) {
 		forumContent := testPrefix + "_forum_content"
 		out := zoho(t, "projects", "forums", "create",
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{
-				"title":       forumTitle,
-				"content":     forumContent,
-				"category_id": forumCategoryID,
-			}))
+			"--title", forumTitle,
+			"--content", forumContent,
+			"--category-id", forumCategoryID)
 		m := parseJSON(t, out)
 		forums, ok := m["forums"].([]any)
 		if !ok || len(forums) == 0 {
@@ -1452,7 +1444,8 @@ func TestProjects(t *testing.T) {
 		updatedContent := testPrefix + "_forum_content_upd"
 		out := zoho(t, "projects", "forums", "update", forumID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"title": updatedTitle, "content": updatedContent}))
+			"--title", updatedTitle,
+			"--content", updatedContent)
 		m := parseJSON(t, out)
 		forums, ok := m["forums"].([]any)
 		if !ok || len(forums) == 0 {
@@ -1619,7 +1612,7 @@ func TestProjects(t *testing.T) {
 		updatedName := testName(t) + "_forum_category_upd"
 		out := zoho(t, "projects", "forum-categories", "update", forumCategoryID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		m := parseJSON(t, out)
 		categories, ok := m["categories"].([]any)
 		if !ok || len(categories) == 0 {
@@ -1654,7 +1647,7 @@ func TestProjects(t *testing.T) {
 	t.Run("project-groups/create", func(t *testing.T) {
 		groupName := testName(t) + "_group"
 		out := zoho(t, "projects", "project-groups", "create",
-			"--json", toJSON(t, map[string]any{"name": groupName, "type": "public"}))
+			"--name", groupName, "--group-type", "public")
 		m := parseJSON(t, out)
 		projectGroupID = fmt.Sprintf("%v", m["id"])
 		if projectGroupID == "" || projectGroupID == "<nil>" {
@@ -1698,7 +1691,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, projectGroupID, "project-groups/create must have succeeded")
 		updatedName := testName(t) + "_group_upd"
 		out := zoho(t, "projects", "project-groups", "update", projectGroupID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["id"]), projectGroupID)
 		assertStringField(t, m, "name", updatedName)
@@ -1731,7 +1724,7 @@ func TestProjects(t *testing.T) {
 	t.Run("tags/create", func(t *testing.T) {
 		tagName := testName(t) + "_tag"
 		out := zoho(t, "projects", "tags", "create",
-			"--json", toJSON(t, []map[string]any{{"name": tagName, "color_class": "bg-tag1"}}))
+			"--tags", toJSON(t, []map[string]any{{"name": tagName, "color_class": "bg-tag1"}}))
 		m := parseJSON(t, out)
 		tags, ok := m["tags"].([]any)
 		if !ok || len(tags) == 0 {
@@ -1790,7 +1783,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, tagID, "tags/create must have succeeded")
 		updatedName := testName(t) + "_tag_upd"
 		out := zoho(t, "projects", "tags", "update", tagID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		m := parseJSON(t, out)
 		tm, ok := m["tags"].(map[string]any)
 		if !ok {
@@ -1859,7 +1852,7 @@ func TestProjects(t *testing.T) {
 	t.Run("roles/create", func(t *testing.T) {
 		roleName := testName(t) + "_role"
 		out := zoho(t, "projects", "roles", "create",
-			"--json", toJSON(t, map[string]any{"name": roleName}))
+			"--name", roleName)
 		m := parseJSON(t, out)
 		roleID = fmt.Sprintf("%v", m["id"])
 		if roleID == "" || roleID == "<nil>" {
@@ -1902,7 +1895,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, roleID, "roles/create must have succeeded")
 		updatedName := testName(t) + "_role_upd"
 		zoho(t, "projects", "roles", "update", roleID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 
 		out := zoho(t, "projects", "roles", "get", roleID)
 		m := parseJSON(t, out)
@@ -2113,7 +2106,7 @@ func TestProjects(t *testing.T) {
 		phaseName = testName(t) + "_phase"
 		out := zoho(t, "projects", "phases", "create",
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": phaseName}))
+			"--name", phaseName)
 		phaseID = extractProjectsID(t, out)
 		cleanup.trackPhase(phaseID, projectID)
 		t.Logf("created phase %s (%s)", phaseID, phaseName)
@@ -2178,7 +2171,7 @@ func TestProjects(t *testing.T) {
 		updatedPhaseName := phaseName + "_upd"
 		out := zoho(t, "projects", "phases", "update", phaseID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"name": updatedPhaseName}))
+			"--name", updatedPhaseName)
 		m := parseJSON(t, out)
 		assertEqual(t, fmt.Sprintf("%v", m["name"]), updatedPhaseName)
 
@@ -2223,7 +2216,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, ownerZPUID, "timelogs/setup-owner must have succeeded")
 		out := zoho(t, "projects", "phase-followers", "add", phaseID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"followers": []string{ownerZPUID}}))
+			"--followers", ownerZPUID)
 		m := parseJSON(t, out)
 		if _, ok := m["followers"]; !ok {
 			t.Fatalf("expected followers key in add response:\n%s", truncate(out, 500))
@@ -2257,7 +2250,7 @@ func TestProjects(t *testing.T) {
 		requireID(t, ownerZPUID, "timelogs/setup-owner must have succeeded")
 		zoho(t, "projects", "phase-followers", "remove", phaseID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"followers": []string{ownerZPUID}}))
+			"--followers", ownerZPUID)
 
 		time.Sleep(2 * time.Second)
 		out := zoho(t, "projects", "phase-followers", "list", phaseID,
@@ -2355,12 +2348,10 @@ func TestProjects(t *testing.T) {
 		endsAt := now.Add(1 * time.Hour).Format("2006-01-02T15:04:05+00:00")
 		out := zoho(t, "projects", "events", "create",
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{
-				"title":     eventName,
-				"starts_at": startsAt,
-				"ends_at":   endsAt,
-				"attendees": []string{ownerZPUID},
-			}))
+			"--title", eventName,
+			"--starts-at", startsAt,
+			"--ends-at", endsAt,
+			"--json", toJSON(t, map[string]any{"attendees": []string{ownerZPUID}}))
 		eventID = extractProjectsID(t, out)
 		cleanup.trackEvent(eventID, projectID)
 		t.Logf("created event %s (%s)", eventID, eventName)
@@ -2403,7 +2394,7 @@ func TestProjects(t *testing.T) {
 		updatedTitle := testPrefix + "_event_upd"
 		out := zoho(t, "projects", "events", "update", eventID,
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"title": updatedTitle}))
+			"--title", updatedTitle)
 		m := parseJSON(t, out)
 		assertStringField(t, m, "title", updatedTitle)
 
@@ -2506,7 +2497,7 @@ func TestProjects(t *testing.T) {
 		statusContent := testPrefix + "_status"
 		out := zoho(t, "projects", "feed", "post",
 			"--project", projectID,
-			"--json", toJSON(t, map[string]any{"content": statusContent}))
+			"--content", statusContent)
 		m := parseJSON(t, out)
 		id := fmt.Sprintf("%v", m["id"])
 		if id == "" || id == "<nil>" {
@@ -2714,10 +2705,8 @@ func TestProjectsProfiles(t *testing.T) {
 	t.Run("profiles/create", func(t *testing.T) {
 		profileName = testName(t) + "_profile"
 		out := zoho(t, "projects", "profiles", "create",
-			"--json", toJSON(t, map[string]any{
-				"name": profileName,
-				"type": "3",
-			}))
+			"--name", profileName,
+			"--profile-type", "3")
 		m := parseJSON(t, out)
 		profileID = fmt.Sprintf("%v", m["id"])
 		if profileID == "" || profileID == "<nil>" {
@@ -2739,7 +2728,7 @@ func TestProjectsProfiles(t *testing.T) {
 		requireID(t, profileID, "profiles/create must have succeeded")
 		updatedName := profileName + "_upd"
 		zoho(t, "projects", "profiles", "update", profileID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 
 		out := zoho(t, "projects", "profiles", "get", profileID)
 		m := parseJSON(t, out)
@@ -2805,7 +2794,7 @@ func TestProjectsDashboards(t *testing.T) {
 	t.Run("reports/dashboard-create", func(t *testing.T) {
 		dashboardName = testName(t) + "_dash"
 		out := zoho(t, "projects", "reports", "dashboard-create",
-			"--json", toJSON(t, map[string]any{"name": dashboardName}))
+			"--name", dashboardName)
 		m := parseJSON(t, out)
 		dashboardID = fmt.Sprintf("%v", m["id"])
 		if dashboardID == "" || dashboardID == "<nil>" {
@@ -2827,7 +2816,7 @@ func TestProjectsDashboards(t *testing.T) {
 		requireID(t, dashboardID, "dashboard-create must have succeeded")
 		updatedName := dashboardName + "_upd"
 		zoho(t, "projects", "reports", "dashboard-update", dashboardID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		getOut := zoho(t, "projects", "reports", "dashboard-get", dashboardID)
 		gm := parseJSON(t, getOut)
 		assertStringField(t, gm, "name", updatedName)
@@ -2883,9 +2872,9 @@ func TestProjectsTeams(t *testing.T) {
 		requireID(t, ownerZPUID, "teams/setup must have succeeded")
 		teamName = testName(t) + "_team"
 		out, err := zohoMayFail(t, "projects", "teams", "create",
+			"--name", teamName,
+			"--lead", ownerZPUID,
 			"--json", toJSON(t, map[string]any{
-				"name":     teamName,
-				"lead":     ownerZPUID,
 				"user_ids": map[string]any{"add": []string{ownerZPUID}},
 			}))
 		if err != nil {
@@ -2931,7 +2920,7 @@ func TestProjectsTeams(t *testing.T) {
 		requireID(t, teamID, "teams/create must have succeeded")
 		updatedName := teamName + "_upd"
 		zoho(t, "projects", "teams", "update", teamID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 
 		out := zoho(t, "projects", "teams", "list")
 		m := parseJSON(t, out)
@@ -2959,7 +2948,7 @@ func TestProjectsTeams(t *testing.T) {
 		requireID(t, projectID, "teams/setup must have succeeded")
 		out, err := zohoMayFail(t, "projects", "teams", "add-to-project",
 			"--project", projectID,
-			"--json", toJSON(t, []string{teamID}))
+			"--team-ids", toJSON(t, []string{teamID}))
 		if err != nil {
 			t.Logf("add-to-project failed: %v", err)
 			t.Logf("response: %s", truncate(out, 500))
@@ -3099,5 +3088,3 @@ func TestProjectsEmergencyCleanup(t *testing.T) {
 		zohoIgnoreError(t, "projects", "core", "delete", id)
 	}
 }
-
-

@@ -2,8 +2,6 @@ package sprints
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/omin8tor/zoho-cli/internal"
@@ -19,24 +17,6 @@ func getClient() (*zohttp.Client, error) {
 		return nil, err
 	}
 	return zohttp.NewClient(config)
-}
-
-func jsonToForm(body map[string]any) map[string]string {
-	form := map[string]string{}
-	for k, v := range body {
-		switch val := v.(type) {
-		case string:
-			form[k] = val
-		default:
-			b, err := json.Marshal(val)
-			if err != nil {
-				form[k] = fmt.Sprintf("%v", val)
-			} else {
-				form[k] = string(b)
-			}
-		}
-	}
-	return form
 }
 
 func resolveTeamID(cmd *cli.Command) (string, error) {
@@ -160,7 +140,14 @@ func projectsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a project",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body (name, description, template, etc.)"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Project name"},
+					&cli.StringFlag{Name: "owner", Required: true, Usage: "Owner user ID"},
+					&cli.StringFlag{Name: "projgroup", Required: true, Usage: "Project group ID"},
+					&cli.StringFlag{Name: "desc", Usage: "Project description"},
+					&cli.StringFlag{Name: "prefix", Usage: "Project prefix (max 3 chars)"},
+					&cli.StringFlag{Name: "startdate", Usage: "Start date (ISO format)"},
+					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -171,11 +158,25 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					form := map[string]string{}
+					form["name"] = cmd.String("name")
+					form["owner"] = cmd.String("owner")
+					form["projgroup"] = cmd.String("projgroup")
+					if cmd.IsSet("desc") {
+						form["desc"] = cmd.String("desc")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("prefix") {
+						form["prefix"] = cmd.String("prefix")
+					}
+					if cmd.IsSet("startdate") {
+						form["startdate"] = cmd.String("startdate")
+					}
+					if cmd.IsSet("enddate") {
+						form["enddate"] = cmd.String("enddate")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{
 						Form: form,
 					})
@@ -190,7 +191,13 @@ func projectsCmd() *cli.Command {
 				Usage:     "Update a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "Project name"},
+					&cli.StringFlag{Name: "desc", Usage: "Project description"},
+					&cli.StringFlag{Name: "owner", Usage: "Owner user ID"},
+					&cli.StringFlag{Name: "prefix", Usage: "Project prefix (max 3 chars)"},
+					&cli.StringFlag{Name: "startdate", Usage: "Start date (ISO format)"},
+					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -204,11 +211,28 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					form := map[string]string{}
+					if cmd.IsSet("name") {
+						form["name"] = cmd.String("name")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("desc") {
+						form["desc"] = cmd.String("desc")
+					}
+					if cmd.IsSet("owner") {
+						form["owner"] = cmd.String("owner")
+					}
+					if cmd.IsSet("prefix") {
+						form["prefix"] = cmd.String("prefix")
+					}
+					if cmd.IsSet("startdate") {
+						form["startdate"] = cmd.String("startdate")
+					}
+					if cmd.IsSet("enddate") {
+						form["enddate"] = cmd.String("enddate")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", &zohttp.RequestOpts{
 						Form: form,
 					})
@@ -316,7 +340,14 @@ func sprintsCmd() *cli.Command {
 				Usage:     "Create a sprint",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body (name, startdate, enddate, etc.)"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Sprint name"},
+					&cli.StringFlag{Name: "startdate", Required: true, Usage: "Start date (ISO format)"},
+					&cli.StringFlag{Name: "enddate", Required: true, Usage: "End date (ISO format)"},
+					&cli.StringFlag{Name: "scrummaster", Required: true, Usage: "Scrum master user ID"},
+					&cli.StringFlag{Name: "description", Usage: "Sprint description"},
+					&cli.StringFlag{Name: "duration", Usage: "Sprint duration"},
+					&cli.StringFlag{Name: "users", Usage: "User IDs as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -330,11 +361,23 @@ func sprintsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					form := map[string]string{}
+					form["name"] = cmd.String("name")
+					form["startdate"] = cmd.String("startdate")
+					form["enddate"] = cmd.String("enddate")
+					form["scrummaster"] = cmd.String("scrummaster")
+					if cmd.IsSet("description") {
+						form["description"] = cmd.String("description")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("duration") {
+						form["duration"] = cmd.String("duration")
+					}
+					if cmd.IsSet("users") {
+						form["users"] = cmd.String("users")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/sprints/", &zohttp.RequestOpts{
 						Form: form,
 					})
@@ -349,7 +392,13 @@ func sprintsCmd() *cli.Command {
 				Usage:     "Update a sprint",
 				ArgsUsage: "<project-id> <sprint-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "Sprint name"},
+					&cli.StringFlag{Name: "description", Usage: "Sprint description"},
+					&cli.StringFlag{Name: "startdate", Usage: "Start date (ISO format)"},
+					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
+					&cli.StringFlag{Name: "duration", Usage: "Sprint duration"},
+					&cli.StringFlag{Name: "scrummaster", Usage: "Scrum master user ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
@@ -363,11 +412,28 @@ func sprintsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					form := map[string]string{}
+					if cmd.IsSet("name") {
+						form["name"] = cmd.String("name")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("description") {
+						form["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("startdate") {
+						form["startdate"] = cmd.String("startdate")
+					}
+					if cmd.IsSet("enddate") {
+						form["enddate"] = cmd.String("enddate")
+					}
+					if cmd.IsSet("duration") {
+						form["duration"] = cmd.String("duration")
+					}
+					if cmd.IsSet("scrummaster") {
+						form["scrummaster"] = cmd.String("scrummaster")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", &zohttp.RequestOpts{
 						Form: form,
 					})
@@ -470,7 +536,18 @@ func itemsCmd() *cli.Command {
 				Usage:     "Create an item in a sprint or backlog",
 				ArgsUsage: "<project-id> <sprint-id|backlog-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body (name, projitemtypeid, etc.)"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Item name"},
+					&cli.StringFlag{Name: "projitemtypeid", Required: true, Usage: "Item type ID"},
+					&cli.StringFlag{Name: "projpriorityid", Required: true, Usage: "Priority ID"},
+					&cli.StringFlag{Name: "description", Usage: "Item description"},
+					&cli.StringFlag{Name: "point", Usage: "Estimation points"},
+					&cli.StringFlag{Name: "users", Usage: "User IDs as JSON array"},
+					&cli.StringFlag{Name: "epicid", Usage: "Epic ID"},
+					&cli.StringFlag{Name: "statusid", Usage: "Status ID"},
+					&cli.StringFlag{Name: "duration", Usage: "Item duration"},
+					&cli.StringFlag{Name: "startdate", Usage: "Start date (ISO format)"},
+					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
@@ -484,11 +561,37 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					form := map[string]string{}
+					form["name"] = cmd.String("name")
+					form["projitemtypeid"] = cmd.String("projitemtypeid")
+					form["projpriorityid"] = cmd.String("projpriorityid")
+					if cmd.IsSet("description") {
+						form["description"] = cmd.String("description")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("point") {
+						form["point"] = cmd.String("point")
+					}
+					if cmd.IsSet("users") {
+						form["users"] = cmd.String("users")
+					}
+					if cmd.IsSet("epicid") {
+						form["epicid"] = cmd.String("epicid")
+					}
+					if cmd.IsSet("statusid") {
+						form["statusid"] = cmd.String("statusid")
+					}
+					if cmd.IsSet("duration") {
+						form["duration"] = cmd.String("duration")
+					}
+					if cmd.IsSet("startdate") {
+						form["startdate"] = cmd.String("startdate")
+					}
+					if cmd.IsSet("enddate") {
+						form["enddate"] = cmd.String("enddate")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{
 						Form: form,
 					})
@@ -503,7 +606,16 @@ func itemsCmd() *cli.Command {
 				Usage:     "Update an item",
 				ArgsUsage: "<project-id> <sprint-id> <item-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "Item name"},
+					&cli.StringFlag{Name: "projitemtypeid", Usage: "Item type ID"},
+					&cli.StringFlag{Name: "projpriorityid", Usage: "Priority ID"},
+					&cli.StringFlag{Name: "description", Usage: "Item description"},
+					&cli.StringFlag{Name: "point", Usage: "Estimation points"},
+					&cli.StringFlag{Name: "epicid", Usage: "Epic ID"},
+					&cli.StringFlag{Name: "statusid", Usage: "Status ID"},
+					&cli.StringFlag{Name: "startdate", Usage: "Start date (ISO format)"},
+					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
@@ -517,11 +629,37 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					form := map[string]string{}
+					if cmd.IsSet("name") {
+						form["name"] = cmd.String("name")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("projitemtypeid") {
+						form["projitemtypeid"] = cmd.String("projitemtypeid")
+					}
+					if cmd.IsSet("projpriorityid") {
+						form["projpriorityid"] = cmd.String("projpriorityid")
+					}
+					if cmd.IsSet("description") {
+						form["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("point") {
+						form["point"] = cmd.String("point")
+					}
+					if cmd.IsSet("epicid") {
+						form["epicid"] = cmd.String("epicid")
+					}
+					if cmd.IsSet("statusid") {
+						form["statusid"] = cmd.String("statusid")
+					}
+					if cmd.IsSet("startdate") {
+						form["startdate"] = cmd.String("startdate")
+					}
+					if cmd.IsSet("enddate") {
+						form["enddate"] = cmd.String("enddate")
+					}
+					if err := internal.MergeJSONForm(cmd, form); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", &zohttp.RequestOpts{
 						Form: form,
 					})
@@ -601,7 +739,11 @@ func epicsCmd() *cli.Command {
 				Usage:     "Create an epic",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body (name, description, etc.)"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Epic name"},
+					&cli.StringFlag{Name: "owner", Usage: "Owner user ID"},
+					&cli.StringFlag{Name: "desc", Usage: "Epic description"},
+					&cli.StringFlag{Name: "color", Usage: "Color code (hex format)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -615,13 +757,22 @@ func epicsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					body := map[string]any{}
+					body["name"] = cmd.String("name")
+					if cmd.IsSet("owner") {
+						body["owner"] = cmd.String("owner")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("desc") {
+						body["desc"] = cmd.String("desc")
+					}
+					if cmd.IsSet("color") {
+						body["color"] = cmd.String("color")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{
-						Form: form,
+						JSON: body,
 					})
 					if err != nil {
 						return err
@@ -634,7 +785,11 @@ func epicsCmd() *cli.Command {
 				Usage:     "Update an epic",
 				ArgsUsage: "<project-id> <epic-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "Epic name"},
+					&cli.StringFlag{Name: "desc", Usage: "Epic description"},
+					&cli.StringFlag{Name: "owner", Usage: "Owner user ID"},
+					&cli.StringFlag{Name: "color", Usage: "Color code (hex format)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
@@ -648,13 +803,24 @@ func epicsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body map[string]any
-					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
-						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
 					}
-					form := jsonToForm(body)
+					if cmd.IsSet("desc") {
+						body["desc"] = cmd.String("desc")
+					}
+					if cmd.IsSet("owner") {
+						body["owner"] = cmd.String("owner")
+					}
+					if cmd.IsSet("color") {
+						body["color"] = cmd.String("color")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/epic/"+cmd.Args().Get(1)+"/", &zohttp.RequestOpts{
-						Form: form,
+						JSON: body,
 					})
 					if err != nil {
 						return err
@@ -818,16 +984,16 @@ func prioritiesCmd() *cli.Command {
 func membersCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "members",
-		Usage: "Project member operations",
+		Usage: "Team member operations",
 		Commands: []*cli.Command{
 			{
-				Name:      "list",
-				Usage:     "List members of a project",
-				ArgsUsage: "<project-id>",
+				Name:  "list",
+				Usage: "List members of the team",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
+					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					if cmd.Args().Len() < 1 {
-						return internal.NewValidationError("project ID required")
-					}
 					c, err := getClient()
 					if err != nil {
 						return err
@@ -836,7 +1002,13 @@ func membersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/members/", nil)
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/users/", &zohttp.RequestOpts{
+						Params: map[string]string{
+							"action": "data",
+							"index":  cmd.String("index"),
+							"range":  cmd.String("range"),
+						},
+					})
 					if err != nil {
 						return err
 					}

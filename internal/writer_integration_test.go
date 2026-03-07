@@ -139,5 +139,3 @@ func TestWriterErrors(t *testing.T) {
 		assertExitCode(t, r, 4)
 	})
 }
-
-

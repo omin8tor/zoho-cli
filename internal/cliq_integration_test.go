@@ -318,5 +318,3 @@ func TestCliqEmergencyCleanup(t *testing.T) {
 		zohoIgnoreError(t, "cliq", "channels", "delete", channelID)
 	}
 }
-
-

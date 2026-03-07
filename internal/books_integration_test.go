@@ -120,7 +120,8 @@ func TestBooksContacts(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		name := fmt.Sprintf("%s Contact %s", testPrefix, randomSuffix())
 		out := zoho(t, "books", "contacts", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": name, "contact_type": "customer"}))
+			"--contact_name", name,
+			"--contact_type", "customer")
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 		contact, ok := m["contact"].(map[string]any)
@@ -147,7 +148,7 @@ func TestBooksContacts(t *testing.T) {
 		requireID(t, contactID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Contact Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "books", "contacts", "update", contactID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": updatedName}))
+			"--contact_name", updatedName)
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 	})
@@ -190,7 +191,8 @@ func TestBooksItems(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		name := fmt.Sprintf("%s Item %s", testPrefix, randomSuffix())
 		out := zoho(t, "books", "items", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"name": name, "rate": 100}))
+			"--name", name,
+			"--rate", "100")
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 		item, ok := m["item"].(map[string]any)
@@ -217,7 +219,7 @@ func TestBooksItems(t *testing.T) {
 		requireID(t, itemID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Item Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "books", "items", "update", itemID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 	})
@@ -255,7 +257,8 @@ func TestBooksEstimates(t *testing.T) {
 	t.Run("create-contact", func(t *testing.T) {
 		name := fmt.Sprintf("%s EstCust %s", testPrefix, randomSuffix())
 		out := zoho(t, "books", "contacts", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": name, "contact_type": "customer"}))
+			"--contact_name", name,
+			"--contact_type", "customer")
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 		contact := m["contact"].(map[string]any)
@@ -272,8 +275,8 @@ func TestBooksEstimates(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		requireID(t, contactID, "create-contact must have succeeded")
 		out := zoho(t, "books", "estimates", "create", "--org", orgID,
+			"--customer_id", contactID,
 			"--json", toJSON(t, map[string]any{
-				"customer_id": contactID,
 				"line_items": []map[string]any{
 					{"description": "Test line item", "rate": 100, "quantity": 1},
 				},
@@ -331,7 +334,8 @@ func TestBooksInvoices(t *testing.T) {
 	t.Run("create-contact", func(t *testing.T) {
 		name := fmt.Sprintf("%s InvCust %s", testPrefix, randomSuffix())
 		out := zoho(t, "books", "contacts", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": name, "contact_type": "customer"}))
+			"--contact_name", name,
+			"--contact_type", "customer")
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 		contact := m["contact"].(map[string]any)
@@ -348,8 +352,8 @@ func TestBooksInvoices(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		requireID(t, contactID, "create-contact must have succeeded")
 		out := zoho(t, "books", "invoices", "create", "--org", orgID,
+			"--customer_id", contactID,
 			"--json", toJSON(t, map[string]any{
-				"customer_id": contactID,
 				"line_items": []map[string]any{
 					{"description": "Test service", "rate": 200, "quantity": 1},
 				},
@@ -444,11 +448,9 @@ func TestBooksExpenses(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		requireID(t, accountID, "discover-account must have succeeded")
 		out := zoho(t, "books", "expenses", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{
-				"account_id": accountID,
-				"date":       "2026-03-07",
-				"amount":     10.00,
-			}))
+			"--account_id", accountID,
+			"--date", "2026-03-07",
+			"--amount", "10.00")
 		m := parseJSON(t, out)
 		assertBooksCodeZero(t, m)
 		expense, ok := m["expense"].(map[string]any)
@@ -586,14 +588,14 @@ func TestBooksErrors(t *testing.T) {
 		}
 	})
 
-	t.Run("missing-json-flag", func(t *testing.T) {
+	t.Run("missing-required-create-flags", func(t *testing.T) {
 		orgID := os.Getenv("ZOHO_BOOKS_ORG_ID")
 		if orgID == "" {
 			t.Skip("ZOHO_BOOKS_ORG_ID not set")
 		}
 		r := runZoho(t, "books", "contacts", "create", "--org", orgID)
 		if r.ExitCode == 0 {
-			t.Error("expected non-zero exit code when --json missing")
+			t.Error("expected non-zero exit code when required create flags are missing")
 		}
 	})
 }
@@ -665,4 +667,3 @@ func TestBooksEmergencyCleanup(t *testing.T) {
 		}
 	}
 }
-

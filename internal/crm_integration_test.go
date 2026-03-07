@@ -85,7 +85,6 @@ func (c *testCleanup) trackAttachment(module, recordID, attID string) {
 	})
 }
 
-
 func (c *testCleanup) trackContact(id string) {
 	c.add("delete contact "+id, func() {
 		zohoIgnoreError(c.t, "crm", "records", "delete", "Contacts", id)
@@ -1116,4 +1115,3 @@ func TestCRMEmergencyCleanup(t *testing.T) {
 		zohoIgnoreError(t, "crm", "records", "delete", "Leads", rec.ID)
 	}
 }
-

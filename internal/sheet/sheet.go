@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	internal "github.com/omin8tor/zoho-cli/internal"
 	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
@@ -832,7 +833,8 @@ func tablesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Record data as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -842,7 +844,10 @@ func tablesCmd() *cli.Command {
 					params := map[string]string{
 						"method":     "table.records.add",
 						"table_name": cmd.String("table-name"),
-						"json_data":  cmd.String("json"),
+						"json_data":  cmd.String("data"),
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -858,7 +863,8 @@ func tablesCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 					&cli.StringFlag{Name: "criteria", Required: true, Usage: "Filter criteria"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -869,7 +875,10 @@ func tablesCmd() *cli.Command {
 						"method":     "table.records.update",
 						"table_name": cmd.String("table-name"),
 						"criteria":   cmd.String("criteria"),
-						"data":       cmd.String("json"),
+						"data":       cmd.String("data"),
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1012,7 +1021,8 @@ func recordsCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Record data as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1021,13 +1031,16 @@ func recordsCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method":    "worksheet.records.add",
-						"json_data": cmd.String("json"),
+						"json_data": cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1044,7 +1057,8 @@ func recordsCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "criteria", Required: true, Usage: "Filter criteria"},
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1054,13 +1068,16 @@ func recordsCmd() *cli.Command {
 					params := map[string]string{
 						"method":   "worksheet.records.update",
 						"criteria": cmd.String("criteria"),
-						"data":     cmd.String("json"),
+						"data":     cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1450,7 +1467,8 @@ func contentCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Row data as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1459,13 +1477,16 @@ func contentCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"method":    "worksheet.jsondata.append",
-						"json_data": cmd.String("json"),
+						"json_data": cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1482,7 +1503,8 @@ func contentCmd() *cli.Command {
 					worksheetFlag,
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
 					&cli.StringFlag{Name: "criteria", Required: true, Usage: "Filter criteria"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1492,13 +1514,16 @@ func contentCmd() *cli.Command {
 					params := map[string]string{
 						"method":    "worksheet.jsondata.set",
 						"criteria":  cmd.String("criteria"),
-						"json_data": cmd.String("json"),
+						"json_data": cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1515,7 +1540,8 @@ func contentCmd() *cli.Command {
 					worksheetFlag,
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
 					&cli.IntFlag{Name: "row-index", Required: true, Usage: "Row index to insert at"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Row data as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1525,13 +1551,16 @@ func contentCmd() *cli.Command {
 					params := map[string]string{
 						"method":    "worksheet.jsondata.insert",
 						"row_index": fmt.Sprintf("%d", cmd.Int("row-index")),
-						"json_data": cmd.String("json"),
+						"json_data": cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -2305,7 +2334,8 @@ func premiumCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Record data as JSON array"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2315,13 +2345,16 @@ func premiumCmd() *cli.Command {
 					params := map[string]string{
 						"method":      "premium.records.add",
 						"resource_id": cmd.String("workbook"),
-						"json_data":   cmd.String("json"),
+						"json_data":   cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/addrecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -2338,7 +2371,8 @@ func premiumCmd() *cli.Command {
 					worksheetFlag,
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
 					&cli.StringFlag{Name: "criteria", Required: true, Usage: "Filter criteria"},
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON data"},
+					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2349,13 +2383,16 @@ func premiumCmd() *cli.Command {
 						"method":      "premium.records.update",
 						"resource_id": cmd.String("workbook"),
 						"criteria":    cmd.String("criteria"),
-						"json_data":   cmd.String("json"),
+						"json_data":   cmd.String("data"),
 					}
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
+					}
+					if err := internal.MergeJSONForm(cmd, params); err != nil {
+						return err
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/updaterecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {

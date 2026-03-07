@@ -56,6 +56,7 @@ func TestSprintsProjects(t *testing.T) {
 	cleanup := newCleanup(t)
 
 	var projectID string
+	var ownerID, projGroupID string
 
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "sprints", "projects", "list", "--team", teamID)
@@ -65,15 +66,31 @@ func TestSprintsProjects(t *testing.T) {
 				t.Fatalf("unexpected response:\n%s", truncate(out, 500))
 			}
 		}
+		props, _ := m["project_prop"].(map[string]any)
+		projObj, _ := m["projectJObj"].(map[string]any)
+		if props != nil && projObj != nil {
+			ownerIdx := int(props["owner"].(float64))
+			groupIdx := int(props["groupId"].(float64))
+			for _, v := range projObj {
+				arr, _ := v.([]any)
+				if arr != nil && len(arr) > ownerIdx && len(arr) > groupIdx {
+					ownerID = fmt.Sprintf("%v", arr[ownerIdx])
+					projGroupID = fmt.Sprintf("%v", arr[groupIdx])
+					break
+				}
+			}
+		}
 	})
 
 	t.Run("create", func(t *testing.T) {
+		if ownerID == "" || projGroupID == "" {
+			t.Skip("could not discover owner/projgroup from existing projects")
+		}
 		name := fmt.Sprintf("%s Proj %s", testPrefix, randomSuffix())
 		out := zoho(t, "sprints", "projects", "create", "--team", teamID,
-			"--json", toJSON(t, map[string]any{
-				"name":     name,
-				"projType": "1",
-			}))
+			"--name", name,
+			"--owner", ownerID,
+			"--projgroup", projGroupID)
 		m := parseJSON(t, out)
 		if pid, ok := m["projectId"]; ok {
 			projectID = fmt.Sprintf("%v", pid)
@@ -110,7 +127,7 @@ func TestSprintsProjects(t *testing.T) {
 		requireID(t, projectID, "create must have succeeded")
 		updName := fmt.Sprintf("%s ProjUpd %s", testPrefix, randomSuffix())
 		out := zoho(t, "sprints", "projects", "update", projectID, "--team", teamID,
-			"--json", toJSON(t, map[string]any{"name": updName}))
+			"--name", updName)
 		m := parseJSON(t, out)
 		status := fmt.Sprintf("%v", m["status"])
 		if status != "success" {
@@ -171,8 +188,7 @@ func TestSprintsProjectMetadata(t *testing.T) {
 	})
 
 	t.Run("members", func(t *testing.T) {
-		requireID(t, projectID, "discover-project must have succeeded")
-		out := zoho(t, "sprints", "members", "list", projectID, "--team", teamID)
+		out := zoho(t, "sprints", "members", "list", "--team", teamID)
 		_ = parseJSON(t, out)
 	})
 }
@@ -282,14 +298,42 @@ func TestSprintsItems(t *testing.T) {
 		_ = parseJSON(t, out)
 	})
 
+	var itemTypeID, priorityID string
+
+	t.Run("discover-item-metadata", func(t *testing.T) {
+		requireID(t, projectID, "discover must have succeeded")
+
+		itOut := zoho(t, "sprints", "item-types", "list", projectID, "--team", teamID)
+		itm := parseJSON(t, itOut)
+		if ids, ok := itm["projItemTypeIds"].([]any); ok && len(ids) > 0 {
+			itemTypeID = fmt.Sprintf("%v", ids[0])
+		}
+		if itemTypeID == "" || itemTypeID == "<nil>" {
+			t.Skip("no item types found")
+		}
+
+		prOut := zoho(t, "sprints", "priorities", "list", projectID, "--team", teamID)
+		prm := parseJSON(t, prOut)
+		if ids, ok := prm["projPriorityIds"].([]any); ok && len(ids) > 0 {
+			priorityID = fmt.Sprintf("%v", ids[0])
+		}
+		if priorityID == "" || priorityID == "<nil>" {
+			t.Skip("no priorities found")
+		}
+	})
+
 	var itemID string
 
 	t.Run("create", func(t *testing.T) {
 		requireID(t, projectID, "discover must have succeeded")
 		requireID(t, backlogID, "discover must have succeeded")
+		requireID(t, itemTypeID, "discover-item-metadata must have succeeded")
+		requireID(t, priorityID, "discover-item-metadata must have succeeded")
 		name := fmt.Sprintf("%s Item %s", testPrefix, randomSuffix())
 		out := zoho(t, "sprints", "items", "create", projectID, backlogID, "--team", teamID,
-			"--json", toJSON(t, map[string]any{"name": name}))
+			"--name", name,
+			"--projitemtypeid", itemTypeID,
+			"--projpriorityid", priorityID)
 		m := parseJSON(t, out)
 		if id, ok := m["itemId"]; ok {
 			itemID = fmt.Sprintf("%v", id)
@@ -317,7 +361,7 @@ func TestSprintsItems(t *testing.T) {
 		requireID(t, itemID, "create must have succeeded")
 		updName := fmt.Sprintf("%s ItemUpd %s", testPrefix, randomSuffix())
 		out, err := zohoMayFail(t, "sprints", "items", "update", projectID, backlogID, itemID, "--team", teamID,
-			"--json", toJSON(t, map[string]any{"name": updName}))
+			"--name", updName)
 		if err != nil {
 			t.Logf("update may have failed: %v\n%s", err, truncate(out, 500))
 		}
@@ -370,7 +414,7 @@ func TestSprintsEpics(t *testing.T) {
 		requireID(t, projectID, "discover-project must have succeeded")
 		name := fmt.Sprintf("%s Epic %s", testPrefix, randomSuffix())
 		out := zoho(t, "sprints", "epics", "create", projectID, "--team", teamID,
-			"--json", toJSON(t, map[string]any{"name": name}))
+			"--name", name)
 		m := parseJSON(t, out)
 		if id, ok := m["epicId"]; ok {
 			epicID = fmt.Sprintf("%v", id)
@@ -392,7 +436,7 @@ func TestSprintsEpics(t *testing.T) {
 		requireID(t, epicID, "create must have succeeded")
 		updName := fmt.Sprintf("%s EpicUpd %s", testPrefix, randomSuffix())
 		out, err := zohoMayFail(t, "sprints", "epics", "update", projectID, epicID, "--team", teamID,
-			"--json", toJSON(t, map[string]any{"name": updName}))
+			"--name", updName)
 		if err != nil {
 			t.Logf("epic update may have failed: %v\n%s", err, truncate(out, 500))
 		}
@@ -434,8 +478,8 @@ func TestSprintsErrors(t *testing.T) {
 		if teamID == "" {
 			t.Skip("ZOHO_SPRINTS_TEAM_ID not set")
 		}
-		r := runZoho(t, "sprints", "items", "create", "--team", teamID, "--json", `{"name":"test"}`)
-		assertExitCode(t, r, 4)
+		r := runZoho(t, "sprints", "items", "create", "--team", teamID, "--name", "test")
+		assertExitCode(t, r, 1)
 	})
 
 	t.Run("missing-args-items-get", func(t *testing.T) {

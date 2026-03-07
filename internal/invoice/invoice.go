@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 
 	"github.com/omin8tor/zoho-cli/internal"
@@ -133,7 +132,13 @@ func contactsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a contact",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "contact_name", Required: true, Usage: "Name of the contact"},
+					&cli.StringFlag{Name: "company_name", Usage: "Company name"},
+					&cli.StringFlag{Name: "contact_type", Usage: "Contact type (customer or vendor)"},
+					&cli.StringFlag{Name: "website", Usage: "Website URL"},
+					&cli.StringFlag{Name: "language_code", Usage: "Language code (e.g. en)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes for the contact"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -144,8 +149,26 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["contact_name"] = cmd.String("contact_name")
+					if cmd.IsSet("company_name") {
+						body["company_name"] = cmd.String("company_name")
+					}
+					if cmd.IsSet("contact_type") {
+						body["contact_type"] = cmd.String("contact_type")
+					}
+					if cmd.IsSet("website") {
+						body["website"] = cmd.String("website")
+					}
+					if cmd.IsSet("language_code") {
+						body["language_code"] = cmd.String("language_code")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/contacts", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -184,7 +207,13 @@ func contactsCmd() *cli.Command {
 				Usage:     "Update a contact",
 				ArgsUsage: "<contact-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "contact_name", Usage: "Name of the contact"},
+					&cli.StringFlag{Name: "company_name", Usage: "Company name"},
+					&cli.StringFlag{Name: "contact_type", Usage: "Contact type (customer or vendor)"},
+					&cli.StringFlag{Name: "website", Usage: "Website URL"},
+					&cli.StringFlag{Name: "language_code", Usage: "Language code (e.g. en)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes for the contact"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -198,8 +227,28 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("contact_name") {
+						body["contact_name"] = cmd.String("contact_name")
+					}
+					if cmd.IsSet("company_name") {
+						body["company_name"] = cmd.String("company_name")
+					}
+					if cmd.IsSet("contact_type") {
+						body["contact_type"] = cmd.String("contact_type")
+					}
+					if cmd.IsSet("website") {
+						body["website"] = cmd.String("website")
+					}
+					if cmd.IsSet("language_code") {
+						body["language_code"] = cmd.String("language_code")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -311,7 +360,14 @@ func estimatesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an estimate",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "estimate_number", Usage: "Estimate number"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Estimate date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "expiry_date", Usage: "Expiry date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -322,8 +378,29 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["customer_id"] = cmd.String("customer_id")
+					if cmd.IsSet("estimate_number") {
+						body["estimate_number"] = cmd.String("estimate_number")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("expiry_date") {
+						body["expiry_date"] = cmd.String("expiry_date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/estimates", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -362,7 +439,14 @@ func estimatesCmd() *cli.Command {
 				Usage:     "Update an estimate",
 				ArgsUsage: "<estimate-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "estimate_number", Usage: "Estimate number"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Estimate date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "expiry_date", Usage: "Expiry date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -376,8 +460,31 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("estimate_number") {
+						body["estimate_number"] = cmd.String("estimate_number")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("expiry_date") {
+						body["expiry_date"] = cmd.String("expiry_date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -535,7 +642,17 @@ func invoicesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an invoice",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "invoice_number", Usage: "Invoice number"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Invoice date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "due_date", Usage: "Due date (YYYY-MM-DD)"},
+					&cli.IntFlag{Name: "payment_terms", Usage: "Payment terms in days"},
+					&cli.StringFlag{Name: "payment_terms_label", Usage: "Payment terms label (e.g. Net 30)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "salesperson_name", Usage: "Salesperson name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -546,8 +663,38 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["customer_id"] = cmd.String("customer_id")
+					if cmd.IsSet("invoice_number") {
+						body["invoice_number"] = cmd.String("invoice_number")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("due_date") {
+						body["due_date"] = cmd.String("due_date")
+					}
+					if cmd.IsSet("payment_terms") {
+						body["payment_terms"] = cmd.Int("payment_terms")
+					}
+					if cmd.IsSet("payment_terms_label") {
+						body["payment_terms_label"] = cmd.String("payment_terms_label")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if cmd.IsSet("salesperson_name") {
+						body["salesperson_name"] = cmd.String("salesperson_name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/invoices", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -586,7 +733,17 @@ func invoicesCmd() *cli.Command {
 				Usage:     "Update an invoice",
 				ArgsUsage: "<invoice-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "invoice_number", Usage: "Invoice number"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Invoice date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "due_date", Usage: "Due date (YYYY-MM-DD)"},
+					&cli.IntFlag{Name: "payment_terms", Usage: "Payment terms in days"},
+					&cli.StringFlag{Name: "payment_terms_label", Usage: "Payment terms label (e.g. Net 30)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "salesperson_name", Usage: "Salesperson name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -600,8 +757,40 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("invoice_number") {
+						body["invoice_number"] = cmd.String("invoice_number")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("due_date") {
+						body["due_date"] = cmd.String("due_date")
+					}
+					if cmd.IsSet("payment_terms") {
+						body["payment_terms"] = cmd.Int("payment_terms")
+					}
+					if cmd.IsSet("payment_terms_label") {
+						body["payment_terms_label"] = cmd.String("payment_terms_label")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if cmd.IsSet("salesperson_name") {
+						body["salesperson_name"] = cmd.String("salesperson_name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -828,7 +1017,13 @@ func recurringInvoicesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a recurring invoice",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "recurrence_name", Required: true, Usage: "Name for the recurring profile"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "recurrence_frequency", Required: true, Usage: "Frequency (e.g. weekly, monthly, yearly)"},
+					&cli.IntFlag{Name: "repeat_every", Usage: "Repeat interval"},
+					&cli.StringFlag{Name: "start_date", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "end_date", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -839,8 +1034,22 @@ func recurringInvoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["recurrence_name"] = cmd.String("recurrence_name")
+					body["customer_id"] = cmd.String("customer_id")
+					body["recurrence_frequency"] = cmd.String("recurrence_frequency")
+					if cmd.IsSet("repeat_every") {
+						body["repeat_every"] = cmd.Int("repeat_every")
+					}
+					if cmd.IsSet("start_date") {
+						body["start_date"] = cmd.String("start_date")
+					}
+					if cmd.IsSet("end_date") {
+						body["end_date"] = cmd.String("end_date")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/recurringinvoices", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -879,7 +1088,13 @@ func recurringInvoicesCmd() *cli.Command {
 				Usage:     "Update a recurring invoice",
 				ArgsUsage: "<recurring-invoice-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "recurrence_name", Usage: "Name for the recurring profile"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "recurrence_frequency", Usage: "Frequency (e.g. weekly, monthly, yearly)"},
+					&cli.IntFlag{Name: "repeat_every", Usage: "Repeat interval"},
+					&cli.StringFlag{Name: "start_date", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "end_date", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -893,8 +1108,28 @@ func recurringInvoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("recurrence_name") {
+						body["recurrence_name"] = cmd.String("recurrence_name")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("recurrence_frequency") {
+						body["recurrence_frequency"] = cmd.String("recurrence_frequency")
+					}
+					if cmd.IsSet("repeat_every") {
+						body["repeat_every"] = cmd.Int("repeat_every")
+					}
+					if cmd.IsSet("start_date") {
+						body["start_date"] = cmd.String("start_date")
+					}
+					if cmd.IsSet("end_date") {
+						body["end_date"] = cmd.String("end_date")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/recurringinvoices/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1006,7 +1241,13 @@ func creditNotesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a credit note",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "creditnote_number", Usage: "Credit note number"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1017,8 +1258,26 @@ func creditNotesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["customer_id"] = cmd.String("customer_id")
+					if cmd.IsSet("creditnote_number") {
+						body["creditnote_number"] = cmd.String("creditnote_number")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/creditnotes", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1057,7 +1316,13 @@ func creditNotesCmd() *cli.Command {
 				Usage:     "Update a credit note",
 				ArgsUsage: "<creditnote-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "creditnote_number", Usage: "Credit note number"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -1071,8 +1336,28 @@ func creditNotesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("creditnote_number") {
+						body["creditnote_number"] = cmd.String("creditnote_number")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/creditnotes/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1207,7 +1492,13 @@ func customerPaymentsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a customer payment",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "payment_mode", Required: true, Usage: "Payment mode (e.g. cash, bank)"},
+					&cli.FloatFlag{Name: "amount", Required: true, Usage: "Payment amount"},
+					&cli.StringFlag{Name: "date", Required: true, Usage: "Payment date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "description", Usage: "Description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1218,8 +1509,20 @@ func customerPaymentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["customer_id"] = cmd.String("customer_id")
+					body["payment_mode"] = cmd.String("payment_mode")
+					body["amount"] = cmd.Float("amount")
+					body["date"] = cmd.String("date")
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/customerpayments", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1258,7 +1561,13 @@ func customerPaymentsCmd() *cli.Command {
 				Usage:     "Update a customer payment",
 				ArgsUsage: "<payment-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "payment_mode", Usage: "Payment mode (e.g. cash, bank)"},
+					&cli.FloatFlag{Name: "amount", Usage: "Payment amount"},
+					&cli.StringFlag{Name: "date", Usage: "Payment date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "description", Usage: "Description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -1272,8 +1581,28 @@ func customerPaymentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("payment_mode") {
+						body["payment_mode"] = cmd.String("payment_mode")
+					}
+					if cmd.IsSet("amount") {
+						body["amount"] = cmd.Float("amount")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/customerpayments/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1339,7 +1668,13 @@ func expensesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an expense",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "account_id", Required: true, Usage: "Expense account ID"},
+					&cli.StringFlag{Name: "date", Required: true, Usage: "Expense date (YYYY-MM-DD)"},
+					&cli.FloatFlag{Name: "amount", Required: true, Usage: "Expense amount"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "description", Usage: "Description"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1350,8 +1685,22 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["account_id"] = cmd.String("account_id")
+					body["date"] = cmd.String("date")
+					body["amount"] = cmd.Float("amount")
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/expenses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1390,7 +1739,13 @@ func expensesCmd() *cli.Command {
 				Usage:     "Update an expense",
 				ArgsUsage: "<expense-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "account_id", Usage: "Expense account ID"},
+					&cli.StringFlag{Name: "date", Usage: "Expense date (YYYY-MM-DD)"},
+					&cli.FloatFlag{Name: "amount", Usage: "Expense amount"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "description", Usage: "Description"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -1404,8 +1759,28 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("account_id") {
+						body["account_id"] = cmd.String("account_id")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("amount") {
+						body["amount"] = cmd.Float("amount")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1494,7 +1869,15 @@ func recurringExpensesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a recurring expense",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "account_id", Required: true, Usage: "Expense account ID"},
+					&cli.StringFlag{Name: "recurrence_name", Required: true, Usage: "Name for the recurring expense"},
+					&cli.StringFlag{Name: "start_date", Required: true, Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "recurrence_frequency", Required: true, Usage: "Frequency (e.g. weekly, monthly, yearly)"},
+					&cli.IntFlag{Name: "repeat_every", Required: true, Usage: "Repeat interval"},
+					&cli.FloatFlag{Name: "amount", Required: true, Usage: "Expense amount"},
+					&cli.StringFlag{Name: "end_date", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1505,8 +1888,22 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["account_id"] = cmd.String("account_id")
+					body["recurrence_name"] = cmd.String("recurrence_name")
+					body["start_date"] = cmd.String("start_date")
+					body["recurrence_frequency"] = cmd.String("recurrence_frequency")
+					body["repeat_every"] = cmd.Int("repeat_every")
+					body["amount"] = cmd.Float("amount")
+					if cmd.IsSet("end_date") {
+						body["end_date"] = cmd.String("end_date")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/recurringexpenses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1545,7 +1942,15 @@ func recurringExpensesCmd() *cli.Command {
 				Usage:     "Update a recurring expense",
 				ArgsUsage: "<recurring-expense-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "account_id", Usage: "Expense account ID"},
+					&cli.StringFlag{Name: "recurrence_name", Usage: "Name for the recurring expense"},
+					&cli.StringFlag{Name: "start_date", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "recurrence_frequency", Usage: "Frequency (e.g. weekly, monthly, yearly)"},
+					&cli.IntFlag{Name: "repeat_every", Usage: "Repeat interval"},
+					&cli.FloatFlag{Name: "amount", Usage: "Expense amount"},
+					&cli.StringFlag{Name: "end_date", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -1559,8 +1964,34 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("account_id") {
+						body["account_id"] = cmd.String("account_id")
+					}
+					if cmd.IsSet("recurrence_name") {
+						body["recurrence_name"] = cmd.String("recurrence_name")
+					}
+					if cmd.IsSet("start_date") {
+						body["start_date"] = cmd.String("start_date")
+					}
+					if cmd.IsSet("recurrence_frequency") {
+						body["recurrence_frequency"] = cmd.String("recurrence_frequency")
+					}
+					if cmd.IsSet("repeat_every") {
+						body["repeat_every"] = cmd.Int("repeat_every")
+					}
+					if cmd.IsSet("amount") {
+						body["amount"] = cmd.Float("amount")
+					}
+					if cmd.IsSet("end_date") {
+						body["end_date"] = cmd.String("end_date")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1718,7 +2149,12 @@ func retainerInvoicesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a retainer invoice",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1729,8 +2165,23 @@ func retainerInvoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["customer_id"] = cmd.String("customer_id")
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/retainerinvoices", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1769,7 +2220,12 @@ func retainerInvoicesCmd() *cli.Command {
 				Usage:     "Update a retainer invoice",
 				ArgsUsage: "<retainer-invoice-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
+					&cli.StringFlag{Name: "date", Usage: "Date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "notes", Usage: "Notes"},
+					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -1783,8 +2239,25 @@ func retainerInvoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("notes") {
+						body["notes"] = cmd.String("notes")
+					}
+					if cmd.IsSet("terms") {
+						body["terms"] = cmd.String("terms")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/retainerinvoices/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1919,7 +2392,14 @@ func projectsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a project",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "project_name", Required: true, Usage: "Project name"},
+					&cli.StringFlag{Name: "customer_id", Required: true, Usage: "Customer ID"},
+					&cli.StringFlag{Name: "billing_type", Required: true, Usage: "Billing type (fixed_cost_for_project, based_on_project_hours, based_on_staff_hours, based_on_task_hours)"},
+					&cli.StringFlag{Name: "description", Usage: "Project description"},
+					&cli.FloatFlag{Name: "rate", Usage: "Hourly rate"},
+					&cli.StringFlag{Name: "budget_type", Usage: "Budget type"},
+					&cli.IntFlag{Name: "budget_hours", Usage: "Budget hours"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1930,8 +2410,25 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["project_name"] = cmd.String("project_name")
+					body["customer_id"] = cmd.String("customer_id")
+					body["billing_type"] = cmd.String("billing_type")
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("rate") {
+						body["rate"] = cmd.Float("rate")
+					}
+					if cmd.IsSet("budget_type") {
+						body["budget_type"] = cmd.String("budget_type")
+					}
+					if cmd.IsSet("budget_hours") {
+						body["budget_hours"] = cmd.Int("budget_hours")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/projects", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -1970,7 +2467,14 @@ func projectsCmd() *cli.Command {
 				Usage:     "Update a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "project_name", Usage: "Project name"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "billing_type", Usage: "Billing type"},
+					&cli.StringFlag{Name: "description", Usage: "Project description"},
+					&cli.FloatFlag{Name: "rate", Usage: "Hourly rate"},
+					&cli.StringFlag{Name: "budget_type", Usage: "Budget type"},
+					&cli.IntFlag{Name: "budget_hours", Usage: "Budget hours"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -1984,8 +2488,31 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("project_name") {
+						body["project_name"] = cmd.String("project_name")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("billing_type") {
+						body["billing_type"] = cmd.String("billing_type")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("rate") {
+						body["rate"] = cmd.Float("rate")
+					}
+					if cmd.IsSet("budget_type") {
+						body["budget_type"] = cmd.String("budget_type")
+					}
+					if cmd.IsSet("budget_hours") {
+						body["budget_hours"] = cmd.Int("budget_hours")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/projects/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -2166,7 +2693,13 @@ func itemsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an item",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Item name"},
+					&cli.FloatFlag{Name: "rate", Required: true, Usage: "Item rate"},
+					&cli.StringFlag{Name: "description", Usage: "Item description"},
+					&cli.StringFlag{Name: "unit", Usage: "Unit of measurement"},
+					&cli.StringFlag{Name: "sku", Usage: "SKU"},
+					&cli.StringFlag{Name: "product_type", Usage: "Product type (goods or service)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2177,8 +2710,24 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["name"] = cmd.String("name")
+					body["rate"] = cmd.Float("rate")
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("unit") {
+						body["unit"] = cmd.String("unit")
+					}
+					if cmd.IsSet("sku") {
+						body["sku"] = cmd.String("sku")
+					}
+					if cmd.IsSet("product_type") {
+						body["product_type"] = cmd.String("product_type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/items", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -2217,7 +2766,13 @@ func itemsCmd() *cli.Command {
 				Usage:     "Update an item",
 				ArgsUsage: "<item-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "Item name"},
+					&cli.FloatFlag{Name: "rate", Usage: "Item rate"},
+					&cli.StringFlag{Name: "description", Usage: "Item description"},
+					&cli.StringFlag{Name: "unit", Usage: "Unit of measurement"},
+					&cli.StringFlag{Name: "sku", Usage: "SKU"},
+					&cli.StringFlag{Name: "product_type", Usage: "Product type (goods or service)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -2231,8 +2786,28 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("rate") {
+						body["rate"] = cmd.Float("rate")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("unit") {
+						body["unit"] = cmd.String("unit")
+					}
+					if cmd.IsSet("sku") {
+						body["sku"] = cmd.String("sku")
+					}
+					if cmd.IsSet("product_type") {
+						body["product_type"] = cmd.String("product_type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -2344,7 +2919,11 @@ func currenciesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a currency",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "currency_code", Required: true, Usage: "Currency code (e.g. USD, EUR)"},
+					&cli.StringFlag{Name: "currency_symbol", Required: true, Usage: "Currency symbol (e.g. $)"},
+					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
+					&cli.IntFlag{Name: "price_precision", Usage: "Decimal precision"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2355,8 +2934,18 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["currency_code"] = cmd.String("currency_code")
+					body["currency_symbol"] = cmd.String("currency_symbol")
+					if cmd.IsSet("currency_format") {
+						body["currency_format"] = cmd.String("currency_format")
+					}
+					if cmd.IsSet("price_precision") {
+						body["price_precision"] = cmd.Int("price_precision")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/settings/currencies", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -2395,7 +2984,11 @@ func currenciesCmd() *cli.Command {
 				Usage:     "Update a currency",
 				ArgsUsage: "<currency-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "currency_code", Usage: "Currency code (e.g. USD, EUR)"},
+					&cli.StringFlag{Name: "currency_symbol", Usage: "Currency symbol (e.g. $)"},
+					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
+					&cli.IntFlag{Name: "price_precision", Usage: "Decimal precision"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -2409,8 +3002,22 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("currency_code") {
+						body["currency_code"] = cmd.String("currency_code")
+					}
+					if cmd.IsSet("currency_symbol") {
+						body["currency_symbol"] = cmd.String("currency_symbol")
+					}
+					if cmd.IsSet("currency_format") {
+						body["currency_format"] = cmd.String("currency_format")
+					}
+					if cmd.IsSet("price_precision") {
+						body["price_precision"] = cmd.Int("price_precision")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -2476,7 +3083,10 @@ func taxesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a tax",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "tax_name", Required: true, Usage: "Tax name"},
+					&cli.FloatFlag{Name: "tax_percentage", Required: true, Usage: "Tax percentage"},
+					&cli.StringFlag{Name: "tax_type", Required: true, Usage: "Tax type (tax or compound_tax)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2487,8 +3097,13 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					body["tax_name"] = cmd.String("tax_name")
+					body["tax_percentage"] = cmd.Float("tax_percentage")
+					body["tax_type"] = cmd.String("tax_type")
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.InvoiceBase+"/settings/taxes", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
@@ -2527,7 +3142,10 @@ func taxesCmd() *cli.Command {
 				Usage:     "Update a tax",
 				ArgsUsage: "<tax-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "tax_name", Usage: "Tax name"},
+					&cli.FloatFlag{Name: "tax_percentage", Usage: "Tax percentage"},
+					&cli.StringFlag{Name: "tax_type", Usage: "Tax type (tax or compound_tax)"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -2541,8 +3159,19 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("tax_name") {
+						body["tax_name"] = cmd.String("tax_name")
+					}
+					if cmd.IsSet("tax_percentage") {
+						body["tax_percentage"] = cmd.Float("tax_percentage")
+					}
+					if cmd.IsSet("tax_type") {
+						body["tax_type"] = cmd.String("tax_type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.InvoiceBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,

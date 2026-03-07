@@ -2,7 +2,6 @@ package expense
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -114,15 +113,26 @@ func organizationsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an organization",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "Organization name"},
+					&cli.StringFlag{Name: "fiscal_start_month", Usage: "Fiscal year start month"},
+					&cli.StringFlag{Name: "time_zone", Usage: "Organization time zone"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name")}
+					if cmd.IsSet("fiscal_start_month") {
+						body["fiscal_start_month"] = cmd.String("fiscal_start_month")
+					}
+					if cmd.IsSet("time_zone") {
+						body["time_zone"] = cmd.String("time_zone")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/organizations", &zohttp.RequestOpts{
 						JSON: body,
 					})
@@ -137,15 +147,29 @@ func organizationsCmd() *cli.Command {
 				Usage:     "Update an organization",
 				ArgsUsage: "<org-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "Organization name"},
+					&cli.StringFlag{Name: "fiscal_start_month", Usage: "Fiscal year start month"},
+					&cli.StringFlag{Name: "time_zone", Usage: "Organization time zone"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("fiscal_start_month") {
+						body["fiscal_start_month"] = cmd.String("fiscal_start_month")
+					}
+					if cmd.IsSet("time_zone") {
+						body["time_zone"] = cmd.String("time_zone")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/organizations/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON: body,
 					})
@@ -255,7 +279,15 @@ func expensesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an expense",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "category_id", Required: true, Usage: "Expense category ID"},
+					&cli.StringFlag{Name: "date", Required: true, Usage: "Expense date (YYYY-MM-DD)"},
+					&cli.FloatFlag{Name: "amount", Required: true, Usage: "Line item amount"},
+					&cli.StringFlag{Name: "currency_id", Usage: "Currency ID"},
+					&cli.StringFlag{Name: "paid_through_account_id", Usage: "Paid through account ID"},
+					&cli.StringFlag{Name: "description", Usage: "Expense description"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "project_id", Usage: "Project ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -266,8 +298,36 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"date": cmd.String("date")}
+					if cmd.IsSet("currency_id") {
+						body["currency_id"] = cmd.String("currency_id")
+					}
+					if cmd.IsSet("paid_through_account_id") {
+						body["paid_through_account_id"] = cmd.String("paid_through_account_id")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("project_id") {
+						body["project_id"] = cmd.String("project_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
+					categoryID := cmd.String("category_id")
+					if categoryID == "" {
+						return internal.NewValidationError("--category_id and --amount are required")
+					}
+					amountVal := cmd.Float("amount")
+					if _, exists := body["line_items"]; !exists {
+						body["line_items"] = []map[string]any{{
+							"category_id": categoryID,
+							"amount":      amountVal,
+						}}
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/expenses", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -283,7 +343,15 @@ func expensesCmd() *cli.Command {
 				Usage:     "Update an expense",
 				ArgsUsage: "<expense-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "category_id", Usage: "Expense category ID"},
+					&cli.StringFlag{Name: "date", Usage: "Expense date (YYYY-MM-DD)"},
+					&cli.FloatFlag{Name: "amount", Usage: "Line item amount"},
+					&cli.StringFlag{Name: "currency_id", Usage: "Currency ID"},
+					&cli.StringFlag{Name: "paid_through_account_id", Usage: "Paid through account ID"},
+					&cli.StringFlag{Name: "description", Usage: "Expense description"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "project_id", Usage: "Project ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -294,8 +362,41 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("date") {
+						body["date"] = cmd.String("date")
+					}
+					if cmd.IsSet("currency_id") {
+						body["currency_id"] = cmd.String("currency_id")
+					}
+					if cmd.IsSet("paid_through_account_id") {
+						body["paid_through_account_id"] = cmd.String("paid_through_account_id")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("project_id") {
+						body["project_id"] = cmd.String("project_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
+					categoryID := cmd.String("category_id")
+					if cmd.IsSet("category_id") != cmd.IsSet("amount") {
+						return internal.NewValidationError("--category_id and --amount must be provided together")
+					}
+					if cmd.IsSet("category_id") && cmd.IsSet("amount") {
+						amountVal := cmd.Float("amount")
+						if _, exists := body["line_items"]; !exists {
+							body["line_items"] = []map[string]any{{
+								"category_id": categoryID,
+								"amount":      amountVal,
+							}}
+						}
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -426,7 +527,9 @@ func reportsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an expense report",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "report_name", Required: true, Usage: "Report name"},
+					&cli.StringFlag{Name: "description", Usage: "Report description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -437,8 +540,13 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"report_name": cmd.String("report_name")}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/expensereports", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -454,7 +562,9 @@ func reportsCmd() *cli.Command {
 				Usage:     "Update an expense report",
 				ArgsUsage: "<report-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "report_name", Usage: "Report name"},
+					&cli.StringFlag{Name: "description", Usage: "Report description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -465,8 +575,16 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("report_name") {
+						body["report_name"] = cmd.String("report_name")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/expensereports/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -504,7 +622,8 @@ func reportsCmd() *cli.Command {
 				Usage:     "Reject an expense report",
 				ArgsUsage: "<report-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Usage: "JSON body with rejection comments"},
+					&cli.StringFlag{Name: "comments", Usage: "Rejection comments"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -515,12 +634,15 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					opts := &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+					body := map[string]any{}
+					if cmd.IsSet("comments") {
+						body["comments"] = cmd.String("comments")
 					}
-					if j := cmd.String("json"); j != "" {
-						var body any
-						json.Unmarshal([]byte(j), &body)
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
+					opts := &zohttp.RequestOpts{Headers: orgHeaders(orgID)}
+					if len(body) > 0 {
 						opts.JSON = body
 					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/expensereports/"+cmd.Args().First()+"/reject", opts)
@@ -535,7 +657,9 @@ func reportsCmd() *cli.Command {
 				Usage:     "Reimburse an expense report",
 				ArgsUsage: "<report-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Usage: "JSON body"},
+					&cli.StringFlag{Name: "payment_mode", Usage: "Payment mode"},
+					&cli.StringFlag{Name: "reference_number", Usage: "Payment reference number"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -546,12 +670,18 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					opts := &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+					body := map[string]any{}
+					if cmd.IsSet("payment_mode") {
+						body["payment_mode"] = cmd.String("payment_mode")
 					}
-					if j := cmd.String("json"); j != "" {
-						var body any
-						json.Unmarshal([]byte(j), &body)
+					if cmd.IsSet("reference_number") {
+						body["reference_number"] = cmd.String("reference_number")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
+					opts := &zohttp.RequestOpts{Headers: orgHeaders(orgID)}
+					if len(body) > 0 {
 						opts.JSON = body
 					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/expensereports/"+cmd.Args().First()+"/reimburse", opts)
@@ -677,7 +807,9 @@ func categoriesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create an expense category",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "category_name", Required: true, Usage: "Category name"},
+					&cli.StringFlag{Name: "description", Usage: "Category description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -688,8 +820,13 @@ func categoriesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"category_name": cmd.String("category_name")}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/expensecategories", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -705,7 +842,9 @@ func categoriesCmd() *cli.Command {
 				Usage:     "Update an expense category",
 				ArgsUsage: "<category-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "category_name", Usage: "Category name"},
+					&cli.StringFlag{Name: "description", Usage: "Category description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -716,8 +855,16 @@ func categoriesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("category_name") {
+						body["category_name"] = cmd.String("category_name")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/expensecategories/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -862,7 +1009,10 @@ func usersCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a user",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Required: true, Usage: "User name"},
+					&cli.StringFlag{Name: "email", Required: true, Usage: "User email"},
+					&cli.StringFlag{Name: "role_id", Usage: "Role ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -873,8 +1023,13 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"name": cmd.String("name"), "email": cmd.String("email")}
+					if cmd.IsSet("role_id") {
+						body["role_id"] = cmd.String("role_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/users", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -890,7 +1045,10 @@ func usersCmd() *cli.Command {
 				Usage:     "Update a user",
 				ArgsUsage: "<user-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "name", Usage: "User name"},
+					&cli.StringFlag{Name: "email", Usage: "User email"},
+					&cli.StringFlag{Name: "role_id", Usage: "Role ID"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -901,8 +1059,19 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("name") {
+						body["name"] = cmd.String("name")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if cmd.IsSet("role_id") {
+						body["role_id"] = cmd.String("role_id")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/users/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1069,7 +1238,10 @@ func customersCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a customer",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "contact_name", Required: true, Usage: "Customer name"},
+					&cli.StringFlag{Name: "company_name", Usage: "Company name"},
+					&cli.StringFlag{Name: "email", Usage: "Customer email"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1080,8 +1252,16 @@ func customersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"contact_name": cmd.String("contact_name")}
+					if cmd.IsSet("company_name") {
+						body["company_name"] = cmd.String("company_name")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/contacts", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1097,7 +1277,10 @@ func customersCmd() *cli.Command {
 				Usage:     "Update a customer",
 				ArgsUsage: "<customer-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "contact_name", Usage: "Customer name"},
+					&cli.StringFlag{Name: "company_name", Usage: "Company name"},
+					&cli.StringFlag{Name: "email", Usage: "Customer email"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1108,8 +1291,19 @@ func customersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("contact_name") {
+						body["contact_name"] = cmd.String("contact_name")
+					}
+					if cmd.IsSet("company_name") {
+						body["company_name"] = cmd.String("company_name")
+					}
+					if cmd.IsSet("email") {
+						body["email"] = cmd.String("email")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1210,7 +1404,10 @@ func projectsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a project",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "project_name", Required: true, Usage: "Project name"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "description", Usage: "Project description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1221,8 +1418,16 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"project_name": cmd.String("project_name")}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/projects", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1238,7 +1443,10 @@ func projectsCmd() *cli.Command {
 				Usage:     "Update a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "project_name", Usage: "Project name"},
+					&cli.StringFlag{Name: "customer_id", Usage: "Customer ID"},
+					&cli.StringFlag{Name: "description", Usage: "Project description"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1249,8 +1457,19 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("project_name") {
+						body["project_name"] = cmd.String("project_name")
+					}
+					if cmd.IsSet("customer_id") {
+						body["customer_id"] = cmd.String("customer_id")
+					}
+					if cmd.IsSet("description") {
+						body["description"] = cmd.String("description")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/projects/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1395,7 +1614,11 @@ func tripsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a trip",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "trip_number", Required: true, Usage: "Trip number"},
+					&cli.BoolFlag{Name: "is_international", Required: true, Usage: "Whether the trip is international (true/false)"},
+					&cli.StringFlag{Name: "business_purpose", Required: true, Usage: "Business purpose"},
+					&cli.StringFlag{Name: "destination_country", Required: true, Usage: "Destination country"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1406,8 +1629,15 @@ func tripsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{
+						"trip_number":         cmd.String("trip_number"),
+						"is_international":    cmd.Bool("is_international"),
+						"business_purpose":    cmd.String("business_purpose"),
+						"destination_country": cmd.String("destination_country"),
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/trips", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1423,7 +1653,11 @@ func tripsCmd() *cli.Command {
 				Usage:     "Update a trip",
 				ArgsUsage: "<trip-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "trip_number", Usage: "Trip number"},
+					&cli.BoolFlag{Name: "is_international", Usage: "Whether the trip is international (true/false)"},
+					&cli.StringFlag{Name: "business_purpose", Usage: "Business purpose"},
+					&cli.StringFlag{Name: "destination_country", Usage: "Destination country"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1434,8 +1668,22 @@ func tripsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("trip_number") {
+						body["trip_number"] = cmd.String("trip_number")
+					}
+					if cmd.IsSet("is_international") {
+						body["is_international"] = cmd.Bool("is_international")
+					}
+					if cmd.IsSet("business_purpose") {
+						body["business_purpose"] = cmd.String("business_purpose")
+					}
+					if cmd.IsSet("destination_country") {
+						body["destination_country"] = cmd.String("destination_country")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/trips/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1495,7 +1743,8 @@ func tripsCmd() *cli.Command {
 				Usage:     "Reject a trip",
 				ArgsUsage: "<trip-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Usage: "JSON body with rejection comments"},
+					&cli.StringFlag{Name: "comments", Usage: "Rejection comments"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1506,12 +1755,15 @@ func tripsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					opts := &zohttp.RequestOpts{
-						Headers: orgHeaders(orgID),
+					body := map[string]any{}
+					if cmd.IsSet("comments") {
+						body["comments"] = cmd.String("comments")
 					}
-					if j := cmd.String("json"); j != "" {
-						var body any
-						json.Unmarshal([]byte(j), &body)
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
+					opts := &zohttp.RequestOpts{Headers: orgHeaders(orgID)}
+					if len(body) > 0 {
 						opts.JSON = body
 					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/trips/"+cmd.Args().First()+"/reject", opts)
@@ -1621,7 +1873,11 @@ func currenciesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a currency",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "currency_code", Required: true, Usage: "Currency code"},
+					&cli.StringFlag{Name: "currency_symbol", Usage: "Currency symbol"},
+					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
+					&cli.FloatFlag{Name: "price_precision", Usage: "Decimal precision"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1632,8 +1888,19 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"currency_code": cmd.String("currency_code")}
+					if cmd.IsSet("currency_symbol") {
+						body["currency_symbol"] = cmd.String("currency_symbol")
+					}
+					if cmd.IsSet("currency_format") {
+						body["currency_format"] = cmd.String("currency_format")
+					}
+					if cmd.IsSet("price_precision") {
+						body["price_precision"] = cmd.Float("price_precision")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/settings/currencies", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1649,7 +1916,11 @@ func currenciesCmd() *cli.Command {
 				Usage:     "Update a currency",
 				ArgsUsage: "<currency-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "currency_code", Usage: "Currency code"},
+					&cli.StringFlag{Name: "currency_symbol", Usage: "Currency symbol"},
+					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
+					&cli.FloatFlag{Name: "price_precision", Usage: "Decimal precision"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1660,8 +1931,22 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("currency_code") {
+						body["currency_code"] = cmd.String("currency_code")
+					}
+					if cmd.IsSet("currency_symbol") {
+						body["currency_symbol"] = cmd.String("currency_symbol")
+					}
+					if cmd.IsSet("currency_format") {
+						body["currency_format"] = cmd.String("currency_format")
+					}
+					if cmd.IsSet("price_precision") {
+						body["price_precision"] = cmd.Float("price_precision")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1750,7 +2035,10 @@ func taxesCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a tax",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "tax_name", Required: true, Usage: "Tax name"},
+					&cli.FloatFlag{Name: "tax_percentage", Required: true, Usage: "Tax percentage"},
+					&cli.StringFlag{Name: "tax_type", Usage: "Tax type"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1761,8 +2049,13 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"tax_name": cmd.String("tax_name"), "tax_percentage": cmd.Float("tax_percentage")}
+					if cmd.IsSet("tax_type") {
+						body["tax_type"] = cmd.String("tax_type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", c.ExpenseBase+"/settings/taxes", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1778,7 +2071,10 @@ func taxesCmd() *cli.Command {
 				Usage:     "Update a tax",
 				ArgsUsage: "<tax-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "tax_name", Usage: "Tax name"},
+					&cli.FloatFlag{Name: "tax_percentage", Usage: "Tax percentage"},
+					&cli.StringFlag{Name: "tax_type", Usage: "Tax type"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1789,8 +2085,19 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("tax_name") {
+						body["tax_name"] = cmd.String("tax_name")
+					}
+					if cmd.IsSet("tax_percentage") {
+						body["tax_percentage"] = cmd.Float("tax_percentage")
+					}
+					if cmd.IsSet("tax_type") {
+						body["tax_type"] = cmd.String("tax_type")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", c.ExpenseBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
@@ -1921,7 +2228,8 @@ func tagsCmd() *cli.Command {
 				Name:  "create",
 				Usage: "Create a reporting tag",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "tag_name", Required: true, Usage: "Tag name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1932,8 +2240,10 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{"tag_name": cmd.String("tag_name")}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("POST", v3Base(c)+"/reportingtags", &zohttp.RequestOpts{
 						JSON:   body,
 						Params: v3OrgParams(orgID),
@@ -1971,7 +2281,8 @@ func tagsCmd() *cli.Command {
 				Usage:     "Update a reporting tag",
 				ArgsUsage: "<tag-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "tag_name", Usage: "Tag name"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -1982,8 +2293,13 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if cmd.IsSet("tag_name") {
+						body["tag_name"] = cmd.String("tag_name")
+					}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:   body,
 						Params: v3OrgParams(orgID),
@@ -2021,7 +2337,7 @@ func tagsCmd() *cli.Command {
 				Usage:     "Update reporting tag options",
 				ArgsUsage: "<tag-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2032,8 +2348,10 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/options", &zohttp.RequestOpts{
 						JSON:   body,
 						Params: v3OrgParams(orgID),
@@ -2049,7 +2367,7 @@ func tagsCmd() *cli.Command {
 				Usage:     "Update reporting tag criteria",
 				ArgsUsage: "<tag-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2060,8 +2378,10 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/"+cmd.Args().First()+"/criteria", &zohttp.RequestOpts{
 						JSON:   body,
 						Params: v3OrgParams(orgID),
@@ -2207,7 +2527,7 @@ func tagsCmd() *cli.Command {
 				Name:  "reorder",
 				Usage: "Reorder reporting tags",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
+					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := getClient()
@@ -2218,8 +2538,10 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					var body any
-					json.Unmarshal([]byte(cmd.String("json")), &body)
+					body := map[string]any{}
+					if err := internal.MergeJSON(cmd, body); err != nil {
+						return err
+					}
 					raw, err := c.Request("PUT", v3Base(c)+"/reportingtags/reorder", &zohttp.RequestOpts{
 						JSON:   body,
 						Params: v3OrgParams(orgID),

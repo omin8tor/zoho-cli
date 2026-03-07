@@ -102,7 +102,7 @@ func TestInventoryItems(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		name := fmt.Sprintf("%s Item %s", testPrefix, randomSuffix())
 		out := zoho(t, "inventory", "items", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"name": name, "rate": 100}))
+			"--name", name, "--rate", "100")
 		m := parseJSON(t, out)
 		assertInventoryCodeZero(t, m)
 		item, ok := m["item"].(map[string]any)
@@ -129,7 +129,7 @@ func TestInventoryItems(t *testing.T) {
 		requireID(t, itemID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Item Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "inventory", "items", "update", itemID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"name": updatedName}))
+			"--name", updatedName)
 		m := parseJSON(t, out)
 		assertInventoryCodeZero(t, m)
 	})
@@ -172,7 +172,7 @@ func TestInventoryContacts(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
 		name := fmt.Sprintf("%s Contact %s", testPrefix, randomSuffix())
 		out := zoho(t, "inventory", "contacts", "create", "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": name, "contact_type": "customer"}))
+			"--contact_name", name, "--contact_type", "customer")
 		m := parseJSON(t, out)
 		assertInventoryCodeZero(t, m)
 		contact, ok := m["contact"].(map[string]any)
@@ -199,7 +199,7 @@ func TestInventoryContacts(t *testing.T) {
 		requireID(t, contactID, "create must have succeeded")
 		updatedName := fmt.Sprintf("%s Contact Upd %s", testPrefix, randomSuffix())
 		out := zoho(t, "inventory", "contacts", "update", contactID, "--org", orgID,
-			"--json", toJSON(t, map[string]any{"contact_name": updatedName}))
+			"--contact_name", updatedName)
 		m := parseJSON(t, out)
 		assertInventoryCodeZero(t, m)
 	})
@@ -299,14 +299,14 @@ func TestInventoryErrors(t *testing.T) {
 		}
 	})
 
-	t.Run("missing-json-flag", func(t *testing.T) {
+	t.Run("missing-name-flag", func(t *testing.T) {
 		orgID := os.Getenv("ZOHO_BOOKS_ORG_ID")
 		if orgID == "" {
 			t.Skip("ZOHO_BOOKS_ORG_ID not set")
 		}
 		r := runZoho(t, "inventory", "items", "create", "--org", orgID)
 		if r.ExitCode == 0 {
-			t.Error("expected non-zero exit code when --json missing")
+			t.Error("expected non-zero exit code when --name missing")
 		}
 	})
 

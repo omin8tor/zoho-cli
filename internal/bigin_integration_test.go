@@ -29,6 +29,17 @@ func (c *testCleanup) trackBiginAttachment(module, recordID, attID string) {
 	})
 }
 
+func skipIfBiginUnavailable(t *testing.T) {
+	t.Helper()
+	out, err := zohoMayFail(t, "bigin", "modules", "list")
+	if err != nil {
+		t.Skipf("skipping: Bigin not available on this account: %v", err)
+	}
+	if strings.Contains(out, "<html") || strings.Contains(out, "OAUTH_SCOPE_MISMATCH") {
+		t.Skipf("skipping: Bigin not available on this account")
+	}
+}
+
 func biginExtractID(t *testing.T, out string) string {
 	t.Helper()
 	var resp struct {
@@ -72,6 +83,7 @@ func biginAssertStatus(t *testing.T, out string, want string) {
 
 func TestBiginModules(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "bigin", "modules", "list")
@@ -136,6 +148,7 @@ func TestBiginModules(t *testing.T) {
 
 func TestBiginOrg(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 
 	t.Run("get", func(t *testing.T) {
 		out := zoho(t, "bigin", "org", "get")
@@ -152,6 +165,7 @@ func TestBiginOrg(t *testing.T) {
 
 func TestBiginRoles(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "bigin", "roles", "list")
@@ -168,6 +182,7 @@ func TestBiginRoles(t *testing.T) {
 
 func TestBiginProfiles(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 
 	t.Run("list", func(t *testing.T) {
 		out := zoho(t, "bigin", "profiles", "list")
@@ -184,6 +199,7 @@ func TestBiginProfiles(t *testing.T) {
 
 func TestBiginUsers(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 
 	var userID string
 
@@ -216,6 +232,7 @@ func TestBiginUsers(t *testing.T) {
 
 func TestBiginContactsCRUD(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -295,6 +312,7 @@ func TestBiginContactsCRUD(t *testing.T) {
 
 func TestBiginPipelinesCRUD(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var pipelineRecordID string
@@ -350,6 +368,7 @@ func TestBiginPipelinesCRUD(t *testing.T) {
 
 func TestBiginNotes(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -414,6 +433,7 @@ func TestBiginNotes(t *testing.T) {
 
 func TestBiginAttachments(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -491,6 +511,7 @@ func TestBiginAttachments(t *testing.T) {
 
 func TestBiginTags(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -547,6 +568,7 @@ func TestBiginTags(t *testing.T) {
 
 func TestBiginUpsert(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -582,6 +604,7 @@ func TestBiginUpsert(t *testing.T) {
 
 func TestBiginRelated(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -628,6 +651,7 @@ func TestBiginRelated(t *testing.T) {
 
 func TestBiginCOQL(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	var contactID string
@@ -681,6 +705,7 @@ func TestBiginCOQL(t *testing.T) {
 
 func TestBiginRecordCount(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 
 	t.Run("count-contacts", func(t *testing.T) {
 		out, err := zohoMayFail(t, "bigin", "records", "count", "Contacts")
@@ -696,6 +721,7 @@ func TestBiginRecordCount(t *testing.T) {
 
 func TestBiginBulkDelete(t *testing.T) {
 	t.Parallel()
+	skipIfBiginUnavailable(t)
 	cleanup := newCleanup(t)
 
 	name1 := fmt.Sprintf("%s Bulk1 %s", testPrefix, randomSuffix())

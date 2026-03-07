@@ -223,7 +223,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/forms/json/"+cmd.Args().First()+"/deleteRecord", &zohttp.RequestOpts{
+					raw, err := c.Request("POST", c.PeopleBase+"/forms/"+cmd.Args().First()+"/deleteRecord", &zohttp.RequestOpts{
 						Form: map[string]string{"recordId": cmd.Args().Get(1)},
 					})
 					if err != nil {
@@ -477,7 +477,7 @@ func leaveCmd() *cli.Command {
 					if v := cmd.String("user-id"); v != "" {
 						params["userId"] = v
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/leave/getLeaveTypeBalance", &zohttp.RequestOpts{
+					raw, err := c.Request("GET", c.PeopleBase+"/leave/getLeaveTypeDetails", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -503,7 +503,7 @@ func departmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/department", nil)
+					raw, err := c.Request("GET", c.PeopleBase+"/forms/department/getRecords", nil)
 					if err != nil {
 						return err
 					}
@@ -535,7 +535,7 @@ func departmentsCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/department/getMembers", &zohttp.RequestOpts{
+					raw, err := c.Request("GET", c.PeopleBase+"/forms/department/getRecords", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -561,7 +561,7 @@ func designationsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/designation", nil)
+					raw, err := c.Request("GET", c.PeopleBase+"/forms/designation/getRecords", nil)
 					if err != nil {
 						return err
 					}

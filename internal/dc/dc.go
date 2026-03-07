@@ -9,6 +9,7 @@ type DCConfig struct {
 	Mail      string
 	People    string
 	Projects  string
+	Recruit   string
 	Sheet     string
 	Sign      string
 	Sprints   string
@@ -27,6 +28,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.com",
 		People:    "https://people.zoho.com",
 		Projects:  "https://projectsapi.zoho.com",
+		Recruit:   "https://recruit.zoho.com",
 		Sheet:     "https://sheet.zoho.com",
 		Sign:      "https://sign.zoho.com",
 		Sprints:   "https://sprintsapi.zoho.com",
@@ -43,6 +45,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.eu",
 		People:    "https://people.zoho.eu",
 		Projects:  "https://projectsapi.zoho.eu",
+		Recruit:   "https://recruit.zoho.eu",
 		Sheet:     "https://sheet.zoho.eu",
 		Sign:      "https://sign.zoho.eu",
 		Sprints:   "https://sprintsapi.zoho.eu",
@@ -59,6 +62,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.in",
 		People:    "https://people.zoho.in",
 		Projects:  "https://projectsapi.zoho.in",
+		Recruit:   "https://recruit.zoho.in",
 		Sheet:     "https://sheet.zoho.in",
 		Sign:      "https://sign.zoho.in",
 		Sprints:   "https://sprintsapi.zoho.in",
@@ -75,6 +79,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.com.au",
 		People:    "https://people.zoho.com.au",
 		Projects:  "https://projectsapi.zoho.com.au",
+		Recruit:   "https://recruit.zoho.com.au",
 		Sheet:     "https://sheet.zoho.com.au",
 		Sign:      "https://sign.zoho.com.au",
 		Sprints:   "https://sprintsapi.zoho.com.au",
@@ -91,6 +96,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.jp",
 		People:    "https://people.zoho.jp",
 		Projects:  "https://projectsapi.zoho.jp",
+		Recruit:   "https://recruit.zoho.jp",
 		Sheet:     "https://sheet.zoho.jp",
 		Sign:      "https://sign.zoho.jp",
 		Sprints:   "https://sprintsapi.zoho.jp",
@@ -107,6 +113,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zohocloud.ca",
 		People:    "https://people.zohocloud.ca",
 		Projects:  "https://projectsapi.zohocloud.ca",
+		Recruit:   "https://recruit.zohocloud.ca",
 		Sheet:     "https://sheet.zohocloud.ca",
 		Sign:      "https://sign.zohocloud.ca",
 		Sprints:   "https://sprintsapi.zohocloud.ca",
@@ -123,6 +130,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.sa",
 		People:    "https://people.zoho.sa",
 		Projects:  "https://projectsapi.zoho.sa",
+		Recruit:   "https://recruit.zoho.sa",
 		Sheet:     "https://sheet.zoho.sa",
 		Sign:      "https://sign.zoho.sa",
 		Sprints:   "https://sprintsapi.zoho.sa",
@@ -139,6 +147,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.uk",
 		People:    "https://people.zoho.uk",
 		Projects:  "https://projectsapi.zoho.uk",
+		Recruit:   "https://recruit.zoho.uk",
 		Sheet:     "https://sheet.zoho.uk",
 		Sign:      "https://sign.zoho.uk",
 		Sprints:   "https://sprintsapi.zoho.uk",
@@ -155,6 +164,7 @@ var dcMap = map[string]DCConfig{
 		Mail:      "https://mail.zoho.com.cn",
 		People:    "https://people.zoho.com.cn",
 		Projects:  "https://projectsapi.zoho.com.cn",
+		Recruit:   "https://recruit.zoho.com.cn",
 		Sheet:     "https://sheet.zoho.com.cn",
 		Sign:      "https://sign.zoho.com.cn",
 		Sprints:   "https://sprintsapi.zoho.com.cn",
@@ -182,6 +192,7 @@ func ExpenseURL(dc string) string   { return APIURL(dc) }
 func MailURL(dc string) string      { return GetDC(dc).Mail }
 func PeopleURL(dc string) string    { return GetDC(dc).People }
 func ProjectsURL(dc string) string  { return GetDC(dc).Projects }
+func RecruitURL(dc string) string   { return GetDC(dc).Recruit }
 func SheetURL(dc string) string     { return GetDC(dc).Sheet }
 func SignURL(dc string) string      { return GetDC(dc).Sign }
 func SprintsURL(dc string) string   { return GetDC(dc).Sprints }

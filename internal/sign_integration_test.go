@@ -488,5 +488,3 @@ func TestSignEmergencyCleanup(t *testing.T) {
 		}
 	}
 }
-
-
