@@ -7,6 +7,7 @@ import (
 
 	"github.com/omin8tor/zoho-cli/internal"
 	"github.com/omin8tor/zoho-cli/internal/auth"
+	"github.com/omin8tor/zoho-cli/internal/books"
 	"github.com/omin8tor/zoho-cli/internal/cliq"
 	"github.com/omin8tor/zoho-cli/internal/crm"
 	"github.com/omin8tor/zoho-cli/internal/desk"
@@ -26,13 +27,14 @@ var version = "dev"
 func main() {
 	app := &cli.Command{
 		Name:    "zoho",
-		Usage:   "CLI for Zoho REST APIs (CRM, Projects, WorkDrive, Writer, Cliq, Expense, Sheet, Desk, Sign, Mail)",
+		Usage:   "CLI for Zoho REST APIs (CRM, Projects, WorkDrive, Writer, Cliq, Expense, Sheet, Desk, Sign, Mail, Books)",
 		Version: version,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{Name: "help-all", Usage: "Show help for all commands recursively"},
 		},
 		Commands: []*cli.Command{
 			auth.Commands(),
+			books.Commands(),
 			crm.Commands(),
 			projects.Commands(),
 			drive.Commands(),

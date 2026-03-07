@@ -16,35 +16,37 @@ import (
 const DefaultScopes = "" +
 	"ZohoAnalytics.fullaccess.all," +
 	"ZohoAssist.userapi.READ,ZohoAssist.sessionapi.CREATE,ZohoAssist.unattended.computer.ALL,ZohoAssist.unattended.group.ALL,ZohoAssist.reportapi.READ," +
+	"ZohoBigin.modules.ALL,ZohoBigin.settings.ALL," +
 	"zohobackstage.portal.READ,zohobackstage.event.ALL,zohobackstage.agenda.CREATE,zohobackstage.speaker.CREATE,zohobackstage.sponsor.CREATE,zohobackstage.eventticket.CREATE,zohobackstage.order.CREATE,zohobackstage.webhook.CREATE," +
-	"ZohoSubscriptions.fullaccess.all," +
 	"zohobookings.data.CREATE," +
 	"ZohoBooks.fullaccess.all," +
 	"ZohoCampaigns.campaign.ALL,ZohoCampaigns.contact.ALL," +
 	"ZohoCliq.Webhooks.CREATE,ZohoCliq.Channels.ALL,ZohoCliq.Messages.ALL,ZohoCliq.Chats.ALL,ZohoCliq.Users.ALL,ZohoCliq.Bots.ALL," +
 	"ZohoCreator.form.CREATE,ZohoCreator.report.ALL,ZohoCreator.meta.form.READ,ZohoCreator.meta.application.READ,ZohoCreator.dashboard.READ," +
+	"ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.coql.READ,ZohoCRM.bulk.ALL,ZohoCRM.notifications.ALL,ZohoCRM.change_owner.CREATE," +
 	"Desk.tickets.ALL,Desk.contacts.ALL,Desk.basic.READ,Desk.settings.READ,Desk.search.READ,Desk.accounts.ALL," +
 	"ZohoExpense.fullaccess.ALL," +
 	"ZohoInventory.FullAccess.all," +
 	"ZohoInvoice.fullaccess.all," +
-	"ZohoLearn.customportal.ALL,ZohoLearn.manual.ALL,ZohoLearn.space.ALL,ZohoLearn.article.ALL,ZohoLearn.attachment.ALL,ZohoLearn.comment.ALL,ZohoLearn.template.ALL,ZohoLearn.favorite.ALL,ZohoLearn.activity.ALL,ZohoLearn.hubMember.ALL,ZohoLearn.questionbank.ALL,ZohoLearn.tag.ALL,ZohoLearn.member.ALL,ZohoLearn.network.ALL,ZohoLearn.commentlike.ALL,ZohoLearn.articleimage.ALL,ZohoLearn.profile.ALL,ZohoLearn.notification.ALL,ZohoLearn.course.ALL,ZohoLearn.lessondiscussion.ALL,ZohoLearn.quiz.ALL," +
+	"ZohoLearn.customportal.ALL,ZohoLearn.manual.ALL,ZohoLearn.space.ALL,ZohoLearn.article.ALL,ZohoLearn.attachment.READ,ZohoLearn.attachment.CREATE,ZohoLearn.comment.ALL,ZohoLearn.template.ALL,ZohoLearn.favorite.ALL,ZohoLearn.activity.READ,ZohoLearn.hubMember.READ,ZohoLearn.questionbank.ALL,ZohoLearn.tag.ALL,ZohoLearn.member.CREATE,ZohoLearn.member.UPDATE,ZohoLearn.member.DELETE,ZohoLearn.network.READ,ZohoLearn.commentlike.READ,ZohoLearn.commentlike.CREATE,ZohoLearn.articleimage.READ,ZohoLearn.profile.READ,ZohoLearn.notification.ALL,ZohoLearn.course.ALL,ZohoLearn.quiz.ALL," +
 	"ZohoMail.accounts.READ,ZohoMail.messages.ALL,ZohoMail.folders.ALL,ZohoMail.tags.ALL,ZohoMail.tasks.ALL,ZohoMail.links.ALL,ZohoMail.notes.ALL,ZohoMail.organization.accounts.ALL,ZohoMail.organization.domains.ALL,ZohoMail.organization.groups.ALL,ZohoMail.organization.policy.ALL,ZohoMail.organization.subscriptions.ALL,ZohoMail.organization.spam.ALL,ZohoMail.organization.audit.READ,ZohoMail.partner.organization.ALL," +
-	"ZohoMarketingAutomation.campaign.ALL,ZohoMarketingAutomation.lead.ALL,ZohoMarketingAutomation.journey.ALL,ZohoMarketingAutomation.wa.READ," +
+	"ZohoMarketingAutomation.campaign.ALL,ZohoMarketingAutomation.lead.ALL,ZohoMarketingAutomation.journey.READ,ZohoMarketingAutomation.journey.CREATE,ZohoMarketingAutomation.wa.READ," +
 	"ZohoMeeting.meeting.ALL," +
 	"PageSense.experiments.ALL,PageSense.goals.ALL,PageSense.reports.all,PageSense.customevents.ALL," +
-	"ZOHOPEOPLE.forms.ALL,ZOHOPEOPLE.employee.ALL,ZOHOPEOPLE.dashboard.ALL,ZOHOPEOPLE.automation.ALL,ZOHOPEOPLE.timetracker.ALL,ZOHOPEOPLE.attendance.ALL,ZOHOPEOPLE.leave.ALL,ZOHOPEOPLE.timesheet.READ," +
+	"ZOHOPEOPLE.forms.ALL,ZOHOPEOPLE.employee.ALL,ZOHOPEOPLE.dashboard.ALL,ZOHOPEOPLE.automation.ALL,ZOHOPEOPLE.timetracker.ALL,ZOHOPEOPLE.attendance.ALL,ZOHOPEOPLE.leave.ALL," +
 	"ZohoProjects.portals.ALL,ZohoProjects.projects.ALL,ZohoProjects.tasks.ALL,ZohoProjects.tasklists.ALL,ZohoProjects.timesheets.ALL,ZohoProjects.bugs.ALL,ZohoProjects.events.ALL,ZohoProjects.forums.ALL,ZohoProjects.milestones.ALL,ZohoProjects.documents.ALL,ZohoProjects.users.ALL,ZohoProjects.projectgroups.ALL,ZohoProjects.tags.ALL,ZohoProjects.leave.ALL,ZohoProjects.teams.ALL,ZohoProjects.status.ALL," +
 	"ZohoRecruit.modules.ALL,ZohoRecruit.settings.ALL,ZohoRecruit.users.ALL,ZohoRecruit.org.ALL,ZohoRecruit.bulk.ALL,ZohoRecruit.notifications.ALL," +
-	"SalesIQ.operators.ALL,SalesIQ.portals.ALL,SalesIQ.departments.ALL,SalesIQ.leadscorerules.ALL,SalesIQ.leadscoreconfigs.ALL,SalesIQ.criteriafields.READ,SalesIQ.visitorroutingrules.ALL,SalesIQ.chatroutingrules.ALL,SalesIQ.cannedresponses.ALL,SalesIQ.blockedips.ALL,SalesIQ.chatmonitors.ALL,SalesIQ.counts.READ,SalesIQ.visitors.ALL,SalesIQ.feedbacks.ALL,SalesIQ.conversations.ALL,SalesIQ.trackingpresets.ALL,SalesIQ.userpreferences.ALL,SalesIQ.visitorhistoryviews.ALL,SalesIQ.triggerrules.ALL,SalesIQ.webhooks.ALL,SalesIQ.callbacks.ALL,SalesIQ.Apps.ALL,SalesIQ.articles.ALL,SalesIQ.encryptions.CREATE," +
+	"SalesIQ.operators.ALL,SalesIQ.portals.ALL,SalesIQ.departments.ALL,SalesIQ.leadscorerules.ALL,SalesIQ.leadscoreconfigs.READ,SalesIQ.criteriafields.READ,SalesIQ.visitorroutingrules.ALL,SalesIQ.chatroutingrules.ALL,SalesIQ.cannedresponses.ALL,SalesIQ.blockedips.ALL,SalesIQ.chatmonitors.ALL,SalesIQ.counts.READ,SalesIQ.visitors.ALL,SalesIQ.feedbacks.READ,SalesIQ.conversations.ALL,SalesIQ.trackingpresets.ALL,SalesIQ.userpreferences.READ,SalesIQ.visitorhistoryviews.ALL,SalesIQ.triggerrules.ALL,SalesIQ.webhooks.ALL,SalesIQ.callbacks.UPDATE,SalesIQ.Apps.ALL,SalesIQ.articles.ALL,SalesIQ.encryptions.CREATE," +
 	"ZohoSheet.dataAPI.ALL," +
 	"ZohoShowtime.sessionapi.ALL,ZohoShowtime.talkapi.READ,ZohoShowtime.portalapi.READ," +
 	"ZohoSign.documents.ALL," +
-	"ZohoSprints.teams.ALL,ZohoSprints.projects.ALL,ZohoSprints.projectsgroups.ALL,ZohoSprints.epic.ALL,ZohoSprints.sprints.ALL,ZohoSprints.items.ALL,ZohoSprints.projectsettings.ALL,ZohoSprints.webhook.ALL,ZohoSprints.meetings.ALL,ZohoSprints.timesheets.ALL,ZohoSprints.release.ALL,ZohoSprints.teamusers.ALL,ZohoSprints.extensions.ALL,ZohoSprints.expense.ALL,ZohoSprints.custommodulerecords.ALL," +
-	"ZohoVault.user.ALL,ZohoVault.secrets.ALL,ZohoVault.passwords.ALL," +
+	"ZohoSprints.teams.ALL,ZohoSprints.projects.ALL,ZohoSprints.projectgroups.ALL,ZohoSprints.epic.ALL,ZohoSprints.sprints.ALL,ZohoSprints.items.ALL,ZohoSprints.projectsettings.ALL,ZohoSprints.webhook.ALL,ZohoSprints.meetings.ALL,ZohoSprints.timesheets.ALL,ZohoSprints.release.ALL,ZohoSprints.teamusers.ALL,ZohoSprints.extensions.ALL,ZohoSprints.expense.ALL,ZohoSprints.custommodulerecords.ALL," +
+	"ZohoSubscriptions.fullaccess.all," +
+	"ZohoVault.user.ALL,ZohoVault.secrets.ALL," +
 	"ZohoVoice.agents.ALL,ZohoVoice.telephony.ALL,ZohoVoice.call.ALL,ZohoVoice.powerdialer.ALL,ZohoVoice.sms.ALL," +
+	"WorkDrive.workspace.ALL,WorkDrive.files.ALL,WorkDrive.files.sharing.ALL,WorkDrive.links.ALL,WorkDrive.team.ALL,WorkDrive.teamfolders.ALL," +
 	"ZohoWriter.documentEditor.ALL,ZohoPC.files.ALL," +
-	"ZohoSearch.securesearch.READ," +
-	"ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.ALL,ZohoCRM.org.ALL,ZohoCRM.coql.READ,ZohoCRM.bulk.ALL,ZohoCRM.notifications.ALL,ZohoCRM.change_owner.CREATE"
+	"ZohoSearch.securesearch.READ"
 
 var locationToDC = map[string]string{
 	"us": "com",
@@ -93,12 +95,22 @@ func DeviceFlowLogin(clientID, clientSecret, dc, scopes string) error {
 		verificationURL = baseURL + "/oauth/v3/device"
 	}
 	interval := 5
-	if v, ok := data["interval"].(float64); ok && int(v) > 5 {
-		interval = int(v)
+	if v, ok := data["interval"].(float64); ok && v > 0 {
+		iv := int(v)
+		if iv > 1000 {
+			iv = iv / 1000
+		}
+		if iv > 5 {
+			interval = iv
+		}
 	}
 	expiresIn := 300
-	if v, ok := data["expires_in"].(float64); ok {
-		expiresIn = int(v)
+	if v, ok := data["expires_in"].(float64); ok && v > 0 {
+		ev := int(v)
+		if ev > 10000 {
+			ev = ev / 1000
+		}
+		expiresIn = ev
 	}
 
 	fmt.Fprintf(os.Stderr, "\nTo authenticate, visit: %s\n", verificationURL)
