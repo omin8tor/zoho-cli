@@ -7,7 +7,6 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
-	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -19,7 +18,7 @@ func milestonesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List milestones",
-				Flags: []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{portalFlag, projectFlag, allFlag, limitFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -30,11 +29,7 @@ func milestonesCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/milestones"
-					items, err := pagination.PaginateProjects(c, url, "milestones", nil, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateProjectsList(c, cmd, url, "milestones", nil)
 				},
 			},
 			{

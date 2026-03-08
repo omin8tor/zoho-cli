@@ -10,6 +10,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -109,8 +110,8 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Field to sort by"},
 					&cli.StringFlag{Name: "sort-order", Usage: "asc or desc"},
-					&cli.IntFlag{Name: "page", Value: 1, Usage: "Page number"},
-					&cli.IntFlag{Name: "per-page", Value: 200, Usage: "Records per page"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -120,10 +121,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", cmd.Int("per-page")),
-					}
+					params := map[string]string{}
 					if f := cmd.String("fields"); f != "" {
 						params["fields"] = f
 					}
@@ -132,6 +130,22 @@ func recordsCmd() *cli.Command {
 					}
 					if s := cmd.String("sort-order"); s != "" {
 						params["sort_order"] = s
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.RecruitBase + "/" + cmd.Args().First(),
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.RecruitBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -244,8 +258,8 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "email", Usage: "Email search"},
 					&cli.StringFlag{Name: "phone", Usage: "Phone search"},
 					&cli.StringFlag{Name: "word", Usage: "Keyword search"},
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all results"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -255,10 +269,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", cmd.Int("per-page")),
-					}
+					params := map[string]string{}
 					if v := cmd.String("criteria"); v != "" {
 						params["criteria"] = v
 					} else if v := cmd.String("email"); v != "" {
@@ -267,6 +278,22 @@ func recordsCmd() *cli.Command {
 						params["phone"] = v
 					} else if v := cmd.String("word"); v != "" {
 						params["word"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.RecruitBase + "/" + cmd.Args().First() + "/search",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.RecruitBase+"/"+cmd.Args().First()+"/search", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -590,8 +617,8 @@ func associateCmd() *cli.Command {
 				Usage:     "List associated records",
 				ArgsUsage: "<module> <record-id>",
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
@@ -602,9 +629,22 @@ func associateCmd() *cli.Command {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					params := map[string]string{
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", cmd.Int("per-page")),
+					params := map[string]string{}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.RecruitBase + "/" + module + "/" + recordID + "/associate",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.RecruitBase+"/"+module+"/"+recordID+"/associate", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -627,8 +667,8 @@ func relatedCmd() *cli.Command {
 				Usage:     "List related records",
 				ArgsUsage: "<module> <record-id> <related-module>",
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
@@ -639,9 +679,22 @@ func relatedCmd() *cli.Command {
 						return err
 					}
 					module, recordID, relModule := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
-					params := map[string]string{
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", cmd.Int("per-page")),
+					params := map[string]string{}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.RecruitBase + "/" + module + "/" + recordID + "/" + relModule,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.RecruitBase+"/"+module+"/"+recordID+"/"+relModule, &zohttp.RequestOpts{Params: params})
 					if err != nil {

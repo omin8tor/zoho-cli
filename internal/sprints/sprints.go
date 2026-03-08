@@ -6,6 +6,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -71,8 +72,8 @@ func projectsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List projects",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -83,13 +84,24 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "projects",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -263,8 +275,8 @@ func sprintsCmd() *cli.Command {
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "type", Usage: "Sprint type filter: 1=upcoming, 2=active, 3=completed, 4=canceled"},
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -280,11 +292,25 @@ func sprintsCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"action": "data",
-						"index":  cmd.String("index"),
-						"range":  cmd.String("range"),
 					}
 					if v := cmd.String("type"); v != "" {
 						params["type"] = "[" + v + "]"
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/sprints/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "sprints",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/sprints/", &zohttp.RequestOpts{
 						Params: params,
@@ -463,8 +489,8 @@ func itemsCmd() *cli.Command {
 				Usage:     "List items in a sprint or backlog",
 				ArgsUsage: "<project-id> <sprint-id|backlog-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
@@ -478,13 +504,24 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().Get(0) + "/sprints/" + cmd.Args().Get(1) + "/item/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "items",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -689,8 +726,8 @@ func epicsCmd() *cli.Command {
 				Usage:     "List epics in a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -704,13 +741,24 @@ func epicsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/epic/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "epics",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -848,8 +896,8 @@ func statusesCmd() *cli.Command {
 				Usage:     "List item statuses in a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "50"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -863,13 +911,24 @@ func statusesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemstatus/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/itemstatus/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "itemstatus",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemstatus/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -890,8 +949,8 @@ func itemTypesCmd() *cli.Command {
 				Usage:     "List item types in a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "50"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -905,13 +964,24 @@ func itemTypesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemtype/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/itemtype/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "itemtype",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemtype/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -932,8 +1002,8 @@ func prioritiesCmd() *cli.Command {
 				Usage:     "List priorities in a project",
 				ArgsUsage: "<project-id>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "50"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
@@ -947,13 +1017,24 @@ func prioritiesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/priority/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/priority/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "priority",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/priority/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -973,8 +1054,8 @@ func membersCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List members of the team",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "index", Usage: "Start index", Value: "1"},
-					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -985,13 +1066,24 @@ func membersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/users/", &zohttp.RequestOpts{
-						Params: map[string]string{
-							"action": "data",
-							"index":  cmd.String("index"),
-							"range":  cmd.String("range"),
-						},
-					})
+					params := map[string]string{"action": "data"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      teamBase(c, teamID) + "/users/",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "users",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.IndexRange(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", teamBase(c, teamID)+"/users/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}

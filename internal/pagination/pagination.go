@@ -2,11 +2,123 @@ package pagination
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
+	"strings"
 
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 )
+
+type PageState struct {
+	Offset  int
+	PageNum int
+	Token   string
+}
+
+type PaginationConfig struct {
+	Client   *zohttp.Client
+	Method   string
+	URL      string
+	Opts     *zohttp.RequestOpts
+	ItemsKey string
+	PageSize int
+	Limit    int
+	SetPage  func(state *PageState, params map[string]string)
+	HasMore  func(raw json.RawMessage, fetched int, pageSize int) (bool, *PageState)
+}
+
+func Paginate(cfg PaginationConfig) ([]json.RawMessage, error) {
+	if cfg.Method == "" {
+		cfg.Method = "GET"
+	}
+	if cfg.PageSize <= 0 {
+		cfg.PageSize = 200
+	}
+
+	params := make(map[string]string)
+	if cfg.Opts != nil {
+		for k, v := range cfg.Opts.Params {
+			params[k] = v
+		}
+	}
+
+	var all []json.RawMessage
+	state := &PageState{Offset: 0, PageNum: 1}
+
+	for range 500 {
+		cfg.SetPage(state, params)
+
+		opts := &zohttp.RequestOpts{Params: params}
+		if cfg.Opts != nil {
+			opts.Headers = cfg.Opts.Headers
+			opts.JSON = cfg.Opts.JSON
+			opts.Form = cfg.Opts.Form
+			opts.Files = cfg.Opts.Files
+		}
+
+		raw, err := cfg.Client.Request(cfg.Method, cfg.URL, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		items := ExtractItems(raw, cfg.ItemsKey)
+		if len(items) == 0 {
+			break
+		}
+		all = append(all, items...)
+
+		if cfg.Limit > 0 && len(all) >= cfg.Limit {
+			all = all[:cfg.Limit]
+			break
+		}
+
+		hasMore, nextState := cfg.HasMore(raw, len(items), cfg.PageSize)
+		if !hasMore {
+			break
+		}
+		if nextState != nil {
+			if nextState.PageNum == 0 {
+				nextState.PageNum = state.PageNum + 1
+			}
+			if nextState.Offset == 0 && nextState.Token == "" {
+				nextState.Offset = len(all)
+			}
+			state = nextState
+		} else {
+			state.Offset = len(all)
+			state.PageNum++
+			state.Token = ""
+		}
+	}
+	return all, nil
+}
+
+func ExtractItems(raw json.RawMessage, key string) []json.RawMessage {
+	if key == "" {
+		var items []json.RawMessage
+		if json.Unmarshal(raw, &items) == nil {
+			return items
+		}
+		return nil
+	}
+
+	parts := strings.SplitN(key, ".", 2)
+	var envelope map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &envelope); err != nil {
+		return nil
+	}
+	itemsRaw, ok := envelope[parts[0]]
+	if !ok {
+		return nil
+	}
+	if len(parts) == 2 {
+		return ExtractItems(itemsRaw, parts[1])
+	}
+	var items []json.RawMessage
+	if err := json.Unmarshal(itemsRaw, &items); err != nil {
+		return nil
+	}
+	return items
+}
 
 func hasNextPage(pageInfo map[string]any) bool {
 	v, ok := pageInfo["has_next_page"]
@@ -23,144 +135,190 @@ func hasNextPage(pageInfo map[string]any) bool {
 	}
 }
 
+func PagePerPage(pageSize int) func(*PageState, map[string]string) {
+	return func(state *PageState, params map[string]string) {
+		params["page"] = strconv.Itoa(state.PageNum)
+		params["per_page"] = strconv.Itoa(pageSize)
+	}
+}
+
+func SetPageCRM(state *PageState, params map[string]string) {
+	if state.Token != "" {
+		params["page_token"] = state.Token
+		delete(params, "page")
+	} else {
+		params["page"] = strconv.Itoa(state.PageNum)
+	}
+	if _, ok := params["per_page"]; !ok {
+		params["per_page"] = "200"
+	}
+}
+
+func FromLimit(pageSize int) func(*PageState, map[string]string) {
+	return func(state *PageState, params map[string]string) {
+		params["from"] = strconv.Itoa(state.Offset)
+		params["limit"] = strconv.Itoa(pageSize)
+	}
+}
+
+func PageOffsetLimit(pageSize int) func(*PageState, map[string]string) {
+	return func(state *PageState, params map[string]string) {
+		params["page[offset]"] = strconv.Itoa(state.Offset)
+		params["page[limit]"] = strconv.Itoa(pageSize)
+	}
+}
+
+func IndexRange(pageSize int) func(*PageState, map[string]string) {
+	return func(state *PageState, params map[string]string) {
+		params["index"] = strconv.Itoa(state.Offset + 1)
+		params["range"] = strconv.Itoa(pageSize)
+	}
+}
+
+func SIndexLimit(pageSize int) func(*PageState, map[string]string) {
+	return func(state *PageState, params map[string]string) {
+		params["sIndex"] = strconv.Itoa(state.Offset + 1)
+		params["limit"] = strconv.Itoa(pageSize)
+	}
+}
+
+func SignPageContext(pageSize int) func(*PageState, map[string]string) {
+	return func(state *PageState, params map[string]string) {
+		pc := map[string]any{
+			"start_index": state.Offset,
+			"row_count":   pageSize,
+		}
+		j, _ := json.Marshal(map[string]any{"page_context": pc})
+		params["data"] = string(j)
+	}
+}
+
+func HasMoreBooks(raw json.RawMessage, _ int, _ int) (bool, *PageState) {
+	var env struct {
+		PageContext struct {
+			HasMorePage bool `json:"has_more_page"`
+			Page        int  `json:"page"`
+		} `json:"page_context"`
+	}
+	if json.Unmarshal(raw, &env) != nil {
+		return false, nil
+	}
+	if !env.PageContext.HasMorePage {
+		return false, nil
+	}
+	return true, &PageState{PageNum: env.PageContext.Page + 1}
+}
+
+func HasMoreCRM(raw json.RawMessage, _ int, _ int) (bool, *PageState) {
+	var env struct {
+		Info struct {
+			MoreRecords   bool   `json:"more_records"`
+			NextPageToken string `json:"next_page_token"`
+		} `json:"info"`
+	}
+	if json.Unmarshal(raw, &env) != nil {
+		return false, nil
+	}
+	if !env.Info.MoreRecords {
+		return false, nil
+	}
+	if env.Info.NextPageToken != "" {
+		return true, &PageState{Token: env.Info.NextPageToken}
+	}
+	return true, nil
+}
+
+func HasMoreProjects(raw json.RawMessage, _ int, _ int) (bool, *PageState) {
+	var env map[string]json.RawMessage
+	if json.Unmarshal(raw, &env) != nil {
+		return false, nil
+	}
+	piRaw, ok := env["page_info"]
+	if !ok {
+		return false, nil
+	}
+	var pi map[string]any
+	if json.Unmarshal(piRaw, &pi) != nil {
+		return false, nil
+	}
+	return hasNextPage(pi), nil
+}
+
+func HasMoreWorkDrive(raw json.RawMessage, _ int, _ int) (bool, *PageState) {
+	var env struct {
+		Meta struct {
+			HasNext bool `json:"has_next"`
+		} `json:"meta"`
+	}
+	if json.Unmarshal(raw, &env) != nil {
+		return false, nil
+	}
+	return env.Meta.HasNext, nil
+}
+
+func HasMoreByCount(_ json.RawMessage, fetched int, pageSize int) (bool, *PageState) {
+	return fetched >= pageSize, nil
+}
+
+func HasMoreSign(raw json.RawMessage, _ int, _ int) (bool, *PageState) {
+	var env struct {
+		PageContext struct {
+			HasMoreRows bool `json:"has_more_rows"`
+		} `json:"page_context"`
+	}
+	if json.Unmarshal(raw, &env) != nil {
+		return false, nil
+	}
+	return env.PageContext.HasMoreRows, nil
+}
+
 func PaginateCRM(client *zohttp.Client, url string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
-	if maxPages == 0 {
-		maxPages = 20
+	limit := 0
+	if maxPages > 0 {
+		limit = maxPages * 200
 	}
-	var all []json.RawMessage
-	p := make(map[string]string)
-	for k, v := range params {
-		p[k] = v
-	}
-	if _, ok := p["per_page"]; !ok {
-		p["per_page"] = "200"
-	}
-	p["page"] = "1"
-
-	for range maxPages {
-		raw, err := client.Request("GET", url, &zohttp.RequestOpts{Params: p})
-		if err != nil {
-			return all, err
-		}
-
-		var envelope struct {
-			Data []json.RawMessage `json:"data"`
-			Info struct {
-				MoreRecords   bool   `json:"more_records"`
-				NextPageToken string `json:"next_page_token"`
-			} `json:"info"`
-		}
-		if err := json.Unmarshal(raw, &envelope); err != nil {
-			return all, nil
-		}
-		all = append(all, envelope.Data...)
-
-		if !envelope.Info.MoreRecords || len(envelope.Data) == 0 {
-			break
-		}
-		if envelope.Info.NextPageToken != "" {
-			p["page_token"] = envelope.Info.NextPageToken
-			delete(p, "page")
-		} else {
-			page, _ := strconv.Atoi(p["page"])
-			p["page"] = strconv.Itoa(page + 1)
-		}
-	}
-	return all, nil
+	return Paginate(PaginationConfig{
+		Client:   client,
+		URL:      url,
+		Opts:     &zohttp.RequestOpts{Params: params},
+		ItemsKey: "data",
+		PageSize: 200,
+		Limit:    limit,
+		SetPage:  SetPageCRM,
+		HasMore:  HasMoreCRM,
+	})
 }
 
 func PaginateProjects(client *zohttp.Client, url string, itemsKey string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
-	if maxPages == 0 {
-		maxPages = 20
+	limit := 0
+	if maxPages > 0 {
+		limit = maxPages * 100
 	}
-	var all []json.RawMessage
-	p := make(map[string]string)
-	for k, v := range params {
-		p[k] = v
-	}
-	page := 1
-
-	for range maxPages {
-		p["page"] = strconv.Itoa(page)
-		p["per_page"] = "100"
-
-		raw, err := client.Request("GET", url, &zohttp.RequestOpts{Params: p})
-		if err != nil {
-			return all, err
-		}
-
-		var rawList []json.RawMessage
-		if err := json.Unmarshal(raw, &rawList); err == nil {
-			all = append(all, rawList...)
-			break
-		}
-
-		var envelope map[string]json.RawMessage
-		if err := json.Unmarshal(raw, &envelope); err != nil {
-			break
-		}
-
-		if itemsKey != "" {
-			if items, ok := envelope[itemsKey]; ok {
-				var list []json.RawMessage
-				if err := json.Unmarshal(items, &list); err != nil {
-					break
-				}
-				all = append(all, list...)
-				if len(list) == 0 {
-					break
-				}
-			}
-		}
-
-		var pageInfo map[string]any
-		if pi, ok := envelope["page_info"]; ok {
-			json.Unmarshal(pi, &pageInfo)
-		}
-		if !hasNextPage(pageInfo) {
-			break
-		}
-		page++
-	}
-	return all, nil
+	return Paginate(PaginationConfig{
+		Client:   client,
+		URL:      url,
+		Opts:     &zohttp.RequestOpts{Params: params},
+		ItemsKey: itemsKey,
+		PageSize: 100,
+		Limit:    limit,
+		SetPage:  PagePerPage(100),
+		HasMore:  HasMoreProjects,
+	})
 }
 
 func PaginateWorkDrive(client *zohttp.Client, url string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
-	if maxPages == 0 {
-		maxPages = 10
+	limit := 0
+	if maxPages > 0 {
+		limit = maxPages * 50
 	}
-	perPage := 50
-	var all []json.RawMessage
-	p := make(map[string]string)
-	for k, v := range params {
-		p[k] = v
-	}
-	if _, ok := p["page[limit]"]; !ok {
-		p["page[limit]"] = fmt.Sprintf("%d", perPage)
-	}
-
-	for range maxPages {
-		p["page[offset]"] = fmt.Sprintf("%d", len(all))
-
-		raw, err := client.Request("GET", url, &zohttp.RequestOpts{Params: p})
-		if err != nil {
-			return all, err
-		}
-
-		var envelope struct {
-			Data []json.RawMessage `json:"data"`
-			Meta struct {
-				HasNext bool `json:"has_next"`
-			} `json:"meta"`
-		}
-		if err := json.Unmarshal(raw, &envelope); err != nil {
-			break
-		}
-		all = append(all, envelope.Data...)
-
-		if !envelope.Meta.HasNext || len(envelope.Data) == 0 {
-			break
-		}
-	}
-	return all, nil
+	return Paginate(PaginationConfig{
+		Client:   client,
+		URL:      url,
+		Opts:     &zohttp.RequestOpts{Params: params},
+		ItemsKey: "data",
+		PageSize: 50,
+		Limit:    limit,
+		SetPage:  PageOffsetLimit(50),
+		HasMore:  HasMoreWorkDrive,
+	})
 }

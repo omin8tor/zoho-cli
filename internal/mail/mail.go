@@ -9,6 +9,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -397,8 +398,8 @@ func messagesCmd() *cli.Command {
 				Usage: "List emails in a folder",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
-					&cli.StringFlag{Name: "start", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max messages (max 200)"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "status", Usage: "Filter: read, unread, or all"},
 					&cli.StringFlag{Name: "flagid", Usage: "Filter by flag ID"},
 					&cli.StringFlag{Name: "labelid", Usage: "Filter by label ID"},
@@ -425,12 +426,6 @@ func messagesCmd() *cli.Command {
 					}
 					params := map[string]string{
 						"folderId": cmd.String("folder"),
-					}
-					if v := cmd.String("start"); v != "" {
-						params["start"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
 					}
 					if v := cmd.String("status"); v != "" {
 						params["status"] = v
@@ -473,6 +468,26 @@ func messagesCmd() *cli.Command {
 					}
 					if v := cmd.String("threaded"); v != "" {
 						params["threadedMails"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						setPage := func(state *pagination.PageState, p map[string]string) {
+							p["start"] = fmt.Sprintf("%d", state.Offset)
+							p["limit"] = "200"
+						}
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.MailBase + "/api/accounts/" + accountID + "/messages/view",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  setPage,
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/messages/view", &zohttp.RequestOpts{Params: params})
 					if err != nil {

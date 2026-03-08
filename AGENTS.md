@@ -99,6 +99,52 @@ Env vars are wired via `Sources: cli.EnvVars(...)` on flag definitions so they a
 - **JSON array fields**: `StringFlag` + `json.Unmarshal([]byte(cmd.String("x")), &v)` in action
 - **--json escape hatch**: `internal.MergeJSON(cmd, body)` — flags always win over --json
 
+## Pagination Policy
+
+All list commands support `--all` and `--limit N` for auto-pagination.
+
+### Flags
+- `--all` — fetch all pages automatically
+- `--limit N` — fetch up to N total records, paginating as needed
+- Default (neither flag) — single request, returns raw Zoho envelope
+- `--all`/`--limit` mode returns a flat JSON array of items via `output.JSON()`
+
+### Architecture (`internal/pagination/pagination.go`)
+One generic `Paginate(PaginationConfig)` function with composable `SetPage`/`HasMore` callback pairs per product pattern:
+
+| Pattern | Products | SetPage | HasMore | ItemsKey |
+|---------|----------|---------|---------|----------|
+| A: page/per_page + page_context | Books, Billing, Invoice, Inventory, Expense | `PagePerPage(200)` | `HasMoreBooks` | varies per resource |
+| B: from/limit offset | Desk | `FromLimit(100)` | `HasMoreByCount` | `"data"` |
+| C: page + page_token | CRM, Bigin, Recruit | `SetPageCRM` | `HasMoreCRM` | `"data"` |
+| D: page + page_info | Projects | `PagePerPage(100)` | `HasMoreProjects` | varies per resource |
+| E: page[offset]/page[limit] | WorkDrive | `PageOffsetLimit(50)` | `HasMoreWorkDrive` | `"data"` |
+| F: index/range | Sprints | `IndexRange(100)` | `HasMoreByCount` | varies |
+| G: JSON data param | Sign | `SignPageContext(100)` | `HasMoreSign` | varies |
+| H: sIndex/limit | People | `SIndexLimit(200)` | `HasMoreByCount` | `"response.result"` |
+
+### Adding pagination to a new list command
+```go
+if cmd.Bool("all") || cmd.IsSet("limit") {
+    items, err := pagination.Paginate(pagination.PaginationConfig{
+        Client:   c,
+        URL:      url,
+        Opts:     &zohttp.RequestOpts{Params: params},
+        ItemsKey: "items_key_here",
+        PageSize: 200,
+        Limit:    cmd.Int("limit"),
+        SetPage:  pagination.PagePerPage(200),
+        HasMore:  pagination.HasMoreBooks,
+    })
+    if err != nil { return err }
+    return output.JSON(items)
+}
+// default single-page fallback
+raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+if err != nil { return err }
+return output.JSONRaw(raw)
+```
+
 ## Key Zoho API Quirks (absorb internally)
 
 - CRM v8 requires `fields` param on list/related/notes/attachments endpoints

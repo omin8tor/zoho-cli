@@ -18,3 +18,5 @@ coverage.html
 # Dev tools
 .tickets/
 .beads/
+references/
+repomix-output.xml

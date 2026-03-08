@@ -7,7 +7,6 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
-	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -21,6 +20,7 @@ func tasksCmd() *cli.Command {
 				Usage: "List tasks in a project",
 				Flags: []cli.Flag{
 					portalFlag, projectFlag,
+					allFlag, limitFlag,
 					&cli.StringFlag{Name: "status", Usage: "Filter: open, closed, in progress"},
 					&cli.StringFlag{Name: "priority", Usage: "Filter: none, low, medium, high"},
 				},
@@ -41,11 +41,7 @@ func tasksCmd() *cli.Command {
 					if p := cmd.String("priority"); p != "" {
 						params["priority"] = p
 					}
-					items, err := pagination.PaginateProjects(c, url, "tasks", params, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateProjectsList(c, cmd, url, "tasks", params)
 				},
 			},
 			{
@@ -53,6 +49,7 @@ func tasksCmd() *cli.Command {
 				Usage: "List my tasks across all projects",
 				Flags: []cli.Flag{
 					portalFlag,
+					allFlag, limitFlag,
 					&cli.StringFlag{Name: "status", Usage: "Filter: open, closed, in progress"},
 					&cli.StringFlag{Name: "priority", Usage: "Filter: none, low, medium, high"},
 				},
@@ -73,11 +70,7 @@ func tasksCmd() *cli.Command {
 					if p := cmd.String("priority"); p != "" {
 						params["priority"] = p
 					}
-					items, err := pagination.PaginateProjects(c, url, "tasks", params, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateProjectsList(c, cmd, url, "tasks", params)
 				},
 			},
 			{

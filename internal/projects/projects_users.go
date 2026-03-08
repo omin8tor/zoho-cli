@@ -5,7 +5,6 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
-	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -17,7 +16,7 @@ func usersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List portal users",
-				Flags: []cli.Flag{portalFlag},
+				Flags: []cli.Flag{portalFlag, allFlag, limitFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -28,11 +27,7 @@ func usersCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/users"
-					items, err := pagination.PaginateProjects(c, url, "users", nil, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateProjectsList(c, cmd, url, "users", nil)
 				},
 			},
 			{
@@ -169,7 +164,7 @@ func projectUsersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List project users",
-				Flags: []cli.Flag{portalFlag, projectFlag},
+				Flags: []cli.Flag{portalFlag, projectFlag, allFlag, limitFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -180,11 +175,7 @@ func projectUsersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/users"
-					items, err := pagination.PaginateProjects(c, url, "users", nil, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateProjectsList(c, cmd, url, "users", nil)
 				},
 			},
 			{

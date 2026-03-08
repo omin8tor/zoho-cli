@@ -6,6 +6,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -91,6 +92,10 @@ func contactsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List contacts",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -100,7 +105,24 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/contacts", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/contacts",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "contacts",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/contacts", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -319,6 +341,10 @@ func estimatesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List estimates",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -328,7 +354,24 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/estimates", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/estimates",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "estimates",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/estimates", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -601,6 +644,10 @@ func invoicesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List invoices",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -610,7 +657,24 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/invoices", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/invoices",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "invoices",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/invoices", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -976,6 +1040,10 @@ func recurringInvoicesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List recurring invoices",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -985,7 +1053,24 @@ func recurringInvoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/recurringinvoices", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/recurringinvoices",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "recurring_invoices",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/recurringinvoices", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1200,6 +1285,10 @@ func creditNotesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List credit notes",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -1209,7 +1298,24 @@ func creditNotesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/creditnotes", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/creditnotes",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "creditnotes",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/creditnotes", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1451,6 +1557,10 @@ func customerPaymentsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List customer payments",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -1460,7 +1570,24 @@ func customerPaymentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/customerpayments", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/customerpayments",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "customerpayments",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/customerpayments", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1627,6 +1754,10 @@ func expensesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List expenses",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -1636,7 +1767,24 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/expenses", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/expenses",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "expenses",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/expenses", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2351,6 +2499,10 @@ func projectsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List projects",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -2360,7 +2512,24 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/projects", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/projects",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "projects",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/projects", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2652,6 +2821,10 @@ func itemsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List items",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -2661,7 +2834,24 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/items", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/items",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "items",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/items", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -3042,6 +3232,10 @@ func taxesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List taxes",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -3051,7 +3245,24 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/settings/taxes", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/settings/taxes",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "taxes",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/settings/taxes", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -3196,6 +3407,10 @@ func usersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List users",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
+				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -3205,7 +3420,24 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InvoiceBase+"/users", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					params := orgParams(orgID)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.InvoiceBase+"/users",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "users",
+							PageSize: 200,
+							Limit:    int(cmd.Int("limit")),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreBooks,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", c.InvoiceBase+"/users", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -37,11 +37,10 @@ func requestsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List sign requests",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "start-index", Usage: "Starting index for pagination"},
-					&cli.StringFlag{Name: "row-count", Usage: "Number of records per page"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-column", Usage: "Sort field (e.g. created_time)"},
 					&cli.StringFlag{Name: "sort-order", Usage: "ASC or DESC"},
-					&cli.StringFlag{Name: "data", Usage: "Full JSON data param (overrides other pagination flags)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -49,30 +48,45 @@ func requestsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("data"); v != "" {
-						params["data"] = v
-					} else {
-						pc := map[string]any{}
-						if v := cmd.String("start-index"); v != "" {
-							if n, err := strconv.Atoi(v); err == nil {
-								pc["start_index"] = n
+					sortColumn := cmd.String("sort-column")
+					sortOrder := cmd.String("sort-order")
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						setPage := func(state *pagination.PageState, p map[string]string) {
+							pc := map[string]any{"start_index": state.Offset, "row_count": 100}
+							if sortColumn != "" {
+								pc["sort_column"] = sortColumn
 							}
-						}
-						if v := cmd.String("row-count"); v != "" {
-							if n, err := strconv.Atoi(v); err == nil {
-								pc["row_count"] = n
+							if sortOrder != "" {
+								pc["sort_order"] = sortOrder
 							}
-						}
-						if v := cmd.String("sort-column"); v != "" {
-							pc["sort_column"] = v
-						}
-						if v := cmd.String("sort-order"); v != "" {
-							pc["sort_order"] = v
-						}
-						if len(pc) > 0 {
 							j, _ := json.Marshal(map[string]any{"page_context": pc})
-							params["data"] = string(j)
+							p["data"] = string(j)
 						}
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.SignBase + "/requests",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "requests",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  setPage,
+							HasMore:  pagination.HasMoreSign,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					if sortColumn != "" || sortOrder != "" {
+						pc := map[string]any{}
+						if sortColumn != "" {
+							pc["sort_column"] = sortColumn
+						}
+						if sortOrder != "" {
+							pc["sort_order"] = sortOrder
+						}
+						j, _ := json.Marshal(map[string]any{"page_context": pc})
+						params["data"] = string(j)
 					}
 					raw, err := c.Request("GET", c.SignBase+"/requests", &zohttp.RequestOpts{
 						Params: params,
@@ -424,11 +438,10 @@ func templatesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List templates",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "start-index", Usage: "Starting index for pagination"},
-					&cli.StringFlag{Name: "row-count", Usage: "Number of records per page"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-column", Usage: "Sort field"},
 					&cli.StringFlag{Name: "sort-order", Usage: "ASC or DESC"},
-					&cli.StringFlag{Name: "data", Usage: "Full JSON data param (overrides other pagination flags)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -436,30 +449,45 @@ func templatesCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("data"); v != "" {
-						params["data"] = v
-					} else {
-						pc := map[string]any{}
-						if v := cmd.String("start-index"); v != "" {
-							if n, err := strconv.Atoi(v); err == nil {
-								pc["start_index"] = n
+					sortColumn := cmd.String("sort-column")
+					sortOrder := cmd.String("sort-order")
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						setPage := func(state *pagination.PageState, p map[string]string) {
+							pc := map[string]any{"start_index": state.Offset, "row_count": 100}
+							if sortColumn != "" {
+								pc["sort_column"] = sortColumn
 							}
-						}
-						if v := cmd.String("row-count"); v != "" {
-							if n, err := strconv.Atoi(v); err == nil {
-								pc["row_count"] = n
+							if sortOrder != "" {
+								pc["sort_order"] = sortOrder
 							}
-						}
-						if v := cmd.String("sort-column"); v != "" {
-							pc["sort_column"] = v
-						}
-						if v := cmd.String("sort-order"); v != "" {
-							pc["sort_order"] = v
-						}
-						if len(pc) > 0 {
 							j, _ := json.Marshal(map[string]any{"page_context": pc})
-							params["data"] = string(j)
+							p["data"] = string(j)
 						}
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.SignBase + "/templates",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "templates",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  setPage,
+							HasMore:  pagination.HasMoreSign,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					if sortColumn != "" || sortOrder != "" {
+						pc := map[string]any{}
+						if sortColumn != "" {
+							pc["sort_column"] = sortColumn
+						}
+						if sortOrder != "" {
+							pc["sort_order"] = sortOrder
+						}
+						j, _ := json.Marshal(map[string]any{"page_context": pc})
+						params["data"] = string(j)
 					}
 					raw, err := c.Request("GET", c.SignBase+"/templates", &zohttp.RequestOpts{
 						Params: params,

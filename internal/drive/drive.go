@@ -29,6 +29,9 @@ var serviceTypeMap = map[string]string{
 	"show":       "zohoshow",
 }
 
+var allFlag = &cli.BoolFlag{Name: "all", Usage: "Auto-paginate all results"}
+var limitFlag = &cli.IntFlag{Name: "limit", Usage: "Maximum items when auto-paginating"}
+
 func requireTeam(cmd *cli.Command) (string, error) {
 	v := cmd.String("team")
 	if v == "" {
@@ -48,6 +51,30 @@ func jsonapiBody(attrs map[string]any) map[string]any {
 
 func jsonapiHeaders() map[string]string {
 	return map[string]string{"Content-Type": jsonapiCT}
+}
+
+func paginateWorkDriveList(c *zohttp.Client, cmd *cli.Command, url string, params map[string]string) error {
+	if cmd.Bool("all") || cmd.IsSet("limit") {
+		items, err := pagination.Paginate(pagination.PaginationConfig{
+			Client:   c,
+			URL:      url,
+			Opts:     &zohttp.RequestOpts{Params: params},
+			ItemsKey: "data",
+			PageSize: 50,
+			Limit:    cmd.Int("limit"),
+			SetPage:  pagination.PageOffsetLimit(50),
+			HasMore:  pagination.HasMoreWorkDrive,
+		})
+		if err != nil {
+			return err
+		}
+		return output.JSON(items)
+	}
+	raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+	if err != nil {
+		return err
+	}
+	return output.JSONRaw(raw)
 }
 
 func Commands() *cli.Command {
@@ -76,6 +103,8 @@ func filesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 					&cli.StringFlag{Name: "type", Usage: "Filter: file, folder, image, etc."},
+					allFlag,
+					limitFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -87,11 +116,7 @@ func filesCmd() *cli.Command {
 					if t := cmd.String("type"); t != "" {
 						params["filter[type]"] = t
 					}
-					items, err := pagination.PaginateWorkDrive(c, url, params, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateWorkDriveList(c, cmd, url, params)
 				},
 			},
 			{
@@ -118,6 +143,8 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "team", Usage: "Team ID", Sources: cli.EnvVars("ZOHO_TEAM_ID")},
 					&cli.StringFlag{Name: "mode", Value: "all", Usage: "all, name, or content"},
 					&cli.StringFlag{Name: "type", Usage: "Filter by type"},
+					allFlag,
+					limitFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -134,11 +161,7 @@ func filesCmd() *cli.Command {
 					if t := cmd.String("type"); t != "" {
 						params["filter[type]"] = t
 					}
-					items, err := pagination.PaginateWorkDrive(c, url, params, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateWorkDriveList(c, cmd, url, params)
 				},
 			},
 			{
@@ -275,6 +298,8 @@ func filesCmd() *cli.Command {
 				Usage: "List trashed files in a team folder",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "team-folder", Required: true, Usage: "Team folder ID"},
+					allFlag,
+					limitFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -282,11 +307,7 @@ func filesCmd() *cli.Command {
 						return err
 					}
 					url := c.WorkDriveBase + "/teamfolders/" + cmd.String("team-folder") + "/trashedfiles"
-					items, err := pagination.PaginateWorkDrive(c, url, nil, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateWorkDriveList(c, cmd, url, nil)
 				},
 			},
 			{
@@ -319,6 +340,8 @@ func foldersCmd() *cli.Command {
 				Usage: "List team folders",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "team", Usage: "Team ID", Sources: cli.EnvVars("ZOHO_TEAM_ID")},
+					allFlag,
+					limitFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -330,11 +353,7 @@ func foldersCmd() *cli.Command {
 						return err
 					}
 					url := c.WorkDriveBase + "/teams/" + team + "/teamfolders"
-					items, err := pagination.PaginateWorkDrive(c, url, nil, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateWorkDriveList(c, cmd, url, nil)
 				},
 			},
 			{

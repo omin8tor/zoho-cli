@@ -6,6 +6,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -150,8 +151,8 @@ func booksProjectsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "status", Usage: "Filter"},
 					&cli.StringFlag{Name: "customer-id", Usage: "Filter"},
-					&cli.StringFlag{Name: "page", Usage: "Filter"},
-					&cli.StringFlag{Name: "per-page", Usage: "Filter"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -169,11 +170,36 @@ func booksProjectsCmd() *cli.Command {
 					if v := cmd.String("customer-id"); v != "" {
 						params["customer_id"] = v
 					}
-					if v := cmd.String("page"); v != "" {
-						params["page"] = v
-					}
-					if v := cmd.String("per-page"); v != "" {
-						params["per_page"] = v
+
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+
+							Client: c,
+
+							URL: c.BooksBase + "/projects",
+
+							Opts: &zohttp.RequestOpts{Params: params},
+
+							ItemsKey: "projects",
+
+							PageSize: 200,
+
+							Limit: int(cmd.Int("limit")),
+
+							SetPage: pagination.PagePerPage(200),
+
+							HasMore: pagination.HasMoreBooks,
+						})
+
+						if err != nil {
+
+							return err
+
+						}
+
+						return output.JSON(items)
+
 					}
 					raw, err := c.Request("GET", c.BooksBase+"/projects", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -938,8 +964,8 @@ func timeEntriesCmd() *cli.Command {
 				Usage: "List time entries",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "project-id", Required: true, Usage: "Project ID"},
-					&cli.StringFlag{Name: "page", Usage: "Page number"},
-					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -951,11 +977,36 @@ func timeEntriesCmd() *cli.Command {
 						return err
 					}
 					params := orgParams(orgID)
-					if v := cmd.String("page"); v != "" {
-						params["page"] = v
-					}
-					if v := cmd.String("per-page"); v != "" {
-						params["per_page"] = v
+
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+
+							Client: c,
+
+							URL: c.BooksBase + "/projects/" + cmd.String("project-id") + "/timeentries",
+
+							Opts: &zohttp.RequestOpts{Params: params},
+
+							ItemsKey: "time_entries",
+
+							PageSize: 200,
+
+							Limit: int(cmd.Int("limit")),
+
+							SetPage: pagination.PagePerPage(200),
+
+							HasMore: pagination.HasMoreBooks,
+						})
+
+						if err != nil {
+
+							return err
+
+						}
+
+						return output.JSON(items)
+
 					}
 					raw, err := c.Request("GET", c.BooksBase+"/projects/"+cmd.String("project-id")+"/timeentries", &zohttp.RequestOpts{Params: params})
 					if err != nil {

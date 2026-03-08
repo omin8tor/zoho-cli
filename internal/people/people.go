@@ -8,6 +8,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -79,8 +80,8 @@ func recordsCmd() *cli.Command {
 				Usage:     "List records from a form",
 				ArgsUsage: "<form-link-name>",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "sindex", Usage: "Starting index (default 1)"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records (max 200)"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "search-column", Usage: "Search column (EMPLOYEEID or EMPLOYEEMAILALIAS)"},
 					&cli.StringFlag{Name: "search-value", Usage: "Search value"},
 				},
@@ -93,17 +94,27 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("sindex"); v != "" {
-						params["sIndex"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
-					}
 					if v := cmd.String("search-column"); v != "" {
 						params["searchColumn"] = v
 					}
 					if v := cmd.String("search-value"); v != "" {
 						params["searchValue"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.PeopleBase + "/forms/" + cmd.Args().First() + "/getRecords",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "response.result",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SIndexLimit(200),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/getRecords", &zohttp.RequestOpts{
 						Params: params,
@@ -348,8 +359,8 @@ func leaveCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List leave records",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "sindex", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records (max 200)"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "search-column", Usage: "Search column"},
 					&cli.StringFlag{Name: "search-value", Usage: "Search value"},
 				},
@@ -359,17 +370,27 @@ func leaveCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("sindex"); v != "" {
-						params["sIndex"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
-					}
 					if v := cmd.String("search-column"); v != "" {
 						params["searchColumn"] = v
 					}
 					if v := cmd.String("search-value"); v != "" {
 						params["searchValue"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.PeopleBase + "/forms/leave/getRecords",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "response.result",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SIndexLimit(200),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.PeopleBase+"/forms/leave/getRecords", &zohttp.RequestOpts{
 						Params: params,

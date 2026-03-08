@@ -23,9 +23,35 @@ func base(c *zohttp.Client, portal, project string) string {
 
 var portalFlag = &cli.StringFlag{Name: "portal", Usage: "Portal ID", Sources: cli.EnvVars("ZOHO_PORTAL_ID")}
 var projectFlag = &cli.StringFlag{Name: "project", Required: true, Usage: "Project ID"}
+var allFlag = &cli.BoolFlag{Name: "all", Usage: "Auto-paginate all results"}
+var limitFlag = &cli.IntFlag{Name: "limit", Usage: "Maximum items when auto-paginating"}
 
 func requirePortal(cmd *cli.Command) (string, error) {
 	return internal.RequireFlag(cmd, "portal", "ZOHO_PORTAL_ID")
+}
+
+func paginateProjectsList(c *zohttp.Client, cmd *cli.Command, url, itemsKey string, params map[string]string) error {
+	if cmd.Bool("all") || cmd.IsSet("limit") {
+		items, err := pagination.Paginate(pagination.PaginationConfig{
+			Client:   c,
+			URL:      url,
+			Opts:     &zohttp.RequestOpts{Params: params},
+			ItemsKey: itemsKey,
+			PageSize: 100,
+			Limit:    cmd.Int("limit"),
+			SetPage:  pagination.PagePerPage(100),
+			HasMore:  pagination.HasMoreProjects,
+		})
+		if err != nil {
+			return err
+		}
+		return output.JSON(items)
+	}
+	raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+	if err != nil {
+		return err
+	}
+	return output.JSONRaw(raw)
 }
 
 func Commands() *cli.Command {
@@ -92,7 +118,7 @@ func projectsCoreCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all projects",
-				Flags: []cli.Flag{portalFlag},
+				Flags: []cli.Flag{portalFlag, allFlag, limitFlag},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
@@ -103,11 +129,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects"
-					items, err := pagination.PaginateProjects(c, url, "", nil, 0)
-					if err != nil {
-						return err
-					}
-					return output.JSON(items)
+					return paginateProjectsList(c, cmd, url, "", nil)
 				},
 			},
 			{

@@ -9,6 +9,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -67,8 +68,8 @@ func chartOfAccountsCmd() *cli.Command {
 				Usage: "List chart of accounts",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "sort-column", Usage: "Filter"},
-					&cli.StringFlag{Name: "page", Usage: "Filter"},
-					&cli.StringFlag{Name: "per-page", Usage: "Filter"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -83,11 +84,36 @@ func chartOfAccountsCmd() *cli.Command {
 					if v := cmd.String("sort-column"); v != "" {
 						params["sort_column"] = v
 					}
-					if v := cmd.String("page"); v != "" {
-						params["page"] = v
-					}
-					if v := cmd.String("per-page"); v != "" {
-						params["per_page"] = v
+
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+
+							Client: c,
+
+							URL: c.BooksBase + "/chartofaccounts",
+
+							Opts: &zohttp.RequestOpts{Params: params},
+
+							ItemsKey: "chartofaccounts",
+
+							PageSize: 200,
+
+							Limit: int(cmd.Int("limit")),
+
+							SetPage: pagination.PagePerPage(200),
+
+							HasMore: pagination.HasMoreBooks,
+						})
+
+						if err != nil {
+
+							return err
+
+						}
+
+						return output.JSON(items)
+
 					}
 					raw, err := c.Request("GET", c.BooksBase+"/chartofaccounts", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -318,8 +344,8 @@ func journalsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "date-start", Usage: "Filter"},
 					&cli.StringFlag{Name: "date-end", Usage: "Filter"},
-					&cli.StringFlag{Name: "page", Usage: "Filter"},
-					&cli.StringFlag{Name: "per-page", Usage: "Filter"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -337,11 +363,36 @@ func journalsCmd() *cli.Command {
 					if v := cmd.String("date-end"); v != "" {
 						params["date_end"] = v
 					}
-					if v := cmd.String("page"); v != "" {
-						params["page"] = v
-					}
-					if v := cmd.String("per-page"); v != "" {
-						params["per_page"] = v
+
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+
+							Client: c,
+
+							URL: c.BooksBase + "/journals",
+
+							Opts: &zohttp.RequestOpts{Params: params},
+
+							ItemsKey: "journals",
+
+							PageSize: 200,
+
+							Limit: int(cmd.Int("limit")),
+
+							SetPage: pagination.PagePerPage(200),
+
+							HasMore: pagination.HasMoreBooks,
+						})
+
+						if err != nil {
+
+							return err
+
+						}
+
+						return output.JSON(items)
+
 					}
 					raw, err := c.Request("GET", c.BooksBase+"/journals", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -608,8 +659,8 @@ func fixedAssetsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List fixed assets",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "page", Usage: "Filter"},
-					&cli.StringFlag{Name: "per-page", Usage: "Filter"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -621,11 +672,36 @@ func fixedAssetsCmd() *cli.Command {
 						return err
 					}
 					params := orgParams(orgID)
-					if v := cmd.String("page"); v != "" {
-						params["page"] = v
-					}
-					if v := cmd.String("per-page"); v != "" {
-						params["per_page"] = v
+
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+
+							Client: c,
+
+							URL: c.BooksBase + "/fixedassets",
+
+							Opts: &zohttp.RequestOpts{Params: params},
+
+							ItemsKey: "fixedassets",
+
+							PageSize: 200,
+
+							Limit: int(cmd.Int("limit")),
+
+							SetPage: pagination.PagePerPage(200),
+
+							HasMore: pagination.HasMoreBooks,
+						})
+
+						if err != nil {
+
+							return err
+
+						}
+
+						return output.JSON(items)
+
 					}
 					raw, err := c.Request("GET", c.BooksBase+"/fixedassets", &zohttp.RequestOpts{Params: params})
 					if err != nil {
@@ -1178,8 +1254,8 @@ func baseCurrencyAdjCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List base currency adjustments",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "page", Usage: "Filter"},
-					&cli.StringFlag{Name: "per-page", Usage: "Filter"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -1191,11 +1267,36 @@ func baseCurrencyAdjCmd() *cli.Command {
 						return err
 					}
 					params := orgParams(orgID)
-					if v := cmd.String("page"); v != "" {
-						params["page"] = v
-					}
-					if v := cmd.String("per-page"); v != "" {
-						params["per_page"] = v
+
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+
+							Client: c,
+
+							URL: c.BooksBase + "/basecurrencyadjustment",
+
+							Opts: &zohttp.RequestOpts{Params: params},
+
+							ItemsKey: "basecurrencyadjustments",
+
+							PageSize: 200,
+
+							Limit: int(cmd.Int("limit")),
+
+							SetPage: pagination.PagePerPage(200),
+
+							HasMore: pagination.HasMoreBooks,
+						})
+
+						if err != nil {
+
+							return err
+
+						}
+
+						return output.JSON(items)
+
 					}
 					raw, err := c.Request("GET", c.BooksBase+"/basecurrencyadjustment", &zohttp.RequestOpts{Params: params})
 					if err != nil {

@@ -179,9 +179,8 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Field to sort by"},
 					&cli.StringFlag{Name: "sort-order", Usage: "asc or desc"},
-					&cli.IntFlag{Name: "page", Value: 1, Usage: "Page number"},
-					&cli.IntFlag{Name: "per-page", Value: 200, Usage: "Records per page (max 200)"},
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum records when auto-paginating"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -200,28 +199,27 @@ func recordsCmd() *cli.Command {
 					if s := cmd.String("sort-order"); s != "" {
 						params["sort_order"] = s
 					}
-					if cmd.Bool("all") {
-						records, err := pagination.PaginateCRM(c, c.CRMBase+"/"+module, params, 0)
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						records, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.CRMBase + "/" + module,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
 						if err != nil {
 							return err
 						}
 						return output.JSON(records)
 					}
-					params["page"] = fmt.Sprintf("%d", cmd.Int("page"))
-					pp := cmd.Int("per-page")
-					if pp > 200 {
-						pp = 200
-					}
-					params["per_page"] = fmt.Sprintf("%d", pp)
 					raw, err := c.Request("GET", c.CRMBase+"/"+module, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
-					var envelope struct {
-						Data []json.RawMessage `json:"data"`
-					}
-					json.Unmarshal(raw, &envelope)
-					return output.JSON(envelope.Data)
+					return output.JSONRaw(raw)
 				},
 			},
 			{
@@ -343,18 +341,15 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "phone", Usage: "Phone search"},
 					&cli.StringFlag{Name: "criteria", Usage: "Criteria e.g. (Stage:equals:Closed Won)"},
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated fields"},
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum records when auto-paginating"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					params := map[string]string{
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", min(cmd.Int("per-page"), 200)),
-					}
+					params := map[string]string{}
 					if w := cmd.String("word"); w != "" {
 						params["word"] = w
 					} else if e := cmd.String("email"); e != "" {
@@ -367,15 +362,28 @@ func recordsCmd() *cli.Command {
 					if f := cmd.String("fields"); f != "" {
 						params["fields"] = f
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/"+cmd.Args().First()+"/search", &zohttp.RequestOpts{Params: params})
+					url := c.CRMBase + "/" + cmd.Args().First() + "/search"
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      url,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
+					}
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
-					var envelope struct {
-						Data []json.RawMessage `json:"data"`
-					}
-					json.Unmarshal(raw, &envelope)
-					return output.JSON(envelope.Data)
+					return output.JSONRaw(raw)
 				},
 			},
 			{
@@ -444,8 +452,8 @@ func notesCmd() *cli.Command {
 				ArgsUsage: "<module> <record-id>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all notes"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum notes when auto-paginating"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -457,20 +465,29 @@ func notesCmd() *cli.Command {
 					if fields == "" {
 						fields = "id,Note_Title,Note_Content,Created_Time,Modified_Time"
 					}
-					params := map[string]string{
-						"fields":   fields,
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", min(cmd.Int("per-page"), 200)),
+					params := map[string]string{"fields": fields}
+					url := c.CRMBase + "/" + module + "/" + recordID + "/Notes"
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      url,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
-					var envelope struct {
-						Data []json.RawMessage `json:"data"`
-					}
-					json.Unmarshal(raw, &envelope)
-					return output.JSON(envelope.Data)
+					return output.JSONRaw(raw)
 				},
 			},
 			{
@@ -558,8 +575,8 @@ func relatedCmd() *cli.Command {
 				ArgsUsage: "<module> <record-id> <related-list>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated fields"},
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all related records"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum related records when auto-paginating"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -571,20 +588,29 @@ func relatedCmd() *cli.Command {
 					if fields == "" {
 						fields = defaultFields
 					}
-					params := map[string]string{
-						"fields":   fields,
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", min(cmd.Int("per-page"), 200)),
+					params := map[string]string{"fields": fields}
+					url := c.CRMBase + "/" + module + "/" + recordID + "/" + relList
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      url,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/"+module+"/"+recordID+"/"+relList, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
-					var envelope struct {
-						Data []json.RawMessage `json:"data"`
-					}
-					json.Unmarshal(raw, &envelope)
-					return output.JSON(envelope.Data)
+					return output.JSONRaw(raw)
 				},
 			},
 		},
@@ -600,28 +626,37 @@ func usersCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List CRM users",
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all users"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum users when auto-paginating"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					params := map[string]string{
-						"type":     "AllUsers",
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", min(cmd.Int("per-page"), 200)),
+					url := c.CRMBase + "/users"
+					params := map[string]string{"type": "AllUsers"}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      url,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "users",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.PagePerPage(200),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/users", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
-					var envelope struct {
-						Users []json.RawMessage `json:"users"`
-					}
-					json.Unmarshal(raw, &envelope)
-					return output.JSON(envelope.Users)
+					return output.JSONRaw(raw)
 				},
 			},
 		},
@@ -689,10 +724,6 @@ func searchGlobalCmd() *cli.Command {
 		Name:      "search-global",
 		Usage:     "Search across all CRM modules",
 		ArgsUsage: "<word>",
-		Flags: []cli.Flag{
-			&cli.IntFlag{Name: "page", Value: 1},
-			&cli.IntFlag{Name: "per-page", Value: 10},
-		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
@@ -700,8 +731,6 @@ func searchGlobalCmd() *cli.Command {
 			}
 			params := map[string]string{
 				"searchword": cmd.Args().First(),
-				"page":       fmt.Sprintf("%d", cmd.Int("page")),
-				"per_page":   fmt.Sprintf("%d", min(cmd.Int("per-page"), 10)),
 			}
 			raw, err := c.Request("GET", c.CRMBase+"/search", &zohttp.RequestOpts{Params: params})
 			if err != nil {
@@ -723,8 +752,8 @@ func attachmentsCmd() *cli.Command {
 				ArgsUsage: "<module> <record-id>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
-					&cli.IntFlag{Name: "page", Value: 1},
-					&cli.IntFlag{Name: "per-page", Value: 200},
+					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all attachments"},
+					&cli.IntFlag{Name: "limit", Usage: "Maximum attachments when auto-paginating"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -736,20 +765,29 @@ func attachmentsCmd() *cli.Command {
 					if fields == "" {
 						fields = "id,File_Name,Size,Created_Time"
 					}
-					params := map[string]string{
-						"fields":   fields,
-						"page":     fmt.Sprintf("%d", cmd.Int("page")),
-						"per_page": fmt.Sprintf("%d", min(cmd.Int("per-page"), 200)),
+					params := map[string]string{"fields": fields}
+					url := c.CRMBase + "/" + module + "/" + recordID + "/Attachments"
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      url,
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "data",
+							PageSize: 200,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.SetPageCRM,
+							HasMore:  pagination.HasMoreCRM,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
-					var envelope struct {
-						Data []json.RawMessage `json:"data"`
-					}
-					json.Unmarshal(raw, &envelope)
-					return output.JSON(envelope.Data)
+					return output.JSONRaw(raw)
 				},
 			},
 			{

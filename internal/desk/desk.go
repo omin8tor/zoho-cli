@@ -6,6 +6,7 @@ import (
 	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -40,8 +41,8 @@ func departmentsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List departments",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "from", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
@@ -52,15 +53,23 @@ func departmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					params := map[string]string{}
-					if v := cmd.String("from"); v != "" {
-						params["from"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.DeskBase + "/departments",
+							Opts:     &zohttp.RequestOpts{Headers: orgHeaders(orgID)},
+							ItemsKey: "data",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.FromLimit(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.DeskBase+"/departments", &zohttp.RequestOpts{
-						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -104,8 +113,8 @@ func agentsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List agents",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "from", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "department-id", Usage: "Department ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -118,14 +127,24 @@ func agentsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("from"); v != "" {
-						params["from"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
-					}
 					if v := cmd.String("department-id"); v != "" {
 						params["departmentId"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.DeskBase + "/agents",
+							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
+							ItemsKey: "data",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.FromLimit(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.DeskBase+"/agents", &zohttp.RequestOpts{
 						Params:  params,
@@ -172,8 +191,8 @@ func ticketsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List tickets",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "from", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "department-ids", Usage: "Comma-separated department IDs"},
 					&cli.StringFlag{Name: "status", Usage: "Filter by status"},
 					&cli.StringFlag{Name: "priority", Usage: "Filter by priority"},
@@ -190,12 +209,6 @@ func ticketsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("from"); v != "" {
-						params["from"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
-					}
 					if v := cmd.String("department-ids"); v != "" {
 						params["departmentIds"] = v
 					}
@@ -210,6 +223,22 @@ func ticketsCmd() *cli.Command {
 					}
 					if v := cmd.String("sort-by"); v != "" {
 						params["sortBy"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.DeskBase + "/tickets",
+							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
+							ItemsKey: "data",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.FromLimit(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.DeskBase+"/tickets", &zohttp.RequestOpts{
 						Params:  params,
@@ -698,8 +727,8 @@ func contactsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List contacts",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "from", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Sort field"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -712,14 +741,24 @@ func contactsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("from"); v != "" {
-						params["from"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
-					}
 					if v := cmd.String("sort-by"); v != "" {
 						params["sortBy"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.DeskBase + "/contacts",
+							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
+							ItemsKey: "data",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.FromLimit(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.DeskBase+"/contacts", &zohttp.RequestOpts{
 						Params:  params,
@@ -980,8 +1019,8 @@ func accountsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List accounts",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "from", Usage: "Starting index"},
-					&cli.StringFlag{Name: "limit", Usage: "Max records"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Sort field"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -994,14 +1033,24 @@ func accountsCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{}
-					if v := cmd.String("from"); v != "" {
-						params["from"] = v
-					}
-					if v := cmd.String("limit"); v != "" {
-						params["limit"] = v
-					}
 					if v := cmd.String("sort-by"); v != "" {
 						params["sortBy"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							URL:      c.DeskBase + "/accounts",
+							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
+							ItemsKey: "data",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  pagination.FromLimit(100),
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("GET", c.DeskBase+"/accounts", &zohttp.RequestOpts{
 						Params:  params,

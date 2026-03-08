@@ -9,6 +9,7 @@ import (
 	internal "github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
+	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
 
@@ -45,8 +46,8 @@ func workbooksCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all workbooks",
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "start-index", Usage: "Start index"},
-					&cli.IntFlag{Name: "count", Usage: "Number of workbooks"},
+					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
+					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-option", Usage: "Sort option"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
@@ -55,14 +56,29 @@ func workbooksCmd() *cli.Command {
 						return err
 					}
 					params := map[string]string{"method": "workbook.list"}
-					if v := cmd.Int("start-index"); v > 0 {
-						params["start_index"] = fmt.Sprintf("%d", v)
-					}
-					if v := cmd.Int("count"); v > 0 {
-						params["count"] = fmt.Sprintf("%d", v)
-					}
 					if v := cmd.String("sort-option"); v != "" {
 						params["sort_option"] = v
+					}
+					if cmd.Bool("all") || cmd.IsSet("limit") {
+						setPage := func(state *pagination.PageState, p map[string]string) {
+							p["start_index"] = fmt.Sprintf("%d", state.Offset)
+							p["count"] = "100"
+						}
+						items, err := pagination.Paginate(pagination.PaginationConfig{
+							Client:   c,
+							Method:   "POST",
+							URL:      c.SheetBase + "/workbooks",
+							Opts:     &zohttp.RequestOpts{Params: params},
+							ItemsKey: "workbooks",
+							PageSize: 100,
+							Limit:    cmd.Int("limit"),
+							SetPage:  setPage,
+							HasMore:  pagination.HasMoreByCount,
+						})
+						if err != nil {
+							return err
+						}
+						return output.JSON(items)
 					}
 					raw, err := c.Request("POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{Params: params})
 					if err != nil {
