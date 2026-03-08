@@ -7,19 +7,10 @@ import (
 	"path/filepath"
 
 	internal "github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
 
 var workbookFlag = &cli.StringFlag{Name: "workbook", Required: true, Usage: "Workbook resource ID"}
 
@@ -59,7 +50,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "sort-option", Usage: "Sort option"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -88,7 +79,7 @@ func workbooksCmd() *cli.Command {
 					&cli.IntFlag{Name: "count", Usage: "Number of templates"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -113,7 +104,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -132,7 +123,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "workbook-name", Required: true, Usage: "Workbook name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -155,7 +146,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "workbook-name", Required: true, Usage: "New workbook name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -179,7 +170,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "workbook-name", Usage: "Workbook name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -213,7 +204,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "format", Required: true, Usage: "Download format (xlsx/csv/tsv/ods/pdf/html)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -237,7 +228,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "file", Usage: "Path to image file"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -270,7 +261,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "new-workbook-name", Required: true, Usage: "New workbook name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -296,7 +287,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "notify", Usage: "Notify user (true/false)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -326,7 +317,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "version-description", Required: true, Usage: "Version description"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -349,7 +340,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "version-number", Required: true, Usage: "Version number"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -371,7 +362,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -390,7 +381,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -409,7 +400,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -428,7 +419,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -447,7 +438,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -466,7 +457,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -485,7 +476,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -513,7 +504,7 @@ func worksheetsCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -533,7 +524,7 @@ func worksheetsCmd() *cli.Command {
 					&cli.StringFlag{Name: "worksheet-name", Required: true, Usage: "Worksheet name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -557,7 +548,7 @@ func worksheetsCmd() *cli.Command {
 					&cli.StringFlag{Name: "new-worksheet-name", Required: true, Usage: "New worksheet name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -583,7 +574,7 @@ func worksheetsCmd() *cli.Command {
 					&cli.StringFlag{Name: "new-worksheet-name", Usage: "New worksheet name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -611,7 +602,7 @@ func worksheetsCmd() *cli.Command {
 					&cli.StringFlag{Name: "new-worksheet-name", Required: true, Usage: "New worksheet name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -635,7 +626,7 @@ func worksheetsCmd() *cli.Command {
 					worksheetFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -658,7 +649,7 @@ func worksheetsCmd() *cli.Command {
 					&cli.StringFlag{Name: "worksheet-names", Required: true, Usage: "JSON array of worksheet names"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -690,7 +681,7 @@ func tablesCmd() *cli.Command {
 					worksheetFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -718,7 +709,7 @@ func tablesCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -748,7 +739,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -772,7 +763,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Header rename data JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -800,7 +791,7 @@ func tablesCmd() *cli.Command {
 					&cli.IntFlag{Name: "count", Usage: "Number of records"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -837,7 +828,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -867,7 +858,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -897,7 +888,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "delete-rows", Usage: "Delete entire rows (true/false)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -925,7 +916,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "columns", Required: true, Usage: "Columns JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -950,7 +941,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "columns", Required: true, Usage: "Columns JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -987,7 +978,7 @@ func recordsCmd() *cli.Command {
 					&cli.IntFlag{Name: "count", Usage: "Number of records"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1025,7 +1016,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1061,7 +1052,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1097,7 +1088,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "delete-rows", Usage: "Delete entire rows (true/false)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1130,7 +1121,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "columns", Required: true, Usage: "Columns JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1167,7 +1158,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1198,7 +1189,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1227,7 +1218,7 @@ func cellsCmd() *cli.Command {
 					&cli.StringFlag{Name: "named-range", Required: true, Usage: "Named range"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1254,7 +1245,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-column", Usage: "End column"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1289,7 +1280,7 @@ func cellsCmd() *cli.Command {
 					worksheetFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1315,7 +1306,7 @@ func cellsCmd() *cli.Command {
 					&cli.StringFlag{Name: "content", Required: true, Usage: "Cell content"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1344,7 +1335,7 @@ func cellsCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Cell data JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1373,7 +1364,7 @@ func cellsCmd() *cli.Command {
 					&cli.StringFlag{Name: "data-array", Required: true, Usage: "Data array JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1404,7 +1395,7 @@ func cellsCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Data JSON 2D array"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1442,7 +1433,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "CSV data string"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1471,7 +1462,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1507,7 +1498,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1544,7 +1535,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1581,7 +1572,7 @@ func contentCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1614,7 +1605,7 @@ func contentCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1643,7 +1634,7 @@ func contentCmd() *cli.Command {
 					worksheetFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1670,7 +1661,7 @@ func contentCmd() *cli.Command {
 					&cli.BoolFlag{Name: "is-exact-match", Usage: "Exact match search"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1708,7 +1699,7 @@ func contentCmd() *cli.Command {
 					&cli.BoolFlag{Name: "is-exact-match", Usage: "Exact match search"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1741,7 +1732,7 @@ func contentCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1770,7 +1761,7 @@ func formatCmd() *cli.Command {
 					&cli.StringFlag{Name: "format-json", Required: true, Usage: "Format JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1793,7 +1784,7 @@ func formatCmd() *cli.Command {
 					&cli.StringFlag{Name: "image-json", Required: true, Usage: "Image JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1818,7 +1809,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "row-height", Required: true, Usage: "Height in pixels"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1847,7 +1838,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "column-width", Required: true, Usage: "Width in pixels"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1876,7 +1867,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "count", Usage: "Number of rows to insert"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1907,7 +1898,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "count", Usage: "Number of columns to insert"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1937,7 +1928,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "row", Required: true, Usage: "Row number"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1964,7 +1955,7 @@ func formatCmd() *cli.Command {
 					&cli.StringFlag{Name: "row-index-array", Required: true, Usage: "JSON array of row indices"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1991,7 +1982,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column number"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2020,7 +2011,7 @@ func formatCmd() *cli.Command {
 					&cli.StringFlag{Name: "note", Required: true, Usage: "Note text"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2056,7 +2047,7 @@ func namedRangesCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2078,7 +2069,7 @@ func namedRangesCmd() *cli.Command {
 					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2107,7 +2098,7 @@ func namedRangesCmd() *cli.Command {
 					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2134,7 +2125,7 @@ func namedRangesCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Named range name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2162,7 +2153,7 @@ func mergeCmd() *cli.Command {
 				Name:  "templates",
 				Usage: "Get merge templates",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2181,7 +2172,7 @@ func mergeCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2200,7 +2191,7 @@ func mergeCmd() *cli.Command {
 					workbookFlag,
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2220,7 +2211,7 @@ func mergeCmd() *cli.Command {
 					&cli.StringFlag{Name: "job-id", Required: true, Usage: "Job ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2244,7 +2235,7 @@ func mergeCmd() *cli.Command {
 					&cli.StringFlag{Name: "output-settings", Required: true, Usage: "Output settings JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2270,7 +2261,7 @@ func mergeCmd() *cli.Command {
 					&cli.StringFlag{Name: "email-settings", Required: true, Usage: "Email settings JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2306,7 +2297,7 @@ func premiumCmd() *cli.Command {
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2338,7 +2329,7 @@ func premiumCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2375,7 +2366,7 @@ func premiumCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2418,7 +2409,7 @@ func utilityCmd() *cli.Command {
 					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2444,7 +2435,7 @@ func utilityCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-column", Usage: "End column index"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}

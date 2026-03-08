@@ -5,19 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
 
 func Commands() *cli.Command {
 	return &cli.Command{
@@ -42,7 +33,7 @@ func channelsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List channels",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -67,7 +58,7 @@ func channelsCmd() *cli.Command {
 				Usage:     "Get channel info",
 				ArgsUsage: "<channel-name>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -87,7 +78,7 @@ func channelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "level", Usage: "Channel level (organization, team, private, external)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -114,7 +105,7 @@ func channelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "bot", Usage: "Bot name to send as"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -134,7 +125,7 @@ func channelsCmd() *cli.Command {
 				Usage:     "List channel members",
 				ArgsUsage: "<channel-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -150,7 +141,7 @@ func channelsCmd() *cli.Command {
 				Usage:     "Delete a channel",
 				ArgsUsage: "<channel-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -178,7 +169,7 @@ func chatsCmd() *cli.Command {
 					&cli.StringFlag{Name: "text", Required: true, Usage: "Message text"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -208,7 +199,7 @@ func buddiesCmd() *cli.Command {
 					&cli.StringFlag{Name: "text", Required: true, Usage: "Message text"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -238,7 +229,7 @@ func messagesCmd() *cli.Command {
 					&cli.IntFlag{Name: "limit", Value: 50, Usage: "Number of messages"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -259,7 +250,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "text", Required: true, Usage: "New message text"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -278,7 +269,7 @@ func messagesCmd() *cli.Command {
 				Usage:     "Delete a message",
 				ArgsUsage: "<chat-id> <message-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -303,7 +294,7 @@ func usersCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List users in the organization",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -319,7 +310,7 @@ func usersCmd() *cli.Command {
 				Usage:     "Get user details",
 				ArgsUsage: "<user-id-or-email>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}

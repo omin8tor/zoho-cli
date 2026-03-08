@@ -8,19 +8,10 @@ import (
 	"strings"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
 
 func Commands() *cli.Command {
 	return &cli.Command{
@@ -52,7 +43,7 @@ func modulesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List available Bigin modules",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -71,7 +62,7 @@ func modulesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -90,7 +81,7 @@ func modulesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -111,7 +102,7 @@ func modulesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -132,7 +123,7 @@ func modulesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -169,7 +160,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -204,7 +195,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -231,7 +222,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -258,7 +249,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -283,7 +274,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -307,7 +298,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -334,7 +325,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and comma-separated IDs required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -361,7 +352,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -385,7 +376,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -417,7 +408,7 @@ func notesCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -445,7 +436,7 @@ func notesCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -474,7 +465,7 @@ func notesCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -502,7 +493,7 @@ func notesCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -531,7 +522,7 @@ func attachmentsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -551,7 +542,7 @@ func attachmentsCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and file path required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -587,7 +578,7 @@ func attachmentsCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and attachment ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -598,7 +589,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -615,7 +606,7 @@ func attachmentsCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and attachment ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -648,7 +639,7 @@ func tagsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -680,7 +671,7 @@ func tagsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -718,7 +709,7 @@ func usersCmd() *cli.Command {
 					&cli.IntFlag{Name: "per-page", Value: 200},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -742,7 +733,7 @@ func usersCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("user ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -766,7 +757,7 @@ func orgCmd() *cli.Command {
 				Name:  "get",
 				Usage: "Get organization details",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -790,7 +781,7 @@ func rolesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List roles",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -809,7 +800,7 @@ func rolesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("role ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -833,7 +824,7 @@ func profilesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List profiles",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -852,7 +843,7 @@ func profilesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("profile ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -884,7 +875,7 @@ func relatedCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and related list name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -912,7 +903,7 @@ func coqlCmd() *cli.Command {
 			&cli.StringFlag{Name: "query", Required: true, Usage: "COQL query string"},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
@@ -943,7 +934,7 @@ func searchCmd() *cli.Command {
 			if cmd.Args().Len() < 1 {
 				return internal.NewValidationError("module API name required")
 			}
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}

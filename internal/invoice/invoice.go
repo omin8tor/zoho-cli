@@ -2,33 +2,12 @@ package invoice
 
 import (
 	"context"
-	"os"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
-
-func resolveOrgID(cmd *cli.Command) (string, error) {
-	org := cmd.String("org")
-	if org == "" {
-		org = os.Getenv("ZOHO_BOOKS_ORG_ID")
-	}
-	if org == "" {
-		return "", internal.NewValidationError("--org flag or ZOHO_BOOKS_ORG_ID env var required")
-	}
-	return org, nil
-}
 
 func orgParams(orgID string) map[string]string {
 	return map[string]string{"organization_id": orgID}
@@ -39,7 +18,7 @@ func Commands() *cli.Command {
 		Name:  "invoice",
 		Usage: "Zoho Invoice operations",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "org", Usage: "Organization ID (or set ZOHO_BOOKS_ORG_ID)"},
+			&cli.StringFlag{Name: "org", Sources: cli.EnvVars("ZOHO_BOOKS_ORG_ID"), Usage: "Organization ID (or set ZOHO_BOOKS_ORG_ID)"},
 		},
 		Commands: []*cli.Command{
 			organizationsCmd(),
@@ -70,7 +49,7 @@ func organizationsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List organizations",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -89,7 +68,7 @@ func organizationsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("organization ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -113,11 +92,11 @@ func contactsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List contacts",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -141,11 +120,11 @@ func contactsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -187,11 +166,11 @@ func contactsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -219,11 +198,11 @@ func contactsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -267,11 +246,11 @@ func contactsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -290,11 +269,11 @@ func contactsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -313,11 +292,11 @@ func contactsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -341,11 +320,11 @@ func estimatesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List estimates",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -370,11 +349,11 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -419,11 +398,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -452,11 +431,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -503,11 +482,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -526,11 +505,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -549,11 +528,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -572,11 +551,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -595,11 +574,11 @@ func estimatesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("estimate ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -623,11 +602,11 @@ func invoicesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List invoices",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -655,11 +634,11 @@ func invoicesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -713,11 +692,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -749,11 +728,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -809,11 +788,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -832,11 +811,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -855,11 +834,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -878,11 +857,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -901,11 +880,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -924,11 +903,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -947,11 +926,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -970,11 +949,11 @@ func invoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -998,11 +977,11 @@ func recurringInvoicesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List recurring invoices",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1026,11 +1005,11 @@ func recurringInvoicesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1068,11 +1047,11 @@ func recurringInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1100,11 +1079,11 @@ func recurringInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1148,11 +1127,11 @@ func recurringInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1171,11 +1150,11 @@ func recurringInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1194,11 +1173,11 @@ func recurringInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1222,11 +1201,11 @@ func creditNotesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List credit notes",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1250,11 +1229,11 @@ func creditNotesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1296,11 +1275,11 @@ func creditNotesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("credit note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1328,11 +1307,11 @@ func creditNotesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("credit note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1376,11 +1355,11 @@ func creditNotesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("credit note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1399,11 +1378,11 @@ func creditNotesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("credit note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1422,11 +1401,11 @@ func creditNotesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("credit note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1445,11 +1424,11 @@ func creditNotesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("credit note ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1473,11 +1452,11 @@ func customerPaymentsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List customer payments",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1501,11 +1480,11 @@ func customerPaymentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1541,11 +1520,11 @@ func customerPaymentsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("payment ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1573,11 +1552,11 @@ func customerPaymentsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("payment ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1621,11 +1600,11 @@ func customerPaymentsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("payment ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1649,11 +1628,11 @@ func expensesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List expenses",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1677,11 +1656,11 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1719,11 +1698,11 @@ func expensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1751,11 +1730,11 @@ func expensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1799,11 +1778,11 @@ func expensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1822,11 +1801,11 @@ func expensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1850,11 +1829,11 @@ func recurringExpensesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List recurring expenses",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1880,11 +1859,11 @@ func recurringExpensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1922,11 +1901,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1956,11 +1935,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2010,11 +1989,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2033,11 +2012,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2056,11 +2035,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2079,11 +2058,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2102,11 +2081,11 @@ func recurringExpensesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("recurring expense ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2130,11 +2109,11 @@ func retainerInvoicesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List retainer invoices",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2157,11 +2136,11 @@ func retainerInvoicesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2200,11 +2179,11 @@ func retainerInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("retainer invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2231,11 +2210,11 @@ func retainerInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("retainer invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2276,11 +2255,11 @@ func retainerInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("retainer invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2299,11 +2278,11 @@ func retainerInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("retainer invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2322,11 +2301,11 @@ func retainerInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("retainer invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2345,11 +2324,11 @@ func retainerInvoicesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("retainer invoice ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2373,11 +2352,11 @@ func projectsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List projects",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2402,11 +2381,11 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2447,11 +2426,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2480,11 +2459,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2531,11 +2510,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2554,11 +2533,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2577,11 +2556,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2600,11 +2579,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2623,11 +2602,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2646,11 +2625,11 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2674,11 +2653,11 @@ func itemsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List items",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2702,11 +2681,11 @@ func itemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2746,11 +2725,11 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2778,11 +2757,11 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2826,11 +2805,11 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2849,11 +2828,11 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2872,11 +2851,11 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2900,11 +2879,11 @@ func currenciesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List currencies",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2926,11 +2905,11 @@ func currenciesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2964,11 +2943,11 @@ func currenciesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("currency ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2994,11 +2973,11 @@ func currenciesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("currency ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3036,11 +3015,11 @@ func currenciesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("currency ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3064,11 +3043,11 @@ func taxesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List taxes",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3089,11 +3068,11 @@ func taxesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3122,11 +3101,11 @@ func taxesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("tax ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3151,11 +3130,11 @@ func taxesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("tax ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3190,11 +3169,11 @@ func taxesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("tax ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3218,11 +3197,11 @@ func usersCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List users",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3241,11 +3220,11 @@ func usersCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("user ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -3260,11 +3239,11 @@ func usersCmd() *cli.Command {
 				Name:  "get-current",
 				Usage: "Get current user",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_BOOKS_ORG_ID")
 					if err != nil {
 						return err
 					}

@@ -42,6 +42,14 @@ type Client struct {
 	WriterBase    string
 }
 
+func GetClient() (*Client, error) {
+	config, err := auth.ResolveAuth()
+	if err != nil {
+		return nil, err
+	}
+	return NewClient(config)
+}
+
 func NewClient(config *auth.AuthConfig) (*Client, error) {
 	token, err := auth.EnsureAccessToken(config, false)
 	if err != nil {
@@ -117,16 +125,25 @@ func (c *Client) RequestRaw(method, rawURL string, params map[string]string) ([]
 		if err := c.handleRetry(resp); err != nil {
 			return nil, nil, 0, err
 		}
-		req, _ = c.buildRequest(method, rawURL, &RequestOpts{Params: params})
-		resp, err = c.HTTP.Do(req)
+		req, err = c.buildRequest(method, rawURL, &RequestOpts{Params: params})
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		resp2, err := c.HTTP.Do(req)
 		if err != nil {
 			return nil, nil, 0, fmt.Errorf("request failed: %w", err)
 		}
-		defer resp.Body.Close()
-		if resp.StatusCode == 401 {
-			body, _ := io.ReadAll(resp.Body)
-			return nil, nil, resp.StatusCode, internal.NewAuthError(fmt.Sprintf("Access token expired or invalid after refresh: %s", body))
+		defer resp2.Body.Close()
+		if resp2.StatusCode == 401 {
+			body, _ := io.ReadAll(resp2.Body)
+			return nil, nil, resp2.StatusCode, internal.NewAuthError(fmt.Sprintf("Access token expired or invalid after refresh: %s", body))
 		}
+		if resp2.StatusCode >= 400 {
+			body, _ := io.ReadAll(resp2.Body)
+			return nil, nil, resp2.StatusCode, internal.NewAPIError(resp2.StatusCode, string(body))
+		}
+		body, err := io.ReadAll(resp2.Body)
+		return body, resp2.Header, resp2.StatusCode, err
 	}
 
 	if resp.StatusCode >= 400 {
@@ -154,16 +171,27 @@ func (c *Client) doRequest(method, rawURL string, opts *RequestOpts) ([]byte, er
 		if err := c.handleRetry(resp); err != nil {
 			return nil, err
 		}
-		req, _ = c.buildRequest(method, rawURL, opts)
-		resp, err = c.HTTP.Do(req)
+		req, err = c.buildRequest(method, rawURL, opts)
+		if err != nil {
+			return nil, err
+		}
+		resp2, err := c.HTTP.Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("request failed: %w", err)
 		}
-		defer resp.Body.Close()
-		if resp.StatusCode == 401 {
-			body, _ := io.ReadAll(resp.Body)
+		defer resp2.Body.Close()
+		if resp2.StatusCode == 401 {
+			body, _ := io.ReadAll(resp2.Body)
 			return nil, internal.NewAuthError(fmt.Sprintf("Access token expired or invalid after refresh: %s", body))
 		}
+		if resp2.StatusCode >= 400 {
+			body, _ := io.ReadAll(resp2.Body)
+			return nil, internal.NewAPIError(resp2.StatusCode, string(body))
+		}
+		if resp2.StatusCode == 204 {
+			return nil, nil
+		}
+		return io.ReadAll(resp2.Body)
 	}
 
 	if resp.StatusCode >= 400 {
@@ -222,12 +250,18 @@ func (c *Client) buildRequest(method, rawURL string, opts *RequestOpts) (*http.R
 			if err != nil {
 				return nil, err
 			}
-			part.Write(file.Data)
+			if _, err := part.Write(file.Data); err != nil {
+				return nil, err
+			}
 		}
 		for k, v := range opts.Form {
-			w.WriteField(k, v)
+			if err := w.WriteField(k, v); err != nil {
+				return nil, err
+			}
 		}
-		w.Close()
+		if err := w.Close(); err != nil {
+			return nil, err
+		}
 		bodyReader = &buf
 		contentType = w.FormDataContentType()
 	} else if opts.JSON != nil {
@@ -236,9 +270,7 @@ func (c *Client) buildRequest(method, rawURL string, opts *RequestOpts) (*http.R
 			return nil, err
 		}
 		bodyReader = bytes.NewReader(data)
-		if contentType == "" {
-			contentType = "application/json"
-		}
+		contentType = "application/json"
 	} else if len(opts.Form) > 0 {
 		vals := url.Values{}
 		for k, v := range opts.Form {

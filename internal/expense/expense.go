@@ -8,30 +8,10 @@ import (
 	"strings"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
-
-func resolveOrgID(cmd *cli.Command) (string, error) {
-	org := cmd.String("org")
-	if org == "" {
-		org = os.Getenv("ZOHO_EXPENSE_ORG_ID")
-	}
-	if org == "" {
-		return "", internal.NewValidationError("--org flag or ZOHO_EXPENSE_ORG_ID env var required")
-	}
-	return org, nil
-}
 
 func orgHeaders(orgID string) map[string]string {
 	return map[string]string{
@@ -54,7 +34,7 @@ func Commands() *cli.Command {
 		Name:  "expense",
 		Usage: "Zoho Expense operations",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "org", Usage: "Organization ID (or set ZOHO_EXPENSE_ORG_ID)"},
+			&cli.StringFlag{Name: "org", Sources: cli.EnvVars("ZOHO_EXPENSE_ORG_ID"), Usage: "Organization ID (or set ZOHO_EXPENSE_ORG_ID)"},
 		},
 		Commands: []*cli.Command{
 			organizationsCmd(),
@@ -82,7 +62,7 @@ func organizationsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List organizations",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -98,7 +78,7 @@ func organizationsCmd() *cli.Command {
 				Usage:     "Get an organization",
 				ArgsUsage: "<org-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -119,7 +99,7 @@ func organizationsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -153,7 +133,7 @@ func organizationsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -204,11 +184,11 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -258,11 +238,11 @@ func expensesCmd() *cli.Command {
 				Usage:     "Get an expense",
 				ArgsUsage: "<expense-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -290,11 +270,11 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -354,11 +334,11 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -412,11 +392,11 @@ func expensesCmd() *cli.Command {
 				Usage:     "Delete an expense",
 				ArgsUsage: "<expense-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -437,11 +417,11 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "duplicate-id", Required: true, Usage: "Duplicate expense ID to merge"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -473,11 +453,11 @@ func reportsCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -506,11 +486,11 @@ func reportsCmd() *cli.Command {
 				Usage:     "Get an expense report",
 				ArgsUsage: "<report-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -532,11 +512,11 @@ func reportsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -567,11 +547,11 @@ func reportsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -600,11 +580,11 @@ func reportsCmd() *cli.Command {
 				Usage:     "Approve an expense report",
 				ArgsUsage: "<report-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -626,11 +606,11 @@ func reportsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -662,11 +642,11 @@ func reportsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -696,11 +676,11 @@ func reportsCmd() *cli.Command {
 				Usage:     "Get approval history of an expense report",
 				ArgsUsage: "<report-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -718,11 +698,11 @@ func reportsCmd() *cli.Command {
 				Usage:     "Delete an expense report",
 				ArgsUsage: "<report-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -753,11 +733,11 @@ func categoriesCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -786,11 +766,11 @@ func categoriesCmd() *cli.Command {
 				Usage:     "Get an expense category",
 				ArgsUsage: "<category-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -812,11 +792,11 @@ func categoriesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -847,11 +827,11 @@ func categoriesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -880,11 +860,11 @@ func categoriesCmd() *cli.Command {
 				Usage:     "Delete an expense category",
 				ArgsUsage: "<category-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -902,11 +882,11 @@ func categoriesCmd() *cli.Command {
 				Usage:     "Enable an expense category",
 				ArgsUsage: "<category-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -924,11 +904,11 @@ func categoriesCmd() *cli.Command {
 				Usage:     "Disable an expense category",
 				ArgsUsage: "<category-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -958,11 +938,11 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -988,11 +968,11 @@ func usersCmd() *cli.Command {
 				Usage:     "Get a user",
 				ArgsUsage: "<user-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1015,11 +995,11 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1051,11 +1031,11 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1087,11 +1067,11 @@ func usersCmd() *cli.Command {
 				Usage:     "Delete a user",
 				ArgsUsage: "<user-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1109,11 +1089,11 @@ func usersCmd() *cli.Command {
 				Usage:     "Activate a user",
 				ArgsUsage: "<user-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1131,11 +1111,11 @@ func usersCmd() *cli.Command {
 				Usage:     "Deactivate a user",
 				ArgsUsage: "<user-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1153,11 +1133,11 @@ func usersCmd() *cli.Command {
 				Usage:     "Assign a role to a user",
 				ArgsUsage: "<user-id> <role-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1187,11 +1167,11 @@ func customersCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1217,11 +1197,11 @@ func customersCmd() *cli.Command {
 				Usage:     "Get a customer",
 				ArgsUsage: "<customer-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1244,11 +1224,11 @@ func customersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1283,11 +1263,11 @@ func customersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1319,11 +1299,11 @@ func customersCmd() *cli.Command {
 				Usage:     "Delete a customer",
 				ArgsUsage: "<customer-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1353,11 +1333,11 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1383,11 +1363,11 @@ func projectsCmd() *cli.Command {
 				Usage:     "Get a project",
 				ArgsUsage: "<project-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1410,11 +1390,11 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1449,11 +1429,11 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1485,11 +1465,11 @@ func projectsCmd() *cli.Command {
 				Usage:     "Delete a project",
 				ArgsUsage: "<project-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1507,11 +1487,11 @@ func projectsCmd() *cli.Command {
 				Usage:     "Activate a project",
 				ArgsUsage: "<project-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1529,11 +1509,11 @@ func projectsCmd() *cli.Command {
 				Usage:     "Deactivate a project",
 				ArgsUsage: "<project-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1563,11 +1543,11 @@ func tripsCmd() *cli.Command {
 					&cli.StringFlag{Name: "per-page", Usage: "Results per page"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1593,11 +1573,11 @@ func tripsCmd() *cli.Command {
 				Usage:     "Get a trip",
 				ArgsUsage: "<trip-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1621,11 +1601,11 @@ func tripsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1660,11 +1640,11 @@ func tripsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1699,11 +1679,11 @@ func tripsCmd() *cli.Command {
 				Usage:     "Delete a trip",
 				ArgsUsage: "<trip-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1721,11 +1701,11 @@ func tripsCmd() *cli.Command {
 				Usage:     "Approve a trip",
 				ArgsUsage: "<trip-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1747,11 +1727,11 @@ func tripsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1778,11 +1758,11 @@ func tripsCmd() *cli.Command {
 				Usage:     "Cancel a trip",
 				ArgsUsage: "<trip-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1800,11 +1780,11 @@ func tripsCmd() *cli.Command {
 				Usage:     "Close a trip",
 				ArgsUsage: "<trip-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1830,11 +1810,11 @@ func currenciesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List currencies",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1852,11 +1832,11 @@ func currenciesCmd() *cli.Command {
 				Usage:     "Get a currency",
 				ArgsUsage: "<currency-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1876,15 +1856,15 @@ func currenciesCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_code", Required: true, Usage: "Currency code"},
 					&cli.StringFlag{Name: "currency_symbol", Usage: "Currency symbol"},
 					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
-					&cli.FloatFlag{Name: "price_precision", Usage: "Decimal precision"},
+					&cli.IntFlag{Name: "price_precision", Usage: "Decimal precision"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1896,7 +1876,7 @@ func currenciesCmd() *cli.Command {
 						body["currency_format"] = cmd.String("currency_format")
 					}
 					if cmd.IsSet("price_precision") {
-						body["price_precision"] = cmd.Float("price_precision")
+						body["price_precision"] = cmd.Int("price_precision")
 					}
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
@@ -1919,15 +1899,15 @@ func currenciesCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_code", Usage: "Currency code"},
 					&cli.StringFlag{Name: "currency_symbol", Usage: "Currency symbol"},
 					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
-					&cli.FloatFlag{Name: "price_precision", Usage: "Decimal precision"},
+					&cli.IntFlag{Name: "price_precision", Usage: "Decimal precision"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1942,7 +1922,7 @@ func currenciesCmd() *cli.Command {
 						body["currency_format"] = cmd.String("currency_format")
 					}
 					if cmd.IsSet("price_precision") {
-						body["price_precision"] = cmd.Float("price_precision")
+						body["price_precision"] = cmd.Int("price_precision")
 					}
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
@@ -1962,11 +1942,11 @@ func currenciesCmd() *cli.Command {
 				Usage:     "Delete a currency",
 				ArgsUsage: "<currency-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1992,11 +1972,11 @@ func taxesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List taxes",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2014,11 +1994,11 @@ func taxesCmd() *cli.Command {
 				Usage:     "Get a tax",
 				ArgsUsage: "<tax-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2041,11 +2021,11 @@ func taxesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2077,11 +2057,11 @@ func taxesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2113,11 +2093,11 @@ func taxesCmd() *cli.Command {
 				Usage:     "Delete a tax",
 				ArgsUsage: "<tax-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2135,11 +2115,11 @@ func taxesCmd() *cli.Command {
 				Usage:     "Get a tax group",
 				ArgsUsage: "<group-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2169,11 +2149,11 @@ func receiptsCmd() *cli.Command {
 					&cli.StringFlag{Name: "file", Required: true, Usage: "Path to receipt file"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2207,11 +2187,11 @@ func tagsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List reporting tags",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2232,11 +2212,11 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2259,11 +2239,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "Get a reporting tag",
 				ArgsUsage: "<tag-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2285,11 +2265,11 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2315,11 +2295,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "Delete a reporting tag",
 				ArgsUsage: "<tag-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2340,11 +2320,11 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2370,11 +2350,11 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2397,11 +2377,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "Activate a reporting tag",
 				ArgsUsage: "<tag-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2419,11 +2399,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "Deactivate a reporting tag",
 				ArgsUsage: "<tag-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2441,11 +2421,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "Activate a reporting tag option",
 				ArgsUsage: "<tag-id> <option-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2463,11 +2443,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "Deactivate a reporting tag option",
 				ArgsUsage: "<tag-id> <option-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2484,11 +2464,11 @@ func tagsCmd() *cli.Command {
 				Name:  "list-options",
 				Usage: "List all reporting tag options across tags",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2506,11 +2486,11 @@ func tagsCmd() *cli.Command {
 				Usage:     "List options for a specific reporting tag",
 				ArgsUsage: "<tag-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2530,11 +2510,11 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_EXPENSE_ORG_ID")
 					if err != nil {
 						return err
 					}

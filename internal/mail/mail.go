@@ -7,49 +7,18 @@ import (
 	"path/filepath"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
-
-func resolveAccountID(cmd *cli.Command) (string, error) {
-	acct := cmd.String("account")
-	if acct == "" {
-		acct = os.Getenv("ZOHO_MAIL_ACCOUNT_ID")
-	}
-	if acct == "" {
-		return "", internal.NewValidationError("--account flag or ZOHO_MAIL_ACCOUNT_ID env var required")
-	}
-	return acct, nil
-}
-
-func resolveOrgID(cmd *cli.Command) (string, error) {
-	org := cmd.String("org")
-	if org == "" {
-		org = os.Getenv("ZOHO_MAIL_ORG_ID")
-	}
-	if org == "" {
-		return "", internal.NewValidationError("--org flag or ZOHO_MAIL_ORG_ID env var required")
-	}
-	return org, nil
-}
 
 func Commands() *cli.Command {
 	return &cli.Command{
 		Name:  "mail",
 		Usage: "Zoho Mail operations",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "account", Usage: "Mail Account ID (or set ZOHO_MAIL_ACCOUNT_ID)"},
-			&cli.StringFlag{Name: "org", Usage: "Organization ID (or set ZOHO_MAIL_ORG_ID)"},
+			&cli.StringFlag{Name: "account", Sources: cli.EnvVars("ZOHO_MAIL_ACCOUNT_ID"), Usage: "Mail Account ID (or set ZOHO_MAIL_ACCOUNT_ID)"},
+			&cli.StringFlag{Name: "org", Sources: cli.EnvVars("ZOHO_MAIL_ORG_ID"), Usage: "Organization ID (or set ZOHO_MAIL_ORG_ID)"},
 		},
 		Commands: []*cli.Command{
 			accountsCmd(),
@@ -81,7 +50,7 @@ func accountsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all mail accounts",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -101,7 +70,7 @@ func accountsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("account-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -125,11 +94,11 @@ func foldersCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all folders",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -149,11 +118,11 @@ func foldersCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("folder-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -174,11 +143,11 @@ func foldersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -215,11 +184,11 @@ func foldersCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("folder-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -252,11 +221,11 @@ func foldersCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("folder-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -280,11 +249,11 @@ func labelsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all labels",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -304,11 +273,11 @@ func labelsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("label-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -328,11 +297,11 @@ func labelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -365,11 +334,11 @@ func labelsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("label-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -399,11 +368,11 @@ func labelsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("label-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -446,11 +415,11 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "threaded", Usage: "Filter threaded mails (true/false)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -521,11 +490,11 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "limit", Usage: "Max results"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -557,11 +526,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -584,11 +553,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -611,11 +580,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -635,11 +604,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -662,11 +631,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -691,11 +660,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" || attachID == "" {
 						return internal.NewValidationError("message-id and attachment-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -704,7 +673,7 @@ func messagesCmd() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -727,11 +696,11 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "ask-receipt", Usage: "Request read receipt: yes or no"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -788,11 +757,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -857,11 +826,11 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -904,11 +873,11 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "file", Required: true, Usage: "Path to file"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -938,11 +907,11 @@ func messagesCmd() *cli.Command {
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -974,11 +943,11 @@ func threadsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					accountID, err := resolveAccountID(cmd)
+					accountID, err := internal.RequireFlag(cmd, "account", "ZOHO_MAIL_ACCOUNT_ID")
 					if err != nil {
 						return err
 					}
@@ -1021,7 +990,7 @@ func signaturesCmd() *cli.Command {
 				Name:  "get",
 				Usage: "Get signatures",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1043,7 +1012,7 @@ func signaturesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1077,7 +1046,7 @@ func signaturesCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1114,7 +1083,7 @@ func signaturesCmd() *cli.Command {
 				Name:  "delete",
 				Usage: "Delete a signature",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -1138,11 +1107,11 @@ func organizationCmd() *cli.Command {
 				Name:  "get",
 				Usage: "Get organization details",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1157,11 +1126,11 @@ func organizationCmd() *cli.Command {
 				Name:  "storage",
 				Usage: "Get organization storage info",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1181,11 +1150,11 @@ func organizationCmd() *cli.Command {
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1210,11 +1179,11 @@ func organizationCmd() *cli.Command {
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1239,11 +1208,11 @@ func organizationCmd() *cli.Command {
 				Name:  "spam-listing",
 				Usage: "Get organization spam listing data",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1263,11 +1232,11 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1297,11 +1266,11 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1326,11 +1295,11 @@ func organizationCmd() *cli.Command {
 				Name:  "allowed-ips",
 				Usage: "Get allowed IPs",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1349,11 +1318,11 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1377,11 +1346,11 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1412,11 +1381,11 @@ func domainsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List domains",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1436,11 +1405,11 @@ func domainsCmd() *cli.Command {
 					if name == "" {
 						return internal.NewValidationError("domain-name argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1459,11 +1428,11 @@ func domainsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1492,11 +1461,11 @@ func domainsCmd() *cli.Command {
 					if name == "" {
 						return internal.NewValidationError("domain-name argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1523,11 +1492,11 @@ func domainsCmd() *cli.Command {
 					if name == "" {
 						return internal.NewValidationError("domain-name argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1551,11 +1520,11 @@ func groupsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List groups",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1575,11 +1544,11 @@ func groupsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1601,11 +1570,11 @@ func groupsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1644,11 +1613,11 @@ func groupsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1684,11 +1653,11 @@ func groupsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1708,11 +1677,11 @@ func groupsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1733,11 +1702,11 @@ func groupsCmd() *cli.Command {
 					if groupID == "" || msgID == "" {
 						return internal.NewValidationError("group-id and message-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1762,11 +1731,11 @@ func groupsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1796,11 +1765,11 @@ func usersCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List organization users",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1820,11 +1789,11 @@ func usersCmd() *cli.Command {
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1846,11 +1815,11 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1887,11 +1856,11 @@ func usersCmd() *cli.Command {
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1926,11 +1895,11 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1961,11 +1930,11 @@ func policyCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List policies",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1980,11 +1949,11 @@ func policyCmd() *cli.Command {
 				Name:  "email-restrictions",
 				Usage: "Get email restriction policy",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -1999,11 +1968,11 @@ func policyCmd() *cli.Command {
 				Name:  "account-restrictions",
 				Usage: "Get account restriction policy",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2018,11 +1987,11 @@ func policyCmd() *cli.Command {
 				Name:  "access-restrictions",
 				Usage: "Get access restriction policy",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2037,11 +2006,11 @@ func policyCmd() *cli.Command {
 				Name:  "forward-restrictions",
 				Usage: "Get mail forward policy",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2061,11 +2030,11 @@ func policyCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("policy-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2085,11 +2054,11 @@ func policyCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("policy-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2109,11 +2078,11 @@ func policyCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2146,11 +2115,11 @@ func policyCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("policy-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2184,11 +2153,11 @@ func logsCmd() *cli.Command {
 				Name:  "login-history",
 				Usage: "Get login history",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2203,11 +2172,11 @@ func logsCmd() *cli.Command {
 				Name:  "audit",
 				Usage: "Get audit logs",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2222,11 +2191,11 @@ func logsCmd() *cli.Command {
 				Name:  "smtp",
 				Usage: "Get SMTP logs",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2250,11 +2219,11 @@ func antispamCmd() *cli.Command {
 				Name:  "options",
 				Usage: "Get anti-spam options",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2274,11 +2243,11 @@ func antispamCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					orgID, err := resolveOrgID(cmd)
+					orgID, err := internal.RequireFlag(cmd, "org", "ZOHO_MAIL_ORG_ID")
 					if err != nil {
 						return err
 					}
@@ -2312,7 +2281,7 @@ func tasksCmd() *cli.Command {
 				Name:  "list-assigned",
 				Usage: "List tasks assigned to me",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2327,7 +2296,7 @@ func tasksCmd() *cli.Command {
 				Name:  "list-created",
 				Usage: "List tasks created by me",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2342,7 +2311,7 @@ func tasksCmd() *cli.Command {
 				Name:  "list-personal",
 				Usage: "List personal tasks",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2362,7 +2331,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2382,7 +2351,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2403,7 +2372,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || taskID == "" {
 						return internal.NewValidationError("group-id and task-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2427,7 +2396,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2476,7 +2445,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2525,7 +2494,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2577,7 +2546,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || taskID == "" {
 						return internal.NewValidationError("group-id and task-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2619,7 +2588,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2640,7 +2609,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || taskID == "" {
 						return internal.NewValidationError("group-id and task-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2660,7 +2629,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2681,7 +2650,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || taskID == "" {
 						return internal.NewValidationError("group-id and task-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2696,7 +2665,7 @@ func tasksCmd() *cli.Command {
 				Name:  "task-groups",
 				Usage: "List task groups",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2716,7 +2685,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2736,7 +2705,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2757,7 +2726,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || projectID == "" {
 						return internal.NewValidationError("group-id and project-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2783,7 +2752,7 @@ func tasksCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2821,7 +2790,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || projectID == "" {
 						return internal.NewValidationError("group-id and project-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2855,7 +2824,7 @@ func tasksCmd() *cli.Command {
 					if groupID == "" || projectID == "" {
 						return internal.NewValidationError("group-id and project-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -2876,7 +2845,7 @@ func bookmarksCmd() *cli.Command {
 		Usage: "Mail bookmark operations",
 		Commands: []*cli.Command{
 			{Name: "list-personal", Usage: "List personal bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -2891,7 +2860,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -2906,7 +2875,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -2922,7 +2891,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and bookmark-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -2933,7 +2902,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "create-personal", Usage: "Create a personal bookmark", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Required: true, Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Required: true, Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -2960,7 +2929,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -2987,7 +2956,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3019,7 +2988,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and bookmark-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3050,7 +3019,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3066,7 +3035,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and bookmark-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3077,7 +3046,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "favorites", Usage: "List favorite bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3088,7 +3057,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "shared", Usage: "List shared bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3099,7 +3068,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "trash-personal", Usage: "List trashed personal bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3114,7 +3083,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3130,7 +3099,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and bookmark-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3145,7 +3114,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3161,7 +3130,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and bookmark-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3176,7 +3145,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3192,7 +3161,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and bookmark-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3203,7 +3172,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "link-groups", Usage: "List bookmark groups", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3214,7 +3183,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "collections-personal", Usage: "List personal bookmark collections", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3229,7 +3198,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3244,7 +3213,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("collection-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3260,7 +3229,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || col == "" {
 					return internal.NewValidationError("group-id and collection-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3271,7 +3240,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "create-collection-personal", Usage: "Create a personal bookmark collection", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3294,7 +3263,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3317,7 +3286,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("collection-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3343,7 +3312,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || col == "" {
 					return internal.NewValidationError("group-id and collection-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3368,7 +3337,7 @@ func bookmarksCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("collection-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3384,7 +3353,7 @@ func bookmarksCmd() *cli.Command {
 				if g == "" || col == "" {
 					return internal.NewValidationError("group-id and collection-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3395,7 +3364,7 @@ func bookmarksCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "all-group-collections", Usage: "List all group bookmark collections", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3415,7 +3384,7 @@ func notesCmd() *cli.Command {
 		Usage: "Mail notes operations",
 		Commands: []*cli.Command{
 			{Name: "list-personal", Usage: "List personal notes", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3430,7 +3399,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3445,7 +3414,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3461,7 +3430,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" {
 					return internal.NewValidationError("group-id and note-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3472,7 +3441,7 @@ func notesCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "create-personal", Usage: "Create a personal note", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Required: true, Usage: "Note title"}, &cli.StringFlag{Name: "content", Required: true, Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3499,7 +3468,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3526,7 +3495,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3558,7 +3527,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" {
 					return internal.NewValidationError("group-id and note-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3589,7 +3558,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3605,7 +3574,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" {
 					return internal.NewValidationError("group-id and note-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3616,7 +3585,7 @@ func notesCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "favorites", Usage: "List favorite notes", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3627,7 +3596,7 @@ func notesCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "shared", Usage: "List notes shared to me", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3638,7 +3607,7 @@ func notesCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "note-groups", Usage: "List note groups", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3649,7 +3618,7 @@ func notesCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "books-personal", Usage: "List personal notebooks", Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3664,7 +3633,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3679,7 +3648,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("book-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3695,7 +3664,7 @@ func notesCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and book-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3706,7 +3675,7 @@ func notesCmd() *cli.Command {
 				return output.JSONRaw(raw)
 			}},
 			{Name: "create-book-personal", Usage: "Create a personal notebook", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3729,7 +3698,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3752,7 +3721,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("book-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3778,7 +3747,7 @@ func notesCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and book-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3803,7 +3772,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("book-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3819,7 +3788,7 @@ func notesCmd() *cli.Command {
 				if g == "" || b == "" {
 					return internal.NewValidationError("group-id and book-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3834,7 +3803,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3850,7 +3819,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" {
 					return internal.NewValidationError("group-id and note-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3869,7 +3838,7 @@ func notesCmd() *cli.Command {
 					if noteID == "" || attachID == "" {
 						return internal.NewValidationError("note-id and attachment-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -3878,7 +3847,7 @@ func notesCmd() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -3897,7 +3866,7 @@ func notesCmd() *cli.Command {
 					if groupID == "" || noteID == "" || attachID == "" {
 						return internal.NewValidationError("group-id, note-id, and attachment-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -3906,7 +3875,7 @@ func notesCmd() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -3923,7 +3892,7 @@ func notesCmd() *cli.Command {
 					if noteID == "" {
 						return internal.NewValidationError("note-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -3948,7 +3917,7 @@ func notesCmd() *cli.Command {
 					if groupID == "" || noteID == "" {
 						return internal.NewValidationError("group-id and note-id arguments required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -3970,7 +3939,7 @@ func notesCmd() *cli.Command {
 				if n == "" || a == "" {
 					return internal.NewValidationError("note-id and attachment-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -3987,7 +3956,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" || a == "" {
 					return internal.NewValidationError("group-id, note-id, and attachment-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -4002,7 +3971,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -4018,7 +3987,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" {
 					return internal.NewValidationError("group-id and note-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -4033,7 +4002,7 @@ func notesCmd() *cli.Command {
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
@@ -4049,7 +4018,7 @@ func notesCmd() *cli.Command {
 				if g == "" || n == "" {
 					return internal.NewValidationError("group-id and note-id arguments required")
 				}
-				c, err := getClient()
+				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}

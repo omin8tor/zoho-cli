@@ -1,5 +1,7 @@
 package dc
 
+import "fmt"
+
 type DCConfig struct {
 	Accounts  string
 	API       string
@@ -176,26 +178,26 @@ var dcMap = map[string]DCConfig{
 
 var ValidDCs = []string{"com", "eu", "in", "com.au", "jp", "ca", "sa", "uk", "com.cn"}
 
-func GetDC(dc string) DCConfig {
+func GetDC(dc string) (DCConfig, error) {
 	if cfg, ok := dcMap[dc]; ok {
-		return cfg
+		return cfg, nil
 	}
-	return dcMap["com"]
+	return DCConfig{}, fmt.Errorf("unknown datacenter %q (valid: %v)", dc, ValidDCs)
 }
 
-func AccountsURL(dc string) string  { return GetDC(dc).Accounts }
-func APIURL(dc string) string       { return GetDC(dc).API }
-func CliqURL(dc string) string      { return GetDC(dc).Cliq }
-func CRMURL(dc string) string       { return GetDC(dc).CRM }
-func DeskURL(dc string) string      { return GetDC(dc).Desk }
+func AccountsURL(dc string) string  { cfg, _ := GetDC(dc); return cfg.Accounts }
+func APIURL(dc string) string       { cfg, _ := GetDC(dc); return cfg.API }
+func CliqURL(dc string) string      { cfg, _ := GetDC(dc); return cfg.Cliq }
+func CRMURL(dc string) string       { cfg, _ := GetDC(dc); return cfg.CRM }
+func DeskURL(dc string) string      { cfg, _ := GetDC(dc); return cfg.Desk }
 func ExpenseURL(dc string) string   { return APIURL(dc) }
-func MailURL(dc string) string      { return GetDC(dc).Mail }
-func PeopleURL(dc string) string    { return GetDC(dc).People }
-func ProjectsURL(dc string) string  { return GetDC(dc).Projects }
-func RecruitURL(dc string) string   { return GetDC(dc).Recruit }
-func SheetURL(dc string) string     { return GetDC(dc).Sheet }
-func SignURL(dc string) string      { return GetDC(dc).Sign }
-func SprintsURL(dc string) string   { return GetDC(dc).Sprints }
-func WorkDriveURL(dc string) string { return GetDC(dc).WorkDrive }
-func WriterURL(dc string) string    { return GetDC(dc).Writer }
-func DownloadURL(dc string) string  { return GetDC(dc).Download }
+func MailURL(dc string) string      { cfg, _ := GetDC(dc); return cfg.Mail }
+func PeopleURL(dc string) string    { cfg, _ := GetDC(dc); return cfg.People }
+func ProjectsURL(dc string) string  { cfg, _ := GetDC(dc); return cfg.Projects }
+func RecruitURL(dc string) string   { cfg, _ := GetDC(dc); return cfg.Recruit }
+func SheetURL(dc string) string     { cfg, _ := GetDC(dc); return cfg.Sheet }
+func SignURL(dc string) string      { cfg, _ := GetDC(dc); return cfg.Sign }
+func SprintsURL(dc string) string   { cfg, _ := GetDC(dc); return cfg.Sprints }
+func WorkDriveURL(dc string) string { cfg, _ := GetDC(dc); return cfg.WorkDrive }
+func WriterURL(dc string) string    { cfg, _ := GetDC(dc); return cfg.Writer }
+func DownloadURL(dc string) string  { cfg, _ := GetDC(dc); return cfg.Download }

@@ -6,20 +6,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/omin8tor/zoho-cli/internal/auth"
+	"github.com/omin8tor/zoho-cli/internal"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/omin8tor/zoho-cli/internal/pagination"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
 
 func Commands() *cli.Command {
 	return &cli.Command{
@@ -56,7 +48,7 @@ func modulesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "include-hidden", Usage: "Include hidden/system modules"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -87,7 +79,7 @@ func modulesCmd() *cli.Command {
 				Usage:     "List fields for a CRM module",
 				ArgsUsage: "<module>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -109,7 +101,7 @@ func modulesCmd() *cli.Command {
 				Usage:     "List related lists for a module",
 				ArgsUsage: "<module>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -131,7 +123,7 @@ func modulesCmd() *cli.Command {
 				Usage:     "List layouts for a module",
 				ArgsUsage: "<module>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -153,7 +145,7 @@ func modulesCmd() *cli.Command {
 				Usage:     "List custom views for a module",
 				ArgsUsage: "<module>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -192,7 +184,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all records"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -240,7 +232,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -276,12 +268,14 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "trigger", Usage: "Comma-separated triggers: approval,workflow,blueprint"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					if err := json.Unmarshal([]byte(cmd.String("json")), &parsed); err != nil {
+						return internal.NewValidationError(fmt.Sprintf("--json: invalid JSON: %v", err))
+					}
 					body := map[string]any{"data": []any{parsed}}
 					if t := cmd.String("trigger"); t != "" {
 						body["trigger"] = splitComma(t)
@@ -302,13 +296,15 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "trigger", Usage: "Comma-separated triggers"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
 					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					if err := json.Unmarshal([]byte(cmd.String("json")), &parsed); err != nil {
+						return internal.NewValidationError(fmt.Sprintf("--json: invalid JSON: %v", err))
+					}
 					body := map[string]any{"data": []any{parsed}}
 					if t := cmd.String("trigger"); t != "" {
 						body["trigger"] = splitComma(t)
@@ -325,7 +321,7 @@ func recordsCmd() *cli.Command {
 				Usage:     "Delete a record",
 				ArgsUsage: "<module> <record-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -351,7 +347,7 @@ func recordsCmd() *cli.Command {
 					&cli.IntFlag{Name: "per-page", Value: 200},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -392,12 +388,14 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "trigger", Usage: "Comma-separated triggers"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					var parsed map[string]any
-					json.Unmarshal([]byte(cmd.String("json")), &parsed)
+					if err := json.Unmarshal([]byte(cmd.String("json")), &parsed); err != nil {
+						return internal.NewValidationError(fmt.Sprintf("--json: invalid JSON: %v", err))
+					}
 					body := map[string]any{"data": []any{parsed}}
 					if d := cmd.String("duplicate-check"); d != "" {
 						body["duplicate_check_fields"] = splitComma(d)
@@ -417,7 +415,7 @@ func recordsCmd() *cli.Command {
 				Usage:     "Delete multiple records",
 				ArgsUsage: "<module> <ids>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -450,7 +448,7 @@ func notesCmd() *cli.Command {
 					&cli.IntFlag{Name: "per-page", Value: 200},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -484,7 +482,7 @@ func notesCmd() *cli.Command {
 					&cli.StringFlag{Name: "title", Usage: "Note title"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -510,7 +508,7 @@ func notesCmd() *cli.Command {
 					&cli.StringFlag{Name: "content", Usage: "Note content"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -534,7 +532,7 @@ func notesCmd() *cli.Command {
 				Usage:     "Delete a note",
 				ArgsUsage: "<note-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -564,7 +562,7 @@ func relatedCmd() *cli.Command {
 					&cli.IntFlag{Name: "per-page", Value: 200},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -606,7 +604,7 @@ func usersCmd() *cli.Command {
 					&cli.IntFlag{Name: "per-page", Value: 200},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -644,7 +642,7 @@ func ownerCmd() *cli.Command {
 					&cli.BoolFlag{Name: "notify", Value: true, Usage: "Notify new owner"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -672,7 +670,7 @@ func coqlCmd() *cli.Command {
 			&cli.StringFlag{Name: "query", Required: true, Usage: "COQL query string"},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
@@ -696,7 +694,7 @@ func searchGlobalCmd() *cli.Command {
 			&cli.IntFlag{Name: "per-page", Value: 10},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
@@ -729,7 +727,7 @@ func attachmentsCmd() *cli.Command {
 					&cli.IntFlag{Name: "per-page", Value: 200},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -759,7 +757,7 @@ func attachmentsCmd() *cli.Command {
 				Usage:     "Upload an attachment to a record",
 				ArgsUsage: "<module> <record-id> <file-path>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -792,7 +790,7 @@ func attachmentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -803,7 +801,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -817,7 +815,7 @@ func attachmentsCmd() *cli.Command {
 				Usage:     "Delete an attachment",
 				ArgsUsage: "<module> <record-id> <attachment-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -842,13 +840,15 @@ func convertCmd() *cli.Command {
 			&cli.StringFlag{Name: "json", Usage: "Conversion options as JSON"},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
 			var opts map[string]any
 			if j := cmd.String("json"); j != "" {
-				json.Unmarshal([]byte(j), &opts)
+				if err := json.Unmarshal([]byte(j), &opts); err != nil {
+					return internal.NewValidationError(fmt.Sprintf("--json: invalid JSON: %v", err))
+				}
 			} else {
 				opts = map[string]any{}
 			}
@@ -876,7 +876,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "tags", Required: true, Usage: "Comma-separated tag names"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -905,7 +905,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "tags", Required: true, Usage: "Comma-separated tag names"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}

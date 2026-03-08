@@ -2,32 +2,15 @@ package sprints
 
 import (
 	"context"
-	"os"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
 
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
-
 func resolveTeamID(cmd *cli.Command) (string, error) {
-	team := cmd.String("team")
-	if team == "" {
-		team = os.Getenv("ZOHO_SPRINTS_TEAM_ID")
-	}
-	if team == "" {
-		return "", internal.NewValidationError("--team flag or ZOHO_SPRINTS_TEAM_ID env var required")
-	}
-	return team, nil
+	return internal.RequireFlag(cmd, "team", "ZOHO_SPRINTS_TEAM_ID")
 }
 
 func teamBase(c *zohttp.Client, teamID string) string {
@@ -39,7 +22,7 @@ func Commands() *cli.Command {
 		Name:  "sprints",
 		Usage: "Zoho Sprints operations",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "team", Usage: "Team ID (or set ZOHO_SPRINTS_TEAM_ID)"},
+			&cli.StringFlag{Name: "team", Usage: "Team ID (or set ZOHO_SPRINTS_TEAM_ID)", Sources: cli.EnvVars("ZOHO_SPRINTS_TEAM_ID")},
 		},
 		Commands: []*cli.Command{
 			teamsCmd(),
@@ -64,7 +47,7 @@ func teamsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List teams",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -92,7 +75,7 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -121,7 +104,7 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -150,7 +133,7 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -203,7 +186,7 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -250,7 +233,7 @@ func projectsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -287,7 +270,7 @@ func sprintsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -320,7 +303,7 @@ func sprintsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -353,7 +336,7 @@ func sprintsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -404,7 +387,7 @@ func sprintsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -451,7 +434,7 @@ func sprintsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -487,7 +470,7 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint/backlog ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -516,7 +499,7 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("project ID, sprint ID, and item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -553,7 +536,7 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint/backlog ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -621,7 +604,7 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("project ID, sprint ID, and item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -677,7 +660,7 @@ func itemsCmd() *cli.Command {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("project ID, sprint ID, and item ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -713,7 +696,7 @@ func epicsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -749,7 +732,7 @@ func epicsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -795,7 +778,7 @@ func epicsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and epic ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -836,7 +819,7 @@ func epicsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and epic ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -872,7 +855,7 @@ func statusesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -914,7 +897,7 @@ func itemTypesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -956,7 +939,7 @@ func prioritiesCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -994,7 +977,7 @@ func membersCmd() *cli.Command {
 					&cli.StringFlag{Name: "range", Usage: "Number of records", Value: "100"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}

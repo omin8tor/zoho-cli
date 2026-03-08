@@ -42,11 +42,15 @@ tk blocked             # Show blocked issues
 ## Architecture
 
 - `cmd/zoho/main.go` - Entry point
+- `internal/errors.go` - Error types, exit codes, `RequireFlag` helper
+- `internal/flags.go` - `MergeJSON`, `MergeJSONForm` helpers
 - `internal/auth/` - OAuth flows, token management, config resolution
-- `internal/http/` - HTTP client with auto-refresh, DC maps
+- `internal/http/` - HTTP client with auto-refresh, `GetClient()`, DC maps
+- `internal/dc/` - Datacenter URL config (9 DCs)
 - `internal/output/` - JSON output, --help-all schema display
 - `internal/crm/` - CRM subcommands (29 commands)
-- `internal/projects/` - Projects subcommands (39 commands)
+- `internal/projects/` - Projects subcommands (split into ~10 files by resource)
+- `internal/books/` - Books subcommands (split into ~16 files by resource)
 - `internal/drive/` - WorkDrive subcommands (26 commands)
 - `internal/writer/` - Writer subcommands (7 commands)
 - `internal/cliq/` - Cliq subcommands (12 commands)
@@ -59,8 +63,17 @@ tk blocked             # Show blocked issues
 - `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`, `ZOHO_DC` - Auth (handled in internal/auth/config.go)
 - `ZOHO_PORTAL_ID` - Default for `--portal` flag (Projects commands)
 - `ZOHO_TEAM_ID` - Default for `--team` flag (WorkDrive commands)
+- `ZOHO_SPRINTS_TEAM_ID` - Default for `--team` flag (Sprints commands)
+- `ZOHO_BOOKS_ORG_ID` - Default for `--org` flag (Books, Billing, Invoice, Inventory)
+- `ZOHO_EXPENSE_ORG_ID` - Default for `--org` flag (Expense commands)
+- `ZOHO_DESK_ORG_ID` - Default for `--org` flag (Desk commands)
+- `ZOHO_MAIL_ORG_ID` - Default for `--org` flag (Mail org commands)
+- `ZOHO_MAIL_ACCOUNT_ID` - Default for `--account` flag (Mail account commands)
+- `ZOHO_CREATOR_OWNER` - Default for `--owner` flag (Creator commands)
+- `ZOHO_CREATOR_APP` - Default for `--app` flag (Creator commands)
 
 Flag passed on CLI always overrides the env var. If neither is set, commands fail with a clear error.
+Env vars are wired via `Sources: cli.EnvVars(...)` on flag definitions so they appear in `--help`.
 
 ## API Documentation (Context7)
 
@@ -77,6 +90,14 @@ Flag passed on CLI always overrides the env var. If neither is set, commands fai
 - Typed envelope structs for API responses, raw map[string]any for record data
 - Pass through raw Zoho API responses (thin wrapper, no data transformation)
 - --help-all shows jq-friendly output schemas per command
+
+### Flag patterns (do NOT "fix" these — the distinction is intentional)
+- **Query params**: `if v := cmd.String("x"); v != "" { params["x"] = v }` — don't send empty params
+- **Body fields**: `if cmd.IsSet("x") { body["x"] = cmd.String("x") }` — allow intentional empty strings
+- **Required body fields**: `body["x"] = cmd.String("x")` — no guard needed
+- **Typed body fields**: `FloatFlag` + `cmd.Float()`, `IntFlag` + `cmd.Int()`, `BoolFlag` + `cmd.Bool()`
+- **JSON array fields**: `StringFlag` + `json.Unmarshal([]byte(cmd.String("x")), &v)` in action
+- **--json escape hatch**: `internal.MergeJSON(cmd, body)` — flags always win over --json
 
 ## Key Zoho API Quirks (absorb internally)
 

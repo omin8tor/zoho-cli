@@ -60,19 +60,14 @@ func NewAPIError(statusCode int, body string) *ZohoAPIError {
 	}
 }
 
-func Err(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
+func RequireFlag(cmd interface{ String(string) string }, flag, envHint string) (string, error) {
+	v := cmd.String(flag)
+	if v == "" {
+		return "", NewValidationError(fmt.Sprintf("--%s flag or %s env var required", flag, envHint))
+	}
+	return v, nil
 }
 
-func Die(err error) {
-	if e, ok := err.(*ZohoCliError); ok {
-		Err(e.Message)
-		os.Exit(e.ExitCode)
-	}
-	if e, ok := err.(*ZohoAPIError); ok {
-		Err(e.Message)
-		os.Exit(e.ExitCode)
-	}
-	Err(err.Error())
-	os.Exit(ExitError)
+func Err(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
 }

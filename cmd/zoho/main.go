@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -73,13 +74,15 @@ func main() {
 	}
 
 	if err := app.Run(context.Background(), os.Args); err != nil {
-		if e, ok := err.(*internal.ZohoCliError); ok {
-			fmt.Fprintln(os.Stderr, e.Message)
-			os.Exit(e.ExitCode)
+		var apiErr *internal.ZohoAPIError
+		var cliErr *internal.ZohoCliError
+		if errors.As(err, &apiErr) {
+			fmt.Fprintln(os.Stderr, apiErr.Message)
+			os.Exit(apiErr.ExitCode)
 		}
-		if e, ok := err.(*internal.ZohoAPIError); ok {
-			fmt.Fprintln(os.Stderr, e.Message)
-			os.Exit(e.ExitCode)
+		if errors.As(err, &cliErr) {
+			fmt.Fprintln(os.Stderr, cliErr.Message)
+			os.Exit(cliErr.ExitCode)
 		}
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
@@ -19,14 +18,6 @@ var serviceTypeMap = map[string]string{
 	"writer": "zw",
 	"sheet":  "zohosheet",
 	"show":   "zohoshow",
-}
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
 }
 
 func Commands() *cli.Command {
@@ -43,7 +34,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "type", Value: "writer", Usage: "writer, sheet, or show"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -76,7 +67,7 @@ func Commands() *cli.Command {
 				Usage:     "Get document metadata",
 				ArgsUsage: "<doc-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -92,7 +83,7 @@ func Commands() *cli.Command {
 				Usage:     "List merge fields in a document",
 				ArgsUsage: "<doc-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -113,7 +104,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -145,7 +136,7 @@ func Commands() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -159,7 +150,7 @@ func Commands() *cli.Command {
 				Usage:     "Move a document to trash",
 				ArgsUsage: "<doc-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -175,7 +166,7 @@ func Commands() *cli.Command {
 				Usage:     "Permanently delete a trashed document",
 				ArgsUsage: "<doc-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -194,7 +185,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "format", Value: "txt", Usage: "txt or html"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -224,7 +215,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -236,7 +227,7 @@ func Commands() *cli.Command {
 						return err
 					}
 					if out := cmd.String("output"); out != "" {
-						if err := os.WriteFile(out, body, 0644); err != nil {
+						if err := os.WriteFile(out, body, 0600); err != nil {
 							return err
 						}
 						return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})

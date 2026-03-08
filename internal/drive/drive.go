@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/omin8tor/zoho-cli/internal/pagination"
@@ -28,14 +27,6 @@ var serviceTypeMap = map[string]string{
 	"writer":     "zw",
 	"sheet":      "zohosheet",
 	"show":       "zohoshow",
-}
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
 }
 
 func requireTeam(cmd *cli.Command) (string, error) {
@@ -87,7 +78,7 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "type", Usage: "Filter: file, folder, image, etc."},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -108,7 +99,7 @@ func filesCmd() *cli.Command {
 				Usage:     "Get file info",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -129,7 +120,7 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "type", Usage: "Filter by type"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -158,7 +149,7 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "New name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -181,7 +172,7 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "to", Required: true, Usage: "Destination folder ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -204,7 +195,7 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "to", Required: true, Usage: "Destination folder ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -224,7 +215,7 @@ func filesCmd() *cli.Command {
 				Usage:     "Move a file to trash",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -244,7 +235,7 @@ func filesCmd() *cli.Command {
 				Usage:     "Permanently delete a file",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -264,7 +255,7 @@ func filesCmd() *cli.Command {
 				Usage:     "Restore a file from trash",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -286,7 +277,7 @@ func filesCmd() *cli.Command {
 					&cli.StringFlag{Name: "team-folder", Required: true, Usage: "Team folder ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -303,7 +294,7 @@ func filesCmd() *cli.Command {
 				Usage:     "List file versions",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -330,7 +321,7 @@ func foldersCmd() *cli.Command {
 					&cli.StringFlag{Name: "team", Usage: "Team ID", Sources: cli.EnvVars("ZOHO_TEAM_ID")},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -355,7 +346,7 @@ func foldersCmd() *cli.Command {
 					&cli.StringFlag{Name: "type", Value: "folder", Usage: "folder, zohowriter, zohosheet, zohoshow"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -387,7 +378,7 @@ func foldersCmd() *cli.Command {
 				Usage:     "Show folder path",
 				ArgsUsage: "<folder-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -412,7 +403,7 @@ func downloadCmd() *cli.Command {
 			&cli.StringFlag{Name: "format", Value: "native", Usage: "native, txt, html, pdf, docx"},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
@@ -430,7 +421,7 @@ func downloadCmd() *cli.Command {
 				return err
 			}
 			if out := cmd.String("output"); out != "" {
-				if err := os.WriteFile(out, body, 0644); err != nil {
+				if err := os.WriteFile(out, body, 0600); err != nil {
 					return err
 				}
 				return output.JSON(map[string]any{"ok": true, "path": out, "size": len(body)})
@@ -451,7 +442,7 @@ func uploadCmd() *cli.Command {
 			&cli.BoolFlag{Name: "override", Usage: "Override existing file"},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			c, err := getClient()
+			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
@@ -496,7 +487,7 @@ func shareCmd() *cli.Command {
 				Usage:     "List file permissions",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -516,7 +507,7 @@ func shareCmd() *cli.Command {
 					&cli.StringFlag{Name: "role", Value: "viewer", Usage: "viewer, commenter, editor, organizer"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -551,7 +542,7 @@ func shareCmd() *cli.Command {
 				Usage:     "Revoke file access",
 				ArgsUsage: "<permission-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -567,7 +558,7 @@ func shareCmd() *cli.Command {
 				Usage:     "List share links for a file",
 				ArgsUsage: "<file-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -590,7 +581,7 @@ func shareCmd() *cli.Command {
 					&cli.StringFlag{Name: "password", Usage: "Link password"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -634,7 +625,7 @@ func shareCmd() *cli.Command {
 				Usage:     "Delete a share link",
 				ArgsUsage: "<link-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -658,7 +649,7 @@ func teamsCmd() *cli.Command {
 				Name:  "me",
 				Usage: "Get current user info",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -674,7 +665,7 @@ func teamsCmd() *cli.Command {
 				Usage:     "List team members",
 				ArgsUsage: "<team-id>",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}

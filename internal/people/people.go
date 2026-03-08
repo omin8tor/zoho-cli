@@ -6,19 +6,10 @@ import (
 	"fmt"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
-
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
 
 func Commands() *cli.Command {
 	return &cli.Command{
@@ -44,7 +35,7 @@ func formsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all forms",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -63,7 +54,7 @@ func formsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("form link name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -97,7 +88,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("form link name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -131,7 +122,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("form link name and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -155,7 +146,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("form link name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -187,7 +178,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("form link name and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -219,7 +210,7 @@ func recordsCmd() *cli.Command {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("form link name and record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -252,7 +243,7 @@ func attendanceCmd() *cli.Command {
 					&cli.StringFlag{Name: "date-format", Usage: "Date format"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -292,7 +283,7 @@ func attendanceCmd() *cli.Command {
 					&cli.StringFlag{Name: "date-format", Usage: "Date format (e.g. yyyy-MM-dd)"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -326,7 +317,7 @@ func attendanceCmd() *cli.Command {
 					&cli.StringFlag{Name: "date-format", Usage: "Date format"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -363,7 +354,7 @@ func leaveCmd() *cli.Command {
 					&cli.StringFlag{Name: "search-value", Usage: "Search value"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -397,7 +388,7 @@ func leaveCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("leave record ID required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -417,7 +408,7 @@ func leaveCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON input data"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -445,7 +436,7 @@ func leaveCmd() *cli.Command {
 					&cli.StringFlag{Name: "user-id", Usage: "User record ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -469,7 +460,7 @@ func leaveCmd() *cli.Command {
 					&cli.StringFlag{Name: "user-id", Usage: "User record ID"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -499,7 +490,7 @@ func departmentsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all departments",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -522,7 +513,7 @@ func departmentsCmd() *cli.Command {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("department name required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -557,7 +548,7 @@ func designationsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all designations",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}

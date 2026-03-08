@@ -4,43 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/omin8tor/zoho-cli/internal"
-	"github.com/omin8tor/zoho-cli/internal/auth"
 	zohttp "github.com/omin8tor/zoho-cli/internal/http"
 	"github.com/omin8tor/zoho-cli/internal/output"
 	"github.com/urfave/cli/v3"
 )
 
-func getClient() (*zohttp.Client, error) {
-	config, err := auth.ResolveAuth()
-	if err != nil {
-		return nil, err
-	}
-	return zohttp.NewClient(config)
-}
-
 func resolveOwner(cmd *cli.Command) (string, error) {
-	owner := cmd.String("owner")
-	if owner == "" {
-		owner = os.Getenv("ZOHO_CREATOR_OWNER")
-	}
-	if owner == "" {
-		return "", internal.NewValidationError("--owner flag or ZOHO_CREATOR_OWNER env var required")
-	}
-	return owner, nil
+	return internal.RequireFlag(cmd, "owner", "ZOHO_CREATOR_OWNER")
 }
 
 func resolveApp(cmd *cli.Command) (string, error) {
-	app := cmd.String("app")
-	if app == "" {
-		app = os.Getenv("ZOHO_CREATOR_APP")
-	}
-	if app == "" {
-		return "", internal.NewValidationError("--app flag or ZOHO_CREATOR_APP env var required")
-	}
-	return app, nil
+	return internal.RequireFlag(cmd, "app", "ZOHO_CREATOR_APP")
 }
 
 func dataBase(base, owner, app string) string {
@@ -60,8 +36,8 @@ func Commands() *cli.Command {
 		Name:  "creator",
 		Usage: "Zoho Creator operations",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "owner", Usage: "Account owner name (or set ZOHO_CREATOR_OWNER)"},
-			&cli.StringFlag{Name: "app", Usage: "Application link name (or set ZOHO_CREATOR_APP)"},
+			&cli.StringFlag{Name: "owner", Usage: "Account owner name (or set ZOHO_CREATOR_OWNER)", Sources: cli.EnvVars("ZOHO_CREATOR_OWNER")},
+			&cli.StringFlag{Name: "app", Usage: "Application link name (or set ZOHO_CREATOR_APP)", Sources: cli.EnvVars("ZOHO_CREATOR_APP")},
 		},
 		Commands: []*cli.Command{
 			applicationsCmd(),
@@ -86,7 +62,7 @@ func applicationsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List applications",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -117,7 +93,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "cursor", Usage: "Record cursor for pagination"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -165,7 +141,7 @@ func recordsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("record-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -192,7 +168,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -228,7 +204,7 @@ func recordsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("record-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -263,7 +239,7 @@ func recordsCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("record-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -295,7 +271,7 @@ func reportsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List reports in an application",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -327,7 +303,7 @@ func formsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List forms in an application",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -362,7 +338,7 @@ func fieldsCmd() *cli.Command {
 					&cli.StringFlag{Name: "form", Required: true, Usage: "Form link name"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -394,7 +370,7 @@ func pagesCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List pages in an application",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -426,7 +402,7 @@ func sectionsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List sections in an application",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -462,7 +438,7 @@ func bulkReadCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body with query fields/criteria/max_records"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -497,7 +473,7 @@ func bulkReadCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("job-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -533,7 +509,7 @@ func bulkWriteCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body with query fields/criteria"},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
@@ -568,7 +544,7 @@ func bulkWriteCmd() *cli.Command {
 					if id == "" {
 						return internal.NewValidationError("job-id argument required")
 					}
-					c, err := getClient()
+					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
