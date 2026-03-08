@@ -43,12 +43,12 @@ func modulesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List available Bigin modules",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/modules", nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/modules", nil)
 					if err != nil {
 						return err
 					}
@@ -59,7 +59,7 @@ func modulesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a specific module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -67,7 +67,7 @@ func modulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/modules/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/modules/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -78,7 +78,7 @@ func modulesCmd() *cli.Command {
 				Name:      "fields",
 				Usage:     "List fields for a Bigin module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -86,7 +86,7 @@ func modulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/fields", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/fields", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -99,7 +99,7 @@ func modulesCmd() *cli.Command {
 				Name:      "layouts",
 				Usage:     "List layouts for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -107,7 +107,7 @@ func modulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/layouts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/layouts", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -120,7 +120,7 @@ func modulesCmd() *cli.Command {
 				Name:      "related-lists",
 				Usage:     "List related lists for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -128,7 +128,7 @@ func modulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/related_lists", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/related_lists", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -157,7 +157,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -176,7 +176,7 @@ func recordsCmd() *cli.Command {
 						params["sort_order"] = s
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.BiginBase + "/" + cmd.Args().First(),
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -191,7 +191,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -205,7 +205,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
@@ -218,7 +218,7 @@ func recordsCmd() *cli.Command {
 					if f := cmd.String("fields"); f != "" {
 						opts = &zohttp.RequestOpts{Params: map[string]string{"fields": f}}
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/"+module+"/"+recordID, opts)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+module+"/"+recordID, opts)
 					if err != nil {
 						return err
 					}
@@ -232,7 +232,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Record data as JSON string"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -245,7 +245,7 @@ func recordsCmd() *cli.Command {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
 					body := map[string]any{"data": []any{parsed}}
-					raw, err := c.Request("POST", c.BiginBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.BiginBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -259,7 +259,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
@@ -273,7 +273,7 @@ func recordsCmd() *cli.Command {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
 					body := map[string]any{"data": []any{parsed}}
-					raw, err := c.Request("PUT", c.BiginBase+"/"+module+"/"+recordID, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.BiginBase+"/"+module+"/"+recordID, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -284,7 +284,7 @@ func recordsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
@@ -293,7 +293,7 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("DELETE", c.BiginBase+"/"+module+"/"+recordID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.BiginBase+"/"+module+"/"+recordID, nil)
 					if err != nil {
 						return err
 					}
@@ -308,7 +308,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Record data as JSON string"},
 					&cli.StringFlag{Name: "duplicate-check", Usage: "Comma-separated duplicate check fields"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -324,7 +324,7 @@ func recordsCmd() *cli.Command {
 					if d := cmd.String("duplicate-check"); d != "" {
 						body["duplicate_check_fields"] = splitComma(d)
 					}
-					raw, err := c.Request("POST", c.BiginBase+"/"+cmd.Args().First()+"/upsert", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.BiginBase+"/"+cmd.Args().First()+"/upsert", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -335,7 +335,7 @@ func recordsCmd() *cli.Command {
 				Name:      "bulk-delete",
 				Usage:     "Delete multiple records",
 				ArgsUsage: "<module> <ids>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and comma-separated IDs required")
 					}
@@ -344,7 +344,7 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					module, ids := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("DELETE", c.BiginBase+"/"+module, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "DELETE", c.BiginBase+"/"+module, &zohttp.RequestOpts{
 						Params: map[string]string{"ids": ids},
 					})
 					if err != nil {
@@ -362,7 +362,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all deleted records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -374,7 +374,7 @@ func recordsCmd() *cli.Command {
 						"type": cmd.String("type"),
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.BiginBase + "/" + cmd.Args().First() + "/deleted",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -389,7 +389,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/"+cmd.Args().First()+"/deleted", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+cmd.Args().First()+"/deleted", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -400,7 +400,7 @@ func recordsCmd() *cli.Command {
 				Name:      "count",
 				Usage:     "Get record count for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -408,7 +408,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/"+cmd.Args().First()+"/actions/count", nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+cmd.Args().First()+"/actions/count", nil)
 					if err != nil {
 						return err
 					}
@@ -432,7 +432,7 @@ func notesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
@@ -443,7 +443,7 @@ func notesCmd() *cli.Command {
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
 					params := map[string]string{}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.BiginBase + "/" + module + "/" + recordID + "/Notes",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -458,7 +458,7 @@ func notesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -473,7 +473,7 @@ func notesCmd() *cli.Command {
 					&cli.StringFlag{Name: "content", Required: true, Usage: "Note content"},
 					&cli.StringFlag{Name: "title", Usage: "Note title"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
@@ -487,7 +487,7 @@ func notesCmd() *cli.Command {
 						note["Note_Title"] = t
 					}
 					body := map[string]any{"data": []any{note}}
-					raw, err := c.Request("POST", c.BiginBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.BiginBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -502,7 +502,7 @@ func notesCmd() *cli.Command {
 					&cli.StringFlag{Name: "title", Usage: "Note title"},
 					&cli.StringFlag{Name: "content", Usage: "Note content"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and note ID required")
 					}
@@ -519,7 +519,7 @@ func notesCmd() *cli.Command {
 						note["Note_Content"] = ct
 					}
 					body := map[string]any{"data": []any{note}}
-					raw, err := c.Request("PUT", c.BiginBase+"/"+module+"/"+recordID+"/Notes/"+noteID, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.BiginBase+"/"+module+"/"+recordID+"/Notes/"+noteID, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -530,7 +530,7 @@ func notesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a note",
 				ArgsUsage: "<module> <record-id> <note-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and note ID required")
 					}
@@ -539,7 +539,7 @@ func notesCmd() *cli.Command {
 						return err
 					}
 					module, recordID, noteID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
-					raw, err := c.Request("DELETE", c.BiginBase+"/"+module+"/"+recordID+"/Notes/"+noteID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.BiginBase+"/"+module+"/"+recordID+"/Notes/"+noteID, nil)
 					if err != nil {
 						return err
 					}
@@ -559,7 +559,7 @@ func attachmentsCmd() *cli.Command {
 				Name:      "list",
 				Usage:     "List attachments on a record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module and record ID required")
 					}
@@ -568,7 +568,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("GET", c.BiginBase+"/"+module+"/"+recordID+"/Attachments", nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+module+"/"+recordID+"/Attachments", nil)
 					if err != nil {
 						return err
 					}
@@ -579,7 +579,7 @@ func attachmentsCmd() *cli.Command {
 				Name:      "upload",
 				Usage:     "Upload an attachment to a record",
 				ArgsUsage: "<module> <record-id> <file-path>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and file path required")
 					}
@@ -599,7 +599,7 @@ func attachmentsCmd() *cli.Command {
 							break
 						}
 					}
-					raw, err := c.Request("POST", c.BiginBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BiginBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
 						Files: map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
 					})
 					if err != nil {
@@ -615,7 +615,7 @@ func attachmentsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and attachment ID required")
 					}
@@ -625,7 +625,7 @@ func attachmentsCmd() *cli.Command {
 					}
 					module, recordID, attID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
 					url := c.BiginBase + "/" + module + "/" + recordID + "/Attachments/" + attID
-					body, _, _, err := c.RequestRaw("GET", url, nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -643,7 +643,7 @@ func attachmentsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an attachment",
 				ArgsUsage: "<module> <record-id> <attachment-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and attachment ID required")
 					}
@@ -652,7 +652,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					module, recordID, attID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
-					raw, err := c.Request("DELETE", c.BiginBase+"/"+module+"/"+recordID+"/Attachments/"+attID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.BiginBase+"/"+module+"/"+recordID+"/Attachments/"+attID, nil)
 					if err != nil {
 						return err
 					}
@@ -676,7 +676,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ids", Required: true, Usage: "Comma-separated record IDs"},
 					&cli.StringFlag{Name: "tags", Required: true, Usage: "Comma-separated tag names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -693,7 +693,7 @@ func tagsCmd() *cli.Command {
 						"tags": tagObjs,
 						"ids":  splitComma(cmd.String("ids")),
 					}
-					raw, err := c.Request("POST", c.BiginBase+"/"+cmd.Args().First()+"/actions/add_tags", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.BiginBase+"/"+cmd.Args().First()+"/actions/add_tags", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -708,7 +708,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ids", Required: true, Usage: "Comma-separated record IDs"},
 					&cli.StringFlag{Name: "tags", Required: true, Usage: "Comma-separated tag names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module API name required")
 					}
@@ -725,7 +725,7 @@ func tagsCmd() *cli.Command {
 						"tags": tagObjs,
 						"ids":  splitComma(cmd.String("ids")),
 					}
-					raw, err := c.Request("POST", c.BiginBase+"/"+cmd.Args().First()+"/actions/remove_tags", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.BiginBase+"/"+cmd.Args().First()+"/actions/remove_tags", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -749,7 +749,7 @@ func usersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -758,7 +758,7 @@ func usersCmd() *cli.Command {
 						"type": cmd.String("type"),
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.BiginBase + "/users",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -773,7 +773,7 @@ func usersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/users", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/users", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -784,7 +784,7 @@ func usersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a specific user",
 				ArgsUsage: "<user-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("user ID required")
 					}
@@ -792,7 +792,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/users/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/users/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -811,12 +811,12 @@ func orgCmd() *cli.Command {
 			{
 				Name:  "get",
 				Usage: "Get organization details",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/org", nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/org", nil)
 					if err != nil {
 						return err
 					}
@@ -835,12 +835,12 @@ func rolesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List roles",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/roles", nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/roles", nil)
 					if err != nil {
 						return err
 					}
@@ -851,7 +851,7 @@ func rolesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a specific role",
 				ArgsUsage: "<role-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("role ID required")
 					}
@@ -859,7 +859,7 @@ func rolesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/roles/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/roles/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -878,12 +878,12 @@ func profilesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List profiles",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/profiles", nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/profiles", nil)
 					if err != nil {
 						return err
 					}
@@ -894,7 +894,7 @@ func profilesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a specific profile",
 				ArgsUsage: "<profile-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("profile ID required")
 					}
@@ -902,7 +902,7 @@ func profilesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/settings/profiles/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/settings/profiles/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -926,7 +926,7 @@ func relatedCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module, record ID, and related list name required")
 					}
@@ -937,7 +937,7 @@ func relatedCmd() *cli.Command {
 					module, recordID, relList := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
 					params := map[string]string{}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.BiginBase + "/" + module + "/" + recordID + "/" + relList,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -952,7 +952,7 @@ func relatedCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.BiginBase+"/"+module+"/"+recordID+"/"+relList, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+module+"/"+recordID+"/"+relList, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -970,13 +970,13 @@ func coqlCmd() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "query", Required: true, Usage: "COQL query string"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
 			body := map[string]string{"select_query": cmd.String("query")}
-			raw, err := c.Request("POST", c.BiginBase+"/coql", &zohttp.RequestOpts{JSON: body})
+			raw, err := c.Request(ctx, "POST", c.BiginBase+"/coql", &zohttp.RequestOpts{JSON: body})
 			if err != nil {
 				return err
 			}
@@ -998,7 +998,7 @@ func searchCmd() *cli.Command {
 			&cli.BoolFlag{Name: "all", Usage: "Fetch all results"},
 			&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if cmd.Args().Len() < 1 {
 				return internal.NewValidationError("module API name required")
 			}
@@ -1017,7 +1017,7 @@ func searchCmd() *cli.Command {
 				params["criteria"] = cr
 			}
 			if cmd.Bool("all") || cmd.IsSet("limit") {
-				items, err := pagination.Paginate(pagination.PaginationConfig{
+				items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 					Client:   c,
 					URL:      c.BiginBase + "/" + cmd.Args().First() + "/search",
 					Opts:     &zohttp.RequestOpts{Params: params},
@@ -1032,7 +1032,7 @@ func searchCmd() *cli.Command {
 				}
 				return output.JSON(items)
 			}
-			raw, err := c.Request("GET", c.BiginBase+"/"+cmd.Args().First()+"/search", &zohttp.RequestOpts{Params: params})
+			raw, err := c.Request(ctx, "GET", c.BiginBase+"/"+cmd.Args().First()+"/search", &zohttp.RequestOpts{Params: params})
 			if err != nil {
 				return err
 			}

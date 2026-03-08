@@ -26,7 +26,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -49,7 +49,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -69,7 +69,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -94,7 +94,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -114,7 +114,7 @@ func estimatesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -136,7 +136,7 @@ func estimatesCmd() *cli.Command {
 
 					if cmd.Bool("all") || cmd.IsSet("limit") {
 
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 
 							Client: c,
 
@@ -164,7 +164,7 @@ func estimatesCmd() *cli.Command {
 						return output.JSON(items)
 
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/estimates", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/estimates", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -182,7 +182,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -207,7 +207,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -221,7 +221,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an estimate",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -230,7 +230,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -241,7 +241,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an estimate",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -250,7 +250,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/estimates/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -266,7 +266,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "value", Usage: "Custom field value"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -285,7 +285,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/customfields", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/customfields", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -299,7 +299,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "mark-sent",
 				Usage:     "Mark an estimate as sent",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -308,7 +308,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/status/sent", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/status/sent", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -319,7 +319,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "mark-accepted",
 				Usage:     "Mark an estimate as accepted",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -328,7 +328,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/status/accepted", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/status/accepted", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -339,7 +339,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "mark-declined",
 				Usage:     "Mark an estimate as declined",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -348,7 +348,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/status/declined", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/status/declined", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -359,7 +359,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "submit-for-approval",
 				Usage:     "Submit an estimate for approval",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -368,7 +368,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/submit", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/submit", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -379,7 +379,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "approve",
 				Usage:     "Approve an estimate",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -388,7 +388,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/approve", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/approve", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -406,7 +406,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "cc_mail_ids", Usage: "CC email addresses (comma-separated)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -425,7 +425,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/email", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/email", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -439,7 +439,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "get-email-content",
 				Usage:     "Get email content of an estimate",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -448,7 +448,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/estimates/"+cmd.Args().First()+"/email", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/estimates/"+cmd.Args().First()+"/email", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -462,7 +462,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "estimate_ids", Required: true, Usage: "Estimate IDs (comma-separated)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -480,7 +480,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates"+"/email", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates"+"/email", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -504,7 +504,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "attention", Usage: "Attention"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -538,7 +538,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/address/billing", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/address/billing", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -562,7 +562,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "attention", Usage: "Attention"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -596,7 +596,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/address/shipping", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/address/shipping", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -609,7 +609,7 @@ func estimatesCmd() *cli.Command {
 			{
 				Name:  "list-templates",
 				Usage: "List estimate templates",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -618,7 +618,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/estimates"+"/templates", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/estimates"+"/templates", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -629,7 +629,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "update-template",
 				Usage:     "Update template of an estimate",
 				ArgsUsage: "<estimate-id> <template-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -638,7 +638,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/templates/"+cmd.Args().Get(1), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/templates/"+cmd.Args().Get(1), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -653,7 +653,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Required: true, Usage: "Comment text"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -667,7 +667,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -681,7 +681,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "list-comments",
 				Usage:     "List comments of an estimate",
 				ArgsUsage: "<estimate-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -690,7 +690,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -705,7 +705,7 @@ func estimatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Required: true, Usage: "Comment text"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -719,7 +719,7 @@ func estimatesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments/"+cmd.Args().Get(1), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments/"+cmd.Args().Get(1), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -733,7 +733,7 @@ func estimatesCmd() *cli.Command {
 				Name:      "delete-comment",
 				Usage:     "Delete a comment on an estimate",
 				ArgsUsage: "<estimate-id> <comment-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -742,7 +742,7 @@ func estimatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments/"+cmd.Args().Get(1), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/estimates/"+cmd.Args().First()+"/comments/"+cmd.Args().Get(1), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}

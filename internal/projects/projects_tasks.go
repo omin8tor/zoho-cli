@@ -24,7 +24,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "status", Usage: "Filter: open, closed, in progress"},
 					&cli.StringFlag{Name: "priority", Usage: "Filter: none, low, medium, high"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -41,7 +41,7 @@ func tasksCmd() *cli.Command {
 					if p := cmd.String("priority"); p != "" {
 						params["priority"] = p
 					}
-					return paginateProjectsList(c, cmd, url, "tasks", params)
+					return paginateProjectsList(ctx, c, cmd, url, "tasks", params)
 				},
 			},
 			{
@@ -53,7 +53,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "status", Usage: "Filter: open, closed, in progress"},
 					&cli.StringFlag{Name: "priority", Usage: "Filter: none, low, medium, high"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -70,7 +70,7 @@ func tasksCmd() *cli.Command {
 					if p := cmd.String("priority"); p != "" {
 						params["priority"] = p
 					}
-					return paginateProjectsList(c, cmd, url, "tasks", params)
+					return paginateProjectsList(ctx, c, cmd, url, "tasks", params)
 				},
 			},
 			{
@@ -78,7 +78,7 @@ func tasksCmd() *cli.Command {
 				Usage:     "Get a single task",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -88,7 +88,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -103,7 +103,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Task name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -117,7 +117,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -137,7 +137,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "end-date", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -166,7 +166,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -178,7 +178,7 @@ func tasksCmd() *cli.Command {
 				Usage:     "Delete a task",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -188,7 +188,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					raw, err := c.Request(ctx, "DELETE", url, nil)
 					if err != nil {
 						return err
 					}
@@ -200,7 +200,7 @@ func tasksCmd() *cli.Command {
 				Usage:     "List subtasks of a task",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -210,7 +210,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/subtasks"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -226,7 +226,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Subtask name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -245,7 +245,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -260,7 +260,7 @@ func tasksCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "instances", Value: "1", Usage: "Number of copies"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -270,7 +270,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/copy"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{
 						Form: map[string]string{"no_of_instances": cmd.String("instances")},
 					})
 					if err != nil {
@@ -297,7 +297,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "target_tasklist_id", Usage: "Target tasklist ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -314,7 +314,7 @@ func tasksCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/move"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -337,7 +337,7 @@ func taskCommentsCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "task", Required: true, Usage: "Task ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -347,7 +347,7 @@ func taskCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.String("task") + "/comments"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -362,7 +362,7 @@ func taskCommentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "task", Required: true, Usage: "Task ID"},
 					&cli.StringFlag{Name: "comment", Required: true, Usage: "Comment text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -372,7 +372,7 @@ func taskCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.String("task") + "/comments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -388,7 +388,7 @@ func taskCommentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "task", Required: true, Usage: "Task ID"},
 					&cli.StringFlag{Name: "comment", Required: true, Usage: "Updated comment text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -398,7 +398,7 @@ func taskCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.String("task") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
+					raw, err := c.Request(ctx, "PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"comment": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -413,7 +413,7 @@ func taskCommentsCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "task", Required: true, Usage: "Task ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -423,7 +423,7 @@ func taskCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.String("task") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					raw, err := c.Request(ctx, "DELETE", url, nil)
 					if err != nil {
 						return err
 					}
@@ -444,7 +444,7 @@ func taskFollowersCmd() *cli.Command {
 				Usage:     "List task followers",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -454,7 +454,7 @@ func taskFollowersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -466,7 +466,7 @@ func taskFollowersCmd() *cli.Command {
 				Usage:     "Follow a task",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -476,7 +476,7 @@ func taskFollowersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/follow"
-					raw, err := c.Request("POST", url, nil)
+					raw, err := c.Request(ctx, "POST", url, nil)
 					if err != nil {
 						return err
 					}
@@ -492,7 +492,7 @@ func taskFollowersCmd() *cli.Command {
 					&cli.StringFlag{Name: "followers", Usage: "Comma-separated follower ZPUIDs"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -513,7 +513,7 @@ func taskFollowersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/followers"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -525,7 +525,7 @@ func taskFollowersCmd() *cli.Command {
 				Usage:     "Unfollow a task",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -535,7 +535,7 @@ func taskFollowersCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/unfollow"
-					raw, err := c.Request("POST", url, nil)
+					raw, err := c.Request(ctx, "POST", url, nil)
 					if err != nil {
 						return err
 					}
@@ -555,7 +555,7 @@ func taskCustomViewsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List task custom views (portal-level)",
 				Flags: []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -565,7 +565,7 @@ func taskCustomViewsCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/tasks/customviews"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -576,7 +576,7 @@ func taskCustomViewsCmd() *cli.Command {
 				Name:  "project-list",
 				Usage: "List task custom views (project-level)",
 				Flags: []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -586,7 +586,7 @@ func taskCustomViewsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/customviews"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -598,7 +598,7 @@ func taskCustomViewsCmd() *cli.Command {
 				Usage:     "Get a task custom view",
 				ArgsUsage: "<view-id>",
 				Flags:     []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -608,7 +608,7 @@ func taskCustomViewsCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/tasks/customviews/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -629,7 +629,7 @@ func taskStatusTimelineCmd() *cli.Command {
 				Usage:     "Get status timeline for a task",
 				ArgsUsage: "<task-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -639,7 +639,7 @@ func taskStatusTimelineCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/" + cmd.Args().First() + "/status-timeline"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -650,7 +650,7 @@ func taskStatusTimelineCmd() *cli.Command {
 				Name:  "project",
 				Usage: "Get status timeline for project tasks",
 				Flags: []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -660,7 +660,7 @@ func taskStatusTimelineCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/tasks/status-timeline"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -671,7 +671,7 @@ func taskStatusTimelineCmd() *cli.Command {
 				Name:  "portal",
 				Usage: "Get status timeline for portal tasks",
 				Flags: []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -681,7 +681,7 @@ func taskStatusTimelineCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/taskstatushistory"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}

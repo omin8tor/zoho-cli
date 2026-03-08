@@ -50,7 +50,7 @@ func workbooksCmd() *cli.Command {
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-option", Usage: "Sort option"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -64,7 +64,7 @@ func workbooksCmd() *cli.Command {
 							p["start_index"] = fmt.Sprintf("%d", state.Offset)
 							p["count"] = "100"
 						}
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							Method:   "POST",
 							URL:      c.SheetBase + "/workbooks",
@@ -80,7 +80,7 @@ func workbooksCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/workbooks", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -94,7 +94,7 @@ func workbooksCmd() *cli.Command {
 					&cli.IntFlag{Name: "start-index", Usage: "Start index"},
 					&cli.IntFlag{Name: "count", Usage: "Number of templates"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -106,7 +106,7 @@ func workbooksCmd() *cli.Command {
 					if v := cmd.Int("count"); v > 0 {
 						params["count"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/templates", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/templates", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -119,13 +119,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.version.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -138,7 +138,7 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "workbook-name", Required: true, Usage: "Workbook name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -147,7 +147,7 @@ func workbooksCmd() *cli.Command {
 						"method":        "workbook.create",
 						"workbook_name": cmd.String("workbook-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/create", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/create", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -161,7 +161,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "workbook-name", Required: true, Usage: "New workbook name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -171,7 +171,7 @@ func workbooksCmd() *cli.Command {
 						"resource_id":   cmd.String("workbook"),
 						"workbook_name": cmd.String("workbook-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/createfromtemplate", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/createfromtemplate", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -185,7 +185,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "file", Required: true, Usage: "Path to file"},
 					&cli.StringFlag{Name: "workbook-name", Usage: "Workbook name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -201,7 +201,7 @@ func workbooksCmd() *cli.Command {
 					if v := cmd.String("workbook-name"); v != "" {
 						form["workbook_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/upload", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/upload", &zohttp.RequestOpts{
 						Params: params,
 						Files:  map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
 						Form:   form,
@@ -219,7 +219,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "format", Required: true, Usage: "Download format (xlsx/csv/tsv/ods/pdf/html)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -228,7 +228,7 @@ func workbooksCmd() *cli.Command {
 						"method":          "workbook.download",
 						"download_format": cmd.String("format"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/download/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/download/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -243,7 +243,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "image-json", Required: true, Usage: "Image JSON configuration"},
 					&cli.StringFlag{Name: "file", Usage: "Path to image file"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -262,7 +262,7 @@ func workbooksCmd() *cli.Command {
 						name := filepath.Base(filePath)
 						opts.Files = map[string]zohttp.FileUpload{"imagefiles": {Filename: name, Data: data}}
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/insertimages", opts)
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/insertimages", opts)
 					if err != nil {
 						return err
 					}
@@ -276,7 +276,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "new-workbook-name", Required: true, Usage: "New workbook name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -286,7 +286,7 @@ func workbooksCmd() *cli.Command {
 						"resource_id":       cmd.String("workbook"),
 						"new_workbook_name": cmd.String("new-workbook-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/copy", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/copy", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -302,7 +302,7 @@ func workbooksCmd() *cli.Command {
 					&cli.StringFlag{Name: "role", Usage: "Role for shared user"},
 					&cli.StringFlag{Name: "notify", Usage: "Notify user (true/false)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -318,7 +318,7 @@ func workbooksCmd() *cli.Command {
 					if v := cmd.String("notify"); v != "" {
 						params["notify"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/share", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/share", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -332,7 +332,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "version-description", Required: true, Usage: "Version description"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -341,7 +341,7 @@ func workbooksCmd() *cli.Command {
 						"method":              "workbook.version.create",
 						"version_description": cmd.String("version-description"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -355,7 +355,7 @@ func workbooksCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "version-number", Required: true, Usage: "Version number"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -364,7 +364,7 @@ func workbooksCmd() *cli.Command {
 						"method":         "workbook.version.revert",
 						"version_number": cmd.String("version-number"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -377,13 +377,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.trash", "resource_ids": fmt.Sprintf(`["%s"]`, cmd.String("workbook"))}
-					raw, err := c.Request("POST", c.SheetBase+"/trash", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/trash", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -396,13 +396,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.restore", "resource_ids": fmt.Sprintf(`["%s"]`, cmd.String("workbook"))}
-					raw, err := c.Request("POST", c.SheetBase+"/restore", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/restore", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -415,13 +415,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.delete", "resource_ids": fmt.Sprintf(`["%s"]`, cmd.String("workbook"))}
-					raw, err := c.Request("POST", c.SheetBase+"/delete", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/delete", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -434,13 +434,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.publish", "resource_id": cmd.String("workbook")}
-					raw, err := c.Request("POST", c.SheetBase+"/publish", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/publish", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -453,13 +453,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.publish.remove", "resource_id": cmd.String("workbook")}
-					raw, err := c.Request("POST", c.SheetBase+"/publish", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/publish", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -472,13 +472,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "lock"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -491,13 +491,13 @@ func workbooksCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "unlock"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -519,13 +519,13 @@ func worksheetsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "worksheet.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -539,7 +539,7 @@ func worksheetsCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "worksheet-name", Required: true, Usage: "Worksheet name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -548,7 +548,7 @@ func worksheetsCmd() *cli.Command {
 						"method":         "worksheet.insert",
 						"worksheet_name": cmd.String("worksheet-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -563,7 +563,7 @@ func worksheetsCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "new-worksheet-name", Required: true, Usage: "New worksheet name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -573,7 +573,7 @@ func worksheetsCmd() *cli.Command {
 						"worksheet_name":     cmd.String("worksheet"),
 						"new_worksheet_name": cmd.String("new-worksheet-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -589,7 +589,7 @@ func worksheetsCmd() *cli.Command {
 					&cli.StringFlag{Name: "dest-workbook", Required: true, Usage: "Destination workbook resource ID"},
 					&cli.StringFlag{Name: "new-worksheet-name", Usage: "New worksheet name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -602,7 +602,7 @@ func worksheetsCmd() *cli.Command {
 					if v := cmd.String("new-worksheet-name"); v != "" {
 						params["new_worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -617,7 +617,7 @@ func worksheetsCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "new-worksheet-name", Required: true, Usage: "New worksheet name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -627,7 +627,7 @@ func worksheetsCmd() *cli.Command {
 						"old_name": cmd.String("worksheet"),
 						"new_name": cmd.String("new-worksheet-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -641,7 +641,7 @@ func worksheetsCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -650,7 +650,7 @@ func worksheetsCmd() *cli.Command {
 						"method":         "worksheet.delete",
 						"worksheet_name": cmd.String("worksheet"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -664,7 +664,7 @@ func worksheetsCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "worksheet-names", Required: true, Usage: "JSON array of worksheet names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -673,7 +673,7 @@ func worksheetsCmd() *cli.Command {
 						"method":          "worksheets.delete",
 						"worksheet_names": cmd.String("worksheet-names"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -696,7 +696,7 @@ func tablesCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -705,7 +705,7 @@ func tablesCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -724,7 +724,7 @@ func tablesCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row"},
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -740,7 +740,7 @@ func tablesCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -754,7 +754,7 @@ func tablesCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -763,7 +763,7 @@ func tablesCmd() *cli.Command {
 						"method":     "table.remove",
 						"table_name": cmd.String("table-name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -778,7 +778,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Header rename data JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -788,7 +788,7 @@ func tablesCmd() *cli.Command {
 						"table_name": cmd.String("table-name"),
 						"data":       cmd.String("data"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -806,7 +806,7 @@ func tablesCmd() *cli.Command {
 					&cli.IntFlag{Name: "start-index", Usage: "Start index"},
 					&cli.IntFlag{Name: "count", Usage: "Number of records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -827,7 +827,7 @@ func tablesCmd() *cli.Command {
 					if v := cmd.Int("count"); v > 0 {
 						params["count"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -843,7 +843,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Record data as JSON array"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -856,7 +856,7 @@ func tablesCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -873,7 +873,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -887,7 +887,7 @@ func tablesCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -903,7 +903,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "criteria", Required: true, Usage: "Filter criteria"},
 					&cli.StringFlag{Name: "delete-rows", Usage: "Delete entire rows (true/false)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -916,7 +916,7 @@ func tablesCmd() *cli.Command {
 					if v := cmd.String("delete-rows"); v != "" {
 						params["delete_rows"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -931,7 +931,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 					&cli.StringFlag{Name: "columns", Required: true, Usage: "Columns JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -941,7 +941,7 @@ func tablesCmd() *cli.Command {
 						"table_name":   cmd.String("table-name"),
 						"column_names": cmd.String("columns"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -956,7 +956,7 @@ func tablesCmd() *cli.Command {
 					&cli.StringFlag{Name: "table-name", Required: true, Usage: "Table name"},
 					&cli.StringFlag{Name: "columns", Required: true, Usage: "Columns JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -966,7 +966,7 @@ func tablesCmd() *cli.Command {
 						"table_name":   cmd.String("table-name"),
 						"column_names": cmd.String("columns"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -993,7 +993,7 @@ func recordsCmd() *cli.Command {
 					&cli.IntFlag{Name: "start-row", Usage: "Start row number"},
 					&cli.IntFlag{Name: "count", Usage: "Number of records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1014,7 +1014,7 @@ func recordsCmd() *cli.Command {
 					if v := cmd.Int("count"); v > 0 {
 						params["count"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1031,7 +1031,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Record data as JSON array"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1049,7 +1049,7 @@ func recordsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1067,7 +1067,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1086,7 +1086,7 @@ func recordsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1103,7 +1103,7 @@ func recordsCmd() *cli.Command {
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
 					&cli.StringFlag{Name: "delete-rows", Usage: "Delete entire rows (true/false)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1121,7 +1121,7 @@ func recordsCmd() *cli.Command {
 					if v := cmd.String("delete-rows"); v != "" {
 						params["delete_rows"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1136,7 +1136,7 @@ func recordsCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "columns", Required: true, Usage: "Columns JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1148,7 +1148,7 @@ func recordsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1173,7 +1173,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "row", Required: true, Usage: "Row index"},
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1186,7 +1186,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1204,7 +1204,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row index"},
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1219,7 +1219,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1233,7 +1233,7 @@ func cellsCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "named-range", Required: true, Usage: "Named range"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1242,7 +1242,7 @@ func cellsCmd() *cli.Command {
 						"method":        "namedrange.content.get",
 						"name_of_range": cmd.String("named-range"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1260,7 +1260,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-row", Usage: "End row"},
 					&cli.IntFlag{Name: "end-column", Usage: "End column"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1281,7 +1281,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.Int("end-column"); v > 0 {
 						params["end_column"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1295,7 +1295,7 @@ func cellsCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1304,7 +1304,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1321,7 +1321,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 					&cli.StringFlag{Name: "content", Required: true, Usage: "Cell content"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1335,7 +1335,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1350,7 +1350,7 @@ func cellsCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Cell data JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1362,7 +1362,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1379,7 +1379,7 @@ func cellsCmd() *cli.Command {
 					&cli.StringFlag{Name: "column-array", Required: true, Usage: "Column array JSON"},
 					&cli.StringFlag{Name: "data-array", Required: true, Usage: "Data array JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1393,7 +1393,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1410,7 +1410,7 @@ func cellsCmd() *cli.Command {
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Data JSON 2D array"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1424,7 +1424,7 @@ func cellsCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1448,7 +1448,7 @@ func contentCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "data", Required: true, Usage: "CSV data string"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1460,7 +1460,7 @@ func contentCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1477,7 +1477,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Row data as JSON array"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1495,7 +1495,7 @@ func contentCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1513,7 +1513,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1532,7 +1532,7 @@ func contentCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1550,7 +1550,7 @@ func contentCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Row data as JSON array"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1569,7 +1569,7 @@ func contentCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1587,7 +1587,7 @@ func contentCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row index"},
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1602,7 +1602,7 @@ func contentCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1620,7 +1620,7 @@ func contentCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-row", Required: true, Usage: "End row index"},
 					&cli.IntFlag{Name: "end-column", Required: true, Usage: "End column index"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1635,7 +1635,7 @@ func contentCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1649,7 +1649,7 @@ func contentCmd() *cli.Command {
 					workbookFlag,
 					worksheetFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1658,7 +1658,7 @@ func contentCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1676,7 +1676,7 @@ func contentCmd() *cli.Command {
 					&cli.BoolFlag{Name: "is-case-sensitive", Usage: "Case sensitive search"},
 					&cli.BoolFlag{Name: "is-exact-match", Usage: "Exact match search"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1695,7 +1695,7 @@ func contentCmd() *cli.Command {
 					if cmd.IsSet("is-exact-match") {
 						params["is_exact_match"] = fmt.Sprintf("%t", cmd.Bool("is-exact-match"))
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1714,7 +1714,7 @@ func contentCmd() *cli.Command {
 					&cli.BoolFlag{Name: "is-case-sensitive", Usage: "Case sensitive search"},
 					&cli.BoolFlag{Name: "is-exact-match", Usage: "Exact match search"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1734,7 +1734,7 @@ func contentCmd() *cli.Command {
 					if cmd.IsSet("is-exact-match") {
 						params["is_exact_match"] = fmt.Sprintf("%t", cmd.Bool("is-exact-match"))
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1747,13 +1747,13 @@ func contentCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.recalculate"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1776,7 +1776,7 @@ func formatCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "format-json", Required: true, Usage: "Format JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1785,7 +1785,7 @@ func formatCmd() *cli.Command {
 						"method":      "ranges.format.set",
 						"format_json": cmd.String("format-json"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1799,7 +1799,7 @@ func formatCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "image-json", Required: true, Usage: "Image JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1808,7 +1808,7 @@ func formatCmd() *cli.Command {
 						"method":     "range.images.fit",
 						"image_json": cmd.String("image-json"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1824,7 +1824,7 @@ func formatCmd() *cli.Command {
 					&cli.StringFlag{Name: "row-index-array", Required: true, Usage: "JSON array of row indices"},
 					&cli.IntFlag{Name: "row-height", Required: true, Usage: "Height in pixels"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1837,7 +1837,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1853,7 +1853,7 @@ func formatCmd() *cli.Command {
 					&cli.StringFlag{Name: "column-index-array", Required: true, Usage: "JSON array of column indices"},
 					&cli.IntFlag{Name: "column-width", Required: true, Usage: "Width in pixels"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1866,7 +1866,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1882,7 +1882,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "row", Required: true, Usage: "Row number"},
 					&cli.IntFlag{Name: "count", Usage: "Number of rows to insert"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1897,7 +1897,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.Int("count"); v > 0 {
 						params["count"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1913,7 +1913,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column number"},
 					&cli.IntFlag{Name: "count", Usage: "Number of columns to insert"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1928,7 +1928,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.Int("count"); v > 0 {
 						params["count"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1943,7 +1943,7 @@ func formatCmd() *cli.Command {
 					worksheetFlag,
 					&cli.IntFlag{Name: "row", Required: true, Usage: "Row number"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1955,7 +1955,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1970,7 +1970,7 @@ func formatCmd() *cli.Command {
 					worksheetFlag,
 					&cli.StringFlag{Name: "row-index-array", Required: true, Usage: "JSON array of row indices"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1982,7 +1982,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1997,7 +1997,7 @@ func formatCmd() *cli.Command {
 					worksheetFlag,
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column number"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2009,7 +2009,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2026,7 +2026,7 @@ func formatCmd() *cli.Command {
 					&cli.IntFlag{Name: "column", Required: true, Usage: "Column index"},
 					&cli.StringFlag{Name: "note", Required: true, Usage: "Note text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2040,7 +2040,7 @@ func formatCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2062,13 +2062,13 @@ func namedRangesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "namedrange.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2084,7 +2084,7 @@ func namedRangesCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Named range name"},
 					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2097,7 +2097,7 @@ func namedRangesCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2113,7 +2113,7 @@ func namedRangesCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Named range name"},
 					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2126,7 +2126,7 @@ func namedRangesCmd() *cli.Command {
 					if v := cmd.String("worksheet"); v != "" {
 						params["worksheet_name"] = v
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2140,7 +2140,7 @@ func namedRangesCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Named range name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2149,7 +2149,7 @@ func namedRangesCmd() *cli.Command {
 						"method":        "namedrange.delete",
 						"name_of_range": cmd.String("name"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2168,13 +2168,13 @@ func mergeCmd() *cli.Command {
 			{
 				Name:  "templates",
 				Usage: "Get merge templates",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "mergetemplate.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/mergetemplates", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/mergetemplates", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2187,13 +2187,13 @@ func mergeCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.mergefield.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2206,13 +2206,13 @@ func mergeCmd() *cli.Command {
 				Flags: []cli.Flag{
 					workbookFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					params := map[string]string{"method": "workbook.mergejob.list"}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2226,7 +2226,7 @@ func mergeCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "job-id", Required: true, Usage: "Job ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2235,7 +2235,7 @@ func mergeCmd() *cli.Command {
 						"method": "workbook.mergejob.details",
 						"job_id": cmd.String("job-id"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/"+cmd.String("workbook"), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2250,7 +2250,7 @@ func mergeCmd() *cli.Command {
 					&cli.StringFlag{Name: "merge-data", Required: true, Usage: "Merge data JSON"},
 					&cli.StringFlag{Name: "output-settings", Required: true, Usage: "Output settings JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2261,7 +2261,7 @@ func mergeCmd() *cli.Command {
 						"merge_data":      cmd.String("merge-data"),
 						"output_settings": cmd.String("output-settings"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/merge", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/merge", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2276,7 +2276,7 @@ func mergeCmd() *cli.Command {
 					&cli.StringFlag{Name: "merge-data", Required: true, Usage: "Merge data JSON"},
 					&cli.StringFlag{Name: "email-settings", Required: true, Usage: "Email settings JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2287,7 +2287,7 @@ func mergeCmd() *cli.Command {
 						"merge_data":     cmd.String("merge-data"),
 						"email_settings": cmd.String("email-settings"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/merge", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/merge", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2312,7 +2312,7 @@ func premiumCmd() *cli.Command {
 					&cli.StringFlag{Name: "criteria", Usage: "Filter criteria"},
 					&cli.IntFlag{Name: "header-row", Usage: "Header row number"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2327,7 +2327,7 @@ func premiumCmd() *cli.Command {
 					if v := cmd.Int("header-row"); v > 0 {
 						params["header_row"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/fetchrecords", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/fetchrecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2344,7 +2344,7 @@ func premiumCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Record data as JSON array"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2363,7 +2363,7 @@ func premiumCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/addrecords", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/addrecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2381,7 +2381,7 @@ func premiumCmd() *cli.Command {
 					&cli.StringFlag{Name: "data", Required: true, Usage: "Update data as JSON"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2401,7 +2401,7 @@ func premiumCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, params); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/updaterecords", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/updaterecords", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2424,7 +2424,7 @@ func utilityCmd() *cli.Command {
 					workbookFlag,
 					&cli.StringFlag{Name: "range", Required: true, Usage: "Range reference"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2433,7 +2433,7 @@ func utilityCmd() *cli.Command {
 						"method":        "range.index.get",
 						"range_address": cmd.String("range"),
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/utils", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/utils", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2450,7 +2450,7 @@ func utilityCmd() *cli.Command {
 					&cli.IntFlag{Name: "end-row", Usage: "End row index"},
 					&cli.IntFlag{Name: "end-column", Usage: "End column index"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2466,7 +2466,7 @@ func utilityCmd() *cli.Command {
 					if v := cmd.Int("end-column"); v > 0 {
 						params["end_column"] = fmt.Sprintf("%d", v)
 					}
-					raw, err := c.Request("POST", c.SheetBase+"/utils", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "POST", c.SheetBase+"/utils", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}

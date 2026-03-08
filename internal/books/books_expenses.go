@@ -29,7 +29,7 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "vendor_id", Usage: "Vendor ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -51,7 +51,7 @@ func expensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/expenses", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/expenses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -72,7 +72,7 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "vendor_id", Usage: "Vendor ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -100,7 +100,7 @@ func expensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/expenses", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/expenses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -120,7 +120,7 @@ func expensesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -142,7 +142,7 @@ func expensesCmd() *cli.Command {
 
 					if cmd.Bool("all") || cmd.IsSet("limit") {
 
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 
 							Client: c,
 
@@ -170,7 +170,7 @@ func expensesCmd() *cli.Command {
 						return output.JSON(items)
 
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/expenses", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/expenses", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -189,7 +189,7 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "vendor_id", Usage: "Vendor ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -217,7 +217,7 @@ func expensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -231,7 +231,7 @@ func expensesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an expense",
 				ArgsUsage: "<expense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -240,7 +240,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -251,7 +251,7 @@ func expensesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an expense",
 				ArgsUsage: "<expense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -260,7 +260,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/expenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -271,7 +271,7 @@ func expensesCmd() *cli.Command {
 				Name:      "list-history",
 				Usage:     "List history of an expense",
 				ArgsUsage: "<expense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -280,7 +280,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/expenses/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/expenses/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -295,7 +295,7 @@ func expensesCmd() *cli.Command {
 					&cli.StringFlag{Name: "email", Usage: "Employee email"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -312,7 +312,7 @@ func expensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/expenses"+"/employees", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/expenses"+"/employees", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -325,7 +325,7 @@ func expensesCmd() *cli.Command {
 			{
 				Name:  "list-employees",
 				Usage: "List employees",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -334,7 +334,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/expenses"+"/employees", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/expenses"+"/employees", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -345,7 +345,7 @@ func expensesCmd() *cli.Command {
 				Name:      "get-employee",
 				Usage:     "Get an employee",
 				ArgsUsage: "<employee-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -354,7 +354,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/expenses"+"/employees/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/expenses"+"/employees/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -365,7 +365,7 @@ func expensesCmd() *cli.Command {
 				Name:      "delete-employee",
 				Usage:     "Delete an employee",
 				ArgsUsage: "<employee-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -374,7 +374,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/expenses"+"/employees/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/expenses"+"/employees/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -388,7 +388,7 @@ func expensesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "file", Required: true, Usage: "File path to upload"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -401,7 +401,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("reading file: %w", err)
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/expenses/"+cmd.Args().First()+"/receipt", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/expenses/"+cmd.Args().First()+"/receipt", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						Files:  map[string]zohttp.FileUpload{"receipt": {Filename: filepath.Base(cmd.String("file")), Data: data}},
 					})
@@ -415,7 +415,7 @@ func expensesCmd() *cli.Command {
 				Name:      "get-receipt",
 				Usage:     "Get receipt of an expense",
 				ArgsUsage: "<expense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -424,7 +424,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/expenses/"+cmd.Args().First()+"/receipt", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/expenses/"+cmd.Args().First()+"/receipt", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -435,7 +435,7 @@ func expensesCmd() *cli.Command {
 				Name:      "delete-receipt",
 				Usage:     "Delete receipt of an expense",
 				ArgsUsage: "<expense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -444,7 +444,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/expenses/"+cmd.Args().First()+"/receipt", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/expenses/"+cmd.Args().First()+"/receipt", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -458,7 +458,7 @@ func expensesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "file", Required: true, Usage: "File path to upload"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -471,7 +471,7 @@ func expensesCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("reading file: %w", err)
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/expenses/"+cmd.Args().First()+"/attachment", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/expenses/"+cmd.Args().First()+"/attachment", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						Files:  map[string]zohttp.FileUpload{"attachment": {Filename: filepath.Base(cmd.String("file")), Data: data}},
 					})
@@ -500,7 +500,7 @@ func recurringExpensesCmd() *cli.Command {
 					&cli.IntFlag{Name: "repeat_every", Usage: "Repeat interval"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -521,7 +521,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/recurringexpenses", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/recurringexpenses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -541,7 +541,7 @@ func recurringExpensesCmd() *cli.Command {
 					&cli.IntFlag{Name: "repeat_every", Usage: "Repeat interval"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -566,7 +566,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/recurringexpenses", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/recurringexpenses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -584,7 +584,7 @@ func recurringExpensesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -600,7 +600,7 @@ func recurringExpensesCmd() *cli.Command {
 
 					if cmd.Bool("all") || cmd.IsSet("limit") {
 
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 
 							Client: c,
 
@@ -628,7 +628,7 @@ func recurringExpensesCmd() *cli.Command {
 						return output.JSON(items)
 
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/recurringexpenses", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/recurringexpenses", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -646,7 +646,7 @@ func recurringExpensesCmd() *cli.Command {
 					&cli.IntFlag{Name: "repeat_every", Usage: "Repeat interval"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -671,7 +671,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -685,7 +685,7 @@ func recurringExpensesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a recurring expense",
 				ArgsUsage: "<recurringexpense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -694,7 +694,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -705,7 +705,7 @@ func recurringExpensesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a recurring expense",
 				ArgsUsage: "<recurringexpense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -714,7 +714,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/recurringexpenses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -725,7 +725,7 @@ func recurringExpensesCmd() *cli.Command {
 				Name:      "stop",
 				Usage:     "Stop a recurring expense",
 				ArgsUsage: "<recurringexpense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -734,7 +734,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/status/stop", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/status/stop", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -745,7 +745,7 @@ func recurringExpensesCmd() *cli.Command {
 				Name:      "resume",
 				Usage:     "Resume a recurring expense",
 				ArgsUsage: "<recurringexpense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -754,7 +754,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/status/resume", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/status/resume", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -765,7 +765,7 @@ func recurringExpensesCmd() *cli.Command {
 				Name:      "list-child-expenses",
 				Usage:     "List child expenses of a recurring expense",
 				ArgsUsage: "<recurringexpense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -774,7 +774,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/expenses", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/expenses", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -785,7 +785,7 @@ func recurringExpensesCmd() *cli.Command {
 				Name:      "list-history",
 				Usage:     "List history of a recurring expense",
 				ArgsUsage: "<recurringexpense-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -794,7 +794,7 @@ func recurringExpensesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/recurringexpenses/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}

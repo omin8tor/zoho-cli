@@ -35,12 +35,12 @@ func formsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all forms",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms", nil)
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms", nil)
 					if err != nil {
 						return err
 					}
@@ -51,7 +51,7 @@ func formsCmd() *cli.Command {
 				Name:      "get-fields",
 				Usage:     "Get fields for a form",
 				ArgsUsage: "<form-link-name>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("form link name required")
 					}
@@ -59,7 +59,7 @@ func formsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/components", nil)
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/components", nil)
 					if err != nil {
 						return err
 					}
@@ -85,7 +85,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "search-column", Usage: "Search column (EMPLOYEEID or EMPLOYEEMAILALIAS)"},
 					&cli.StringFlag{Name: "search-value", Usage: "Search value"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("form link name required")
 					}
@@ -101,7 +101,7 @@ func recordsCmd() *cli.Command {
 						params["searchValue"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.PeopleBase + "/forms/" + cmd.Args().First() + "/getRecords",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -116,7 +116,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/getRecords", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/getRecords", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -129,7 +129,7 @@ func recordsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a single record by ID",
 				ArgsUsage: "<form-link-name> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("form link name and record ID required")
 					}
@@ -137,7 +137,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/getDataByID", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/"+cmd.Args().First()+"/getDataByID", &zohttp.RequestOpts{
 						Params: map[string]string{"recordId": cmd.Args().Get(1)},
 					})
 					if err != nil {
@@ -153,7 +153,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON input data"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("form link name required")
 					}
@@ -169,7 +169,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/forms/json/"+cmd.Args().First()+"/insertRecord", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.PeopleBase+"/forms/json/"+cmd.Args().First()+"/insertRecord", &zohttp.RequestOpts{
 						Form: map[string]string{"inputData": string(inputData)},
 					})
 					if err != nil {
@@ -185,7 +185,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON input data"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("form link name and record ID required")
 					}
@@ -201,7 +201,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/forms/json/"+cmd.Args().First()+"/updateRecord", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.PeopleBase+"/forms/json/"+cmd.Args().First()+"/updateRecord", &zohttp.RequestOpts{
 						Form: map[string]string{
 							"inputData": string(inputData),
 							"recordId":  cmd.Args().Get(1),
@@ -217,7 +217,7 @@ func recordsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a record from a form",
 				ArgsUsage: "<form-link-name> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("form link name and record ID required")
 					}
@@ -225,7 +225,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/forms/"+cmd.Args().First()+"/deleteRecord", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.PeopleBase+"/forms/"+cmd.Args().First()+"/deleteRecord", &zohttp.RequestOpts{
 						Form: map[string]string{"recordId": cmd.Args().Get(1)},
 					})
 					if err != nil {
@@ -253,7 +253,7 @@ func attendanceCmd() *cli.Command {
 					&cli.StringFlag{Name: "check-out", Usage: "Check-out time (dd/MM/yyyy HH:mm:ss)"},
 					&cli.StringFlag{Name: "date-format", Usage: "Date format"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -274,7 +274,7 @@ func attendanceCmd() *cli.Command {
 					if v := cmd.String("date-format"); v != "" {
 						params["dateFormat"] = v
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/attendance", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.PeopleBase+"/attendance", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -293,7 +293,7 @@ func attendanceCmd() *cli.Command {
 					&cli.StringFlag{Name: "email-id", Usage: "Employee email ID"},
 					&cli.StringFlag{Name: "date-format", Usage: "Date format (e.g. yyyy-MM-dd)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -311,7 +311,7 @@ func attendanceCmd() *cli.Command {
 					if v := cmd.String("date-format"); v != "" {
 						params["dateFormat"] = v
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/attendance/getUserReport", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/attendance/getUserReport", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -327,7 +327,7 @@ func attendanceCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON array of attendance records"},
 					&cli.StringFlag{Name: "date-format", Usage: "Date format"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -336,7 +336,7 @@ func attendanceCmd() *cli.Command {
 					if v := cmd.String("date-format"); v != "" {
 						params["dateFormat"] = v
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/attendance/bulkImport", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.PeopleBase+"/attendance/bulkImport", &zohttp.RequestOpts{
 						Params: params,
 						Form:   map[string]string{"data": cmd.String("json")},
 					})
@@ -364,7 +364,7 @@ func leaveCmd() *cli.Command {
 					&cli.StringFlag{Name: "search-column", Usage: "Search column"},
 					&cli.StringFlag{Name: "search-value", Usage: "Search value"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -377,7 +377,7 @@ func leaveCmd() *cli.Command {
 						params["searchValue"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.PeopleBase + "/forms/leave/getRecords",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -392,7 +392,7 @@ func leaveCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/leave/getRecords", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/leave/getRecords", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -405,7 +405,7 @@ func leaveCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a leave record by ID",
 				ArgsUsage: "<record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("leave record ID required")
 					}
@@ -413,7 +413,7 @@ func leaveCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/leave/getDataByID", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/leave/getDataByID", &zohttp.RequestOpts{
 						Params: map[string]string{"recordId": cmd.Args().First()},
 					})
 					if err != nil {
@@ -428,7 +428,7 @@ func leaveCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON input data"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -441,7 +441,7 @@ func leaveCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.PeopleBase+"/forms/json/leave/insertRecord", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.PeopleBase+"/forms/json/leave/insertRecord", &zohttp.RequestOpts{
 						Form: map[string]string{"inputData": string(inputData)},
 					})
 					if err != nil {
@@ -456,7 +456,7 @@ func leaveCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "user-id", Usage: "User record ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -465,7 +465,7 @@ func leaveCmd() *cli.Command {
 					if v := cmd.String("user-id"); v != "" {
 						params["userId"] = v
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/leave/getLeaveTypeDetails", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/leave/getLeaveTypeDetails", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -480,7 +480,7 @@ func leaveCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "user-id", Usage: "User record ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -489,7 +489,7 @@ func leaveCmd() *cli.Command {
 					if v := cmd.String("user-id"); v != "" {
 						params["userId"] = v
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/leave/getLeaveTypeDetails", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/leave/getLeaveTypeDetails", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -510,12 +510,12 @@ func departmentsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all departments",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/department/getRecords", nil)
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/department/getRecords", nil)
 					if err != nil {
 						return err
 					}
@@ -530,7 +530,7 @@ func departmentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "sindex", Usage: "Starting index"},
 					&cli.StringFlag{Name: "limit", Usage: "Max records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("department name required")
 					}
@@ -547,7 +547,7 @@ func departmentsCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/department/getRecords", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/department/getRecords", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -568,12 +568,12 @@ func designationsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all designations",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.PeopleBase+"/forms/designation/getRecords", nil)
+					raw, err := c.Request(ctx, "GET", c.PeopleBase+"/forms/designation/getRecords", nil)
 					if err != nil {
 						return err
 					}

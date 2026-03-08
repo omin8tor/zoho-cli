@@ -44,7 +44,7 @@ func departmentsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -54,7 +54,7 @@ func departmentsCmd() *cli.Command {
 						return err
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.DeskBase + "/departments",
 							Opts:     &zohttp.RequestOpts{Headers: orgHeaders(orgID)},
@@ -69,7 +69,7 @@ func departmentsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/departments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/departments", &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -82,7 +82,7 @@ func departmentsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a department",
 				ArgsUsage: "<department-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -91,7 +91,7 @@ func departmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/departments/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/departments/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -117,7 +117,7 @@ func agentsCmd() *cli.Command {
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "department-id", Usage: "Department ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -131,7 +131,7 @@ func agentsCmd() *cli.Command {
 						params["departmentId"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.DeskBase + "/agents",
 							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
@@ -146,7 +146,7 @@ func agentsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/agents", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/agents", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -160,7 +160,7 @@ func agentsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an agent",
 				ArgsUsage: "<agent-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -169,7 +169,7 @@ func agentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/agents/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/agents/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -199,7 +199,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "assignee", Usage: "Assignee ID"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Sort field"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -225,7 +225,7 @@ func ticketsCmd() *cli.Command {
 						params["sortBy"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.DeskBase + "/tickets",
 							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
@@ -240,7 +240,7 @@ func ticketsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -254,7 +254,7 @@ func ticketsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a ticket",
 				ArgsUsage: "<ticket-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -263,7 +263,7 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -290,7 +290,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "dueDate", Usage: "Due date (ISO 8601)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -335,7 +335,7 @@ func ticketsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.DeskBase+"/tickets", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.DeskBase+"/tickets", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -365,7 +365,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "resolution", Usage: "Ticket resolution"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -417,7 +417,7 @@ func ticketsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PATCH", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -431,7 +431,7 @@ func ticketsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a ticket",
 				ArgsUsage: "<ticket-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -440,7 +440,7 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "DELETE", c.DeskBase+"/tickets/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -461,7 +461,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "limit", Usage: "Max records"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Sort field"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -492,7 +492,7 @@ func ticketsCmd() *cli.Command {
 					if v := cmd.String("sort-by"); v != "" {
 						params["sortBy"] = v
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets/search", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets/search", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -510,7 +510,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "from", Usage: "Starting index"},
 					&cli.StringFlag{Name: "limit", Usage: "Max records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -526,7 +526,7 @@ func ticketsCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/threads", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/threads", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -549,7 +549,7 @@ func ticketsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "isForward", Usage: "Send as forward"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -578,7 +578,7 @@ func ticketsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.DeskBase+"/tickets/"+cmd.Args().First()+"/sendReply", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.DeskBase+"/tickets/"+cmd.Args().First()+"/sendReply", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -596,7 +596,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "from", Usage: "Starting index"},
 					&cli.StringFlag{Name: "limit", Usage: "Max records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -612,7 +612,7 @@ func ticketsCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -631,7 +631,7 @@ func ticketsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "isPublic", Usage: "Whether the comment is public"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -648,7 +648,7 @@ func ticketsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.DeskBase+"/tickets/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.DeskBase+"/tickets/"+cmd.Args().First()+"/comments", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -662,7 +662,7 @@ func ticketsCmd() *cli.Command {
 				Name:      "attachments",
 				Usage:     "List ticket attachments",
 				ArgsUsage: "<ticket-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -671,7 +671,7 @@ func ticketsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/attachments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/attachments", &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -688,7 +688,7 @@ func ticketsCmd() *cli.Command {
 					&cli.StringFlag{Name: "from", Usage: "Starting index"},
 					&cli.StringFlag{Name: "limit", Usage: "Max records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -704,7 +704,7 @@ func ticketsCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/history", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/tickets/"+cmd.Args().First()+"/history", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -731,7 +731,7 @@ func contactsCmd() *cli.Command {
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Sort field"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -745,7 +745,7 @@ func contactsCmd() *cli.Command {
 						params["sortBy"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.DeskBase + "/contacts",
 							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
@@ -760,7 +760,7 @@ func contactsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/contacts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/contacts", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -774,7 +774,7 @@ func contactsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a contact",
 				ArgsUsage: "<contact-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -783,7 +783,7 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -810,7 +810,7 @@ func contactsCmd() *cli.Command {
 					&cli.StringFlag{Name: "street", Usage: "Street"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -855,7 +855,7 @@ func contactsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.DeskBase+"/contacts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.DeskBase+"/contacts", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -884,7 +884,7 @@ func contactsCmd() *cli.Command {
 					&cli.StringFlag{Name: "street", Usage: "Street"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -933,7 +933,7 @@ func contactsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PATCH", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -947,7 +947,7 @@ func contactsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a contact",
 				ArgsUsage: "<contact-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -956,7 +956,7 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "DELETE", c.DeskBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -974,7 +974,7 @@ func contactsCmd() *cli.Command {
 					&cli.StringFlag{Name: "from", Usage: "Starting index"},
 					&cli.StringFlag{Name: "limit", Usage: "Max records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -996,7 +996,7 @@ func contactsCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/contacts/search", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/contacts/search", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -1023,7 +1023,7 @@ func accountsCmd() *cli.Command {
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 					&cli.StringFlag{Name: "sort-by", Usage: "Sort field"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1037,7 +1037,7 @@ func accountsCmd() *cli.Command {
 						params["sortBy"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.DeskBase + "/accounts",
 							Opts:     &zohttp.RequestOpts{Params: params, Headers: orgHeaders(orgID)},
@@ -1052,7 +1052,7 @@ func accountsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/accounts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/accounts", &zohttp.RequestOpts{
 						Params:  params,
 						Headers: orgHeaders(orgID),
 					})
@@ -1066,7 +1066,7 @@ func accountsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1075,7 +1075,7 @@ func accountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -1096,7 +1096,7 @@ func accountsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Account description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1125,7 +1125,7 @@ func accountsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.DeskBase+"/accounts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.DeskBase+"/accounts", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -1148,7 +1148,7 @@ func accountsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Account description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1179,7 +1179,7 @@ func accountsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PATCH", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: orgHeaders(orgID),
 					})
@@ -1193,7 +1193,7 @@ func accountsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1202,7 +1202,7 @@ func accountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "DELETE", c.DeskBase+"/accounts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Headers: orgHeaders(orgID),
 					})
 					if err != nil {
@@ -1225,7 +1225,7 @@ func searchCmd() *cli.Command {
 			&cli.StringFlag{Name: "from", Usage: "Starting index"},
 			&cli.StringFlag{Name: "limit", Usage: "Max records"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
@@ -1244,7 +1244,7 @@ func searchCmd() *cli.Command {
 			if v := cmd.String("limit"); v != "" {
 				params["limit"] = v
 			}
-			raw, err := c.Request("GET", c.DeskBase+"/search", &zohttp.RequestOpts{
+			raw, err := c.Request(ctx, "GET", c.DeskBase+"/search", &zohttp.RequestOpts{
 				Params:  params,
 				Headers: orgHeaders(orgID),
 			})

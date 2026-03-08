@@ -57,7 +57,7 @@ func itemsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -68,7 +68,7 @@ func itemsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/items",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -83,7 +83,7 @@ func itemsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/items", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/items", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -94,7 +94,7 @@ func itemsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an item",
 				ArgsUsage: "<item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
@@ -106,7 +106,7 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -127,7 +127,7 @@ func itemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Item description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -162,7 +162,7 @@ func itemsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/items", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/items", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -185,7 +185,7 @@ func itemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Item description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
@@ -219,7 +219,7 @@ func itemsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -233,7 +233,7 @@ func itemsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an item",
 				ArgsUsage: "<item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
@@ -245,7 +245,7 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/items/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -256,7 +256,7 @@ func itemsCmd() *cli.Command {
 				Name:      "mark-active",
 				Usage:     "Mark an item as active",
 				ArgsUsage: "<item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
@@ -268,7 +268,7 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/items/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/items/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -279,7 +279,7 @@ func itemsCmd() *cli.Command {
 				Name:      "mark-inactive",
 				Usage:     "Mark an item as inactive",
 				ArgsUsage: "<item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item ID required")
 					}
@@ -291,7 +291,7 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/items/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/items/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -314,7 +314,7 @@ func compositeItemsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -325,7 +325,7 @@ func compositeItemsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/compositeitems",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -340,7 +340,7 @@ func compositeItemsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/compositeitems", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/compositeitems", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -351,7 +351,7 @@ func compositeItemsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a composite item",
 				ArgsUsage: "<composite-item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("composite item ID required")
 					}
@@ -363,7 +363,7 @@ func compositeItemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/compositeitems/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/compositeitems/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -382,7 +382,7 @@ func compositeItemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Item description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -411,7 +411,7 @@ func compositeItemsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/compositeitems", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/compositeitems", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -433,7 +433,7 @@ func compositeItemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Item description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("composite item ID required")
 					}
@@ -464,7 +464,7 @@ func compositeItemsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/compositeitems/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/compositeitems/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -478,7 +478,7 @@ func compositeItemsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a composite item",
 				ArgsUsage: "<composite-item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("composite item ID required")
 					}
@@ -490,7 +490,7 @@ func compositeItemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/compositeitems/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/compositeitems/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -513,7 +513,7 @@ func itemGroupsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -524,7 +524,7 @@ func itemGroupsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/itemgroups",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -539,7 +539,7 @@ func itemGroupsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/itemgroups", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/itemgroups", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -550,7 +550,7 @@ func itemGroupsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an item group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item group ID required")
 					}
@@ -562,7 +562,7 @@ func itemGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/itemgroups/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/itemgroups/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -580,7 +580,7 @@ func itemGroupsCmd() *cli.Command {
 					&cli.StringFlag{Name: "manufacturer", Usage: "Manufacturer name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -604,7 +604,7 @@ func itemGroupsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/itemgroups", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/itemgroups", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -626,7 +626,7 @@ func itemGroupsCmd() *cli.Command {
 					&cli.StringFlag{Name: "manufacturer", Usage: "Manufacturer name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item group ID required")
 					}
@@ -657,7 +657,7 @@ func itemGroupsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/itemgroups/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/itemgroups/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -671,7 +671,7 @@ func itemGroupsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an item group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("item group ID required")
 					}
@@ -683,7 +683,7 @@ func itemGroupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/itemgroups/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/itemgroups/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -706,7 +706,7 @@ func contactsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -717,7 +717,7 @@ func contactsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/contacts",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -732,7 +732,7 @@ func contactsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/contacts", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/contacts", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -743,7 +743,7 @@ func contactsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a contact",
 				ArgsUsage: "<contact-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
@@ -755,7 +755,7 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -774,7 +774,7 @@ func contactsCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes about the contact"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -803,7 +803,7 @@ func contactsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/contacts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/contacts", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -825,7 +825,7 @@ func contactsCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes about the contact"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
@@ -856,7 +856,7 @@ func contactsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -870,7 +870,7 @@ func contactsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a contact",
 				ArgsUsage: "<contact-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
@@ -882,7 +882,7 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/contacts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -893,7 +893,7 @@ func contactsCmd() *cli.Command {
 				Name:      "mark-active",
 				Usage:     "Mark a contact as active",
 				ArgsUsage: "<contact-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
@@ -905,7 +905,7 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/contacts/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/contacts/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -916,7 +916,7 @@ func contactsCmd() *cli.Command {
 				Name:      "mark-inactive",
 				Usage:     "Mark a contact as inactive",
 				ArgsUsage: "<contact-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("contact ID required")
 					}
@@ -928,7 +928,7 @@ func contactsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/contacts/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/contacts/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -951,7 +951,7 @@ func salesOrdersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -962,7 +962,7 @@ func salesOrdersCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/salesorders",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -977,7 +977,7 @@ func salesOrdersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/salesorders", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/salesorders", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -988,7 +988,7 @@ func salesOrdersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a sales order",
 				ArgsUsage: "<salesorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("sales order ID required")
 					}
@@ -1000,7 +1000,7 @@ func salesOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/salesorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/salesorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1020,7 +1020,7 @@ func salesOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1052,7 +1052,7 @@ func salesOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/salesorders", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/salesorders", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1075,7 +1075,7 @@ func salesOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("sales order ID required")
 					}
@@ -1109,7 +1109,7 @@ func salesOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/salesorders/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/salesorders/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1123,7 +1123,7 @@ func salesOrdersCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a sales order",
 				ArgsUsage: "<salesorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("sales order ID required")
 					}
@@ -1135,7 +1135,7 @@ func salesOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/salesorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/salesorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1146,7 +1146,7 @@ func salesOrdersCmd() *cli.Command {
 				Name:      "mark-confirmed",
 				Usage:     "Mark a sales order as confirmed",
 				ArgsUsage: "<salesorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("sales order ID required")
 					}
@@ -1158,7 +1158,7 @@ func salesOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/salesorders/"+cmd.Args().First()+"/status/confirmed", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/salesorders/"+cmd.Args().First()+"/status/confirmed", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1169,7 +1169,7 @@ func salesOrdersCmd() *cli.Command {
 				Name:      "mark-void",
 				Usage:     "Mark a sales order as void",
 				ArgsUsage: "<salesorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("sales order ID required")
 					}
@@ -1181,7 +1181,7 @@ func salesOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/salesorders/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/salesorders/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1204,7 +1204,7 @@ func invoicesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1215,7 +1215,7 @@ func invoicesCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/invoices",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -1230,7 +1230,7 @@ func invoicesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/invoices", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/invoices", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1241,7 +1241,7 @@ func invoicesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an invoice",
 				ArgsUsage: "<invoice-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
@@ -1253,7 +1253,7 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1273,7 +1273,7 @@ func invoicesCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1305,7 +1305,7 @@ func invoicesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/invoices", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/invoices", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1328,7 +1328,7 @@ func invoicesCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
@@ -1362,7 +1362,7 @@ func invoicesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1376,7 +1376,7 @@ func invoicesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an invoice",
 				ArgsUsage: "<invoice-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
@@ -1388,7 +1388,7 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/invoices/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1399,7 +1399,7 @@ func invoicesCmd() *cli.Command {
 				Name:      "mark-sent",
 				Usage:     "Mark an invoice as sent",
 				ArgsUsage: "<invoice-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
@@ -1411,7 +1411,7 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/invoices/"+cmd.Args().First()+"/status/sent", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/invoices/"+cmd.Args().First()+"/status/sent", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1422,7 +1422,7 @@ func invoicesCmd() *cli.Command {
 				Name:      "mark-void",
 				Usage:     "Mark an invoice as void",
 				ArgsUsage: "<invoice-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
@@ -1434,7 +1434,7 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/invoices/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/invoices/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1445,7 +1445,7 @@ func invoicesCmd() *cli.Command {
 				Name:      "mark-draft",
 				Usage:     "Mark an invoice as draft",
 				ArgsUsage: "<invoice-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("invoice ID required")
 					}
@@ -1457,7 +1457,7 @@ func invoicesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/invoices/"+cmd.Args().First()+"/status/draft", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/invoices/"+cmd.Args().First()+"/status/draft", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1480,7 +1480,7 @@ func packagesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1491,7 +1491,7 @@ func packagesCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/packages",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -1506,7 +1506,7 @@ func packagesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/packages", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/packages", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1517,7 +1517,7 @@ func packagesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a package",
 				ArgsUsage: "<package-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("package ID required")
 					}
@@ -1529,7 +1529,7 @@ func packagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/packages/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/packages/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1546,7 +1546,7 @@ func packagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Package notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1565,7 +1565,7 @@ func packagesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/packages", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/packages", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1585,7 +1585,7 @@ func packagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Package notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("package ID required")
 					}
@@ -1610,7 +1610,7 @@ func packagesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/packages/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/packages/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1624,7 +1624,7 @@ func packagesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a package",
 				ArgsUsage: "<package-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("package ID required")
 					}
@@ -1636,7 +1636,7 @@ func packagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/packages/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/packages/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1659,7 +1659,7 @@ func shipmentOrdersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1670,7 +1670,7 @@ func shipmentOrdersCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/shipmentorders",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -1685,7 +1685,7 @@ func shipmentOrdersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/shipmentorders", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/shipmentorders", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1696,7 +1696,7 @@ func shipmentOrdersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a shipment order",
 				ArgsUsage: "<shipmentorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("shipment order ID required")
 					}
@@ -1708,7 +1708,7 @@ func shipmentOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/shipmentorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/shipmentorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1727,7 +1727,7 @@ func shipmentOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1750,7 +1750,7 @@ func shipmentOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/shipmentorders", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/shipmentorders", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1764,7 +1764,7 @@ func shipmentOrdersCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a shipment order",
 				ArgsUsage: "<shipmentorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("shipment order ID required")
 					}
@@ -1776,7 +1776,7 @@ func shipmentOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/shipmentorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/shipmentorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1799,7 +1799,7 @@ func purchaseOrdersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1810,7 +1810,7 @@ func purchaseOrdersCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/purchaseorders",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -1825,7 +1825,7 @@ func purchaseOrdersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/purchaseorders", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/purchaseorders", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1836,7 +1836,7 @@ func purchaseOrdersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a purchase order",
 				ArgsUsage: "<purchaseorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("purchase order ID required")
 					}
@@ -1848,7 +1848,7 @@ func purchaseOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/purchaseorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/purchaseorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1868,7 +1868,7 @@ func purchaseOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1900,7 +1900,7 @@ func purchaseOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/purchaseorders", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/purchaseorders", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1923,7 +1923,7 @@ func purchaseOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("purchase order ID required")
 					}
@@ -1957,7 +1957,7 @@ func purchaseOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/purchaseorders/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/purchaseorders/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1971,7 +1971,7 @@ func purchaseOrdersCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a purchase order",
 				ArgsUsage: "<purchaseorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("purchase order ID required")
 					}
@@ -1983,7 +1983,7 @@ func purchaseOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/purchaseorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/purchaseorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1994,7 +1994,7 @@ func purchaseOrdersCmd() *cli.Command {
 				Name:      "mark-issued",
 				Usage:     "Mark a purchase order as issued",
 				ArgsUsage: "<purchaseorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("purchase order ID required")
 					}
@@ -2006,7 +2006,7 @@ func purchaseOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/purchaseorders/"+cmd.Args().First()+"/status/issued", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/purchaseorders/"+cmd.Args().First()+"/status/issued", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2017,7 +2017,7 @@ func purchaseOrdersCmd() *cli.Command {
 				Name:      "mark-cancelled",
 				Usage:     "Mark a purchase order as cancelled",
 				ArgsUsage: "<purchaseorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("purchase order ID required")
 					}
@@ -2029,7 +2029,7 @@ func purchaseOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/purchaseorders/"+cmd.Args().First()+"/status/cancelled", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/purchaseorders/"+cmd.Args().First()+"/status/cancelled", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2052,7 +2052,7 @@ func billsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2063,7 +2063,7 @@ func billsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/bills",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -2078,7 +2078,7 @@ func billsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/bills", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/bills", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2089,7 +2089,7 @@ func billsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a bill",
 				ArgsUsage: "<bill-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("bill ID required")
 					}
@@ -2101,7 +2101,7 @@ func billsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/bills/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/bills/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2121,7 +2121,7 @@ func billsCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2153,7 +2153,7 @@ func billsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/bills", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/bills", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2177,7 +2177,7 @@ func billsCmd() *cli.Command {
 					&cli.StringFlag{Name: "terms", Usage: "Terms and conditions"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("bill ID required")
 					}
@@ -2214,7 +2214,7 @@ func billsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/bills/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/bills/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2228,7 +2228,7 @@ func billsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a bill",
 				ArgsUsage: "<bill-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("bill ID required")
 					}
@@ -2240,7 +2240,7 @@ func billsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/bills/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/bills/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2251,7 +2251,7 @@ func billsCmd() *cli.Command {
 				Name:      "mark-open",
 				Usage:     "Mark a bill as open",
 				ArgsUsage: "<bill-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("bill ID required")
 					}
@@ -2263,7 +2263,7 @@ func billsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/bills/"+cmd.Args().First()+"/status/open", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/bills/"+cmd.Args().First()+"/status/open", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2274,7 +2274,7 @@ func billsCmd() *cli.Command {
 				Name:      "mark-void",
 				Usage:     "Mark a bill as void",
 				ArgsUsage: "<bill-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("bill ID required")
 					}
@@ -2286,7 +2286,7 @@ func billsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/bills/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/bills/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2309,7 +2309,7 @@ func vendorCreditsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2320,7 +2320,7 @@ func vendorCreditsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/vendorcredits",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -2335,7 +2335,7 @@ func vendorCreditsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/vendorcredits", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/vendorcredits", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2346,7 +2346,7 @@ func vendorCreditsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a vendor credit",
 				ArgsUsage: "<vendorcredit-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("vendor credit ID required")
 					}
@@ -2358,7 +2358,7 @@ func vendorCreditsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/vendorcredits/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/vendorcredits/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2376,7 +2376,7 @@ func vendorCreditsCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2402,7 +2402,7 @@ func vendorCreditsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/vendorcredits", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/vendorcredits", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2424,7 +2424,7 @@ func vendorCreditsCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("vendor credit ID required")
 					}
@@ -2455,7 +2455,7 @@ func vendorCreditsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/vendorcredits/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/vendorcredits/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2469,7 +2469,7 @@ func vendorCreditsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a vendor credit",
 				ArgsUsage: "<vendorcredit-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("vendor credit ID required")
 					}
@@ -2481,7 +2481,7 @@ func vendorCreditsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/vendorcredits/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/vendorcredits/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2492,7 +2492,7 @@ func vendorCreditsCmd() *cli.Command {
 				Name:      "mark-open",
 				Usage:     "Convert a vendor credit to open",
 				ArgsUsage: "<vendorcredit-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("vendor credit ID required")
 					}
@@ -2504,7 +2504,7 @@ func vendorCreditsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/vendorcredits/"+cmd.Args().First()+"/status/open", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/vendorcredits/"+cmd.Args().First()+"/status/open", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2515,7 +2515,7 @@ func vendorCreditsCmd() *cli.Command {
 				Name:      "mark-void",
 				Usage:     "Void a vendor credit",
 				ArgsUsage: "<vendorcredit-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("vendor credit ID required")
 					}
@@ -2527,7 +2527,7 @@ func vendorCreditsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/vendorcredits/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/vendorcredits/"+cmd.Args().First()+"/status/void", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2550,7 +2550,7 @@ func priceListsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2561,7 +2561,7 @@ func priceListsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/pricebooks",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -2576,7 +2576,7 @@ func priceListsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/pricebooks", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/pricebooks", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2587,7 +2587,7 @@ func priceListsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a price list",
 				ArgsUsage: "<pricebook-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("price list ID required")
 					}
@@ -2599,7 +2599,7 @@ func priceListsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/pricebooks/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/pricebooks/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2616,7 +2616,7 @@ func priceListsCmd() *cli.Command {
 					&cli.StringFlag{Name: "type", Usage: "Pricebook type"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2639,7 +2639,7 @@ func priceListsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/pricebooks", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/pricebooks", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2659,7 +2659,7 @@ func priceListsCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_id", Usage: "Currency ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("price list ID required")
 					}
@@ -2684,7 +2684,7 @@ func priceListsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/pricebooks/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/pricebooks/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2698,7 +2698,7 @@ func priceListsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a price list",
 				ArgsUsage: "<pricebook-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("price list ID required")
 					}
@@ -2710,7 +2710,7 @@ func priceListsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/pricebooks/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/pricebooks/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2721,7 +2721,7 @@ func priceListsCmd() *cli.Command {
 				Name:      "mark-active",
 				Usage:     "Mark a price list as active",
 				ArgsUsage: "<pricebook-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("price list ID required")
 					}
@@ -2733,7 +2733,7 @@ func priceListsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/pricebooks/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/pricebooks/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2744,7 +2744,7 @@ func priceListsCmd() *cli.Command {
 				Name:      "mark-inactive",
 				Usage:     "Mark a price list as inactive",
 				ArgsUsage: "<pricebook-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("price list ID required")
 					}
@@ -2756,7 +2756,7 @@ func priceListsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/pricebooks/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/pricebooks/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2779,7 +2779,7 @@ func warehousesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2790,7 +2790,7 @@ func warehousesCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/settings/warehouses",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -2805,7 +2805,7 @@ func warehousesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/settings/warehouses", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/settings/warehouses", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -2816,7 +2816,7 @@ func warehousesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a warehouse",
 				ArgsUsage: "<warehouse-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("warehouse ID required")
 					}
@@ -2828,7 +2828,7 @@ func warehousesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2847,7 +2847,7 @@ func warehousesCmd() *cli.Command {
 					&cli.StringFlag{Name: "zip", Usage: "ZIP/postal code"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2876,7 +2876,7 @@ func warehousesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/settings/warehouses", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/settings/warehouses", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2899,7 +2899,7 @@ func warehousesCmd() *cli.Command {
 					&cli.StringFlag{Name: "zip", Usage: "ZIP/postal code"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("warehouse ID required")
 					}
@@ -2933,7 +2933,7 @@ func warehousesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -2947,7 +2947,7 @@ func warehousesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a warehouse",
 				ArgsUsage: "<warehouse-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("warehouse ID required")
 					}
@@ -2959,7 +2959,7 @@ func warehousesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2970,7 +2970,7 @@ func warehousesCmd() *cli.Command {
 				Name:      "mark-active",
 				Usage:     "Mark a warehouse as active",
 				ArgsUsage: "<warehouse-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("warehouse ID required")
 					}
@@ -2982,7 +2982,7 @@ func warehousesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -2993,7 +2993,7 @@ func warehousesCmd() *cli.Command {
 				Name:      "mark-inactive",
 				Usage:     "Mark a warehouse as inactive",
 				ArgsUsage: "<warehouse-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("warehouse ID required")
 					}
@@ -3005,7 +3005,7 @@ func warehousesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/settings/warehouses/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3028,7 +3028,7 @@ func transferOrdersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3039,7 +3039,7 @@ func transferOrdersCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/transferorders",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -3054,7 +3054,7 @@ func transferOrdersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/transferorders", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/transferorders", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -3065,7 +3065,7 @@ func transferOrdersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a transfer order",
 				ArgsUsage: "<transferorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("transfer order ID required")
 					}
@@ -3077,7 +3077,7 @@ func transferOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/transferorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/transferorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3095,7 +3095,7 @@ func transferOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3119,7 +3119,7 @@ func transferOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/transferorders", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/transferorders", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3140,7 +3140,7 @@ func transferOrdersCmd() *cli.Command {
 					&cli.StringFlag{Name: "notes", Usage: "Notes"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("transfer order ID required")
 					}
@@ -3168,7 +3168,7 @@ func transferOrdersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/transferorders/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/transferorders/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3182,7 +3182,7 @@ func transferOrdersCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a transfer order",
 				ArgsUsage: "<transferorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("transfer order ID required")
 					}
@@ -3194,7 +3194,7 @@ func transferOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/transferorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/transferorders/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3205,7 +3205,7 @@ func transferOrdersCmd() *cli.Command {
 				Name:      "mark-received",
 				Usage:     "Mark a transfer order as received",
 				ArgsUsage: "<transferorder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("transfer order ID required")
 					}
@@ -3217,7 +3217,7 @@ func transferOrdersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/transferorders/"+cmd.Args().First()+"/received", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/transferorders/"+cmd.Args().First()+"/received", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3240,7 +3240,7 @@ func adjustmentsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3251,7 +3251,7 @@ func adjustmentsCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/inventoryadjustments",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -3266,7 +3266,7 @@ func adjustmentsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/inventoryadjustments", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/inventoryadjustments", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -3277,7 +3277,7 @@ func adjustmentsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an inventory adjustment",
 				ArgsUsage: "<adjustment-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("adjustment ID required")
 					}
@@ -3289,7 +3289,7 @@ func adjustmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/inventoryadjustments/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/inventoryadjustments/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3307,7 +3307,7 @@ func adjustmentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3331,7 +3331,7 @@ func adjustmentsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/inventoryadjustments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/inventoryadjustments", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3345,7 +3345,7 @@ func adjustmentsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an inventory adjustment",
 				ArgsUsage: "<adjustment-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("adjustment ID required")
 					}
@@ -3357,7 +3357,7 @@ func adjustmentsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/inventoryadjustments/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/inventoryadjustments/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3376,12 +3376,12 @@ func organizationsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List organizations",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/organizations", nil)
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/organizations", nil)
 					if err != nil {
 						return err
 					}
@@ -3392,7 +3392,7 @@ func organizationsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an organization",
 				ArgsUsage: "<org-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("organization ID required")
 					}
@@ -3400,7 +3400,7 @@ func organizationsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/organizations/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/organizations/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -3419,7 +3419,7 @@ func currenciesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List currencies",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3428,7 +3428,7 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/settings/currencies", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/settings/currencies", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3439,7 +3439,7 @@ func currenciesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a currency",
 				ArgsUsage: "<currency-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("currency ID required")
 					}
@@ -3451,7 +3451,7 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3467,7 +3467,7 @@ func currenciesCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3487,7 +3487,7 @@ func currenciesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/settings/currencies", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/settings/currencies", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3507,7 +3507,7 @@ func currenciesCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_format", Usage: "Currency format"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("currency ID required")
 					}
@@ -3532,7 +3532,7 @@ func currenciesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3546,7 +3546,7 @@ func currenciesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a currency",
 				ArgsUsage: "<currency-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("currency ID required")
 					}
@@ -3558,7 +3558,7 @@ func currenciesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/settings/currencies/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3581,7 +3581,7 @@ func taxesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3592,7 +3592,7 @@ func taxesCmd() *cli.Command {
 					}
 					params := orgParams(orgID)
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.InventoryBase+"/settings/taxes",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -3607,7 +3607,7 @@ func taxesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/settings/taxes", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/settings/taxes", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -3618,7 +3618,7 @@ func taxesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a tax",
 				ArgsUsage: "<tax-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("tax ID required")
 					}
@@ -3630,7 +3630,7 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3646,7 +3646,7 @@ func taxesCmd() *cli.Command {
 					&cli.StringFlag{Name: "tax_type", Usage: "Tax type"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3664,7 +3664,7 @@ func taxesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.InventoryBase+"/settings/taxes", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.InventoryBase+"/settings/taxes", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3684,7 +3684,7 @@ func taxesCmd() *cli.Command {
 					&cli.StringFlag{Name: "tax_type", Usage: "Tax type"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("tax ID required")
 					}
@@ -3709,7 +3709,7 @@ func taxesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.InventoryBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.InventoryBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -3723,7 +3723,7 @@ func taxesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a tax",
 				ArgsUsage: "<tax-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("tax ID required")
 					}
@@ -3735,7 +3735,7 @@ func taxesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.InventoryBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.InventoryBase+"/settings/taxes/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3754,7 +3754,7 @@ func usersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List users",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3763,7 +3763,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/users", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/users", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3774,7 +3774,7 @@ func usersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a user",
 				ArgsUsage: "<user-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("user ID required")
 					}
@@ -3786,7 +3786,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/users/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/users/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -3796,7 +3796,7 @@ func usersCmd() *cli.Command {
 			{
 				Name:  "get-current",
 				Usage: "Get current user",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -3805,7 +3805,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.InventoryBase+"/users/me", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.InventoryBase+"/users/me", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}

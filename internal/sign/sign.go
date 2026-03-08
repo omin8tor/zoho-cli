@@ -42,7 +42,7 @@ func requestsCmd() *cli.Command {
 					&cli.StringFlag{Name: "sort-column", Usage: "Sort field (e.g. created_time)"},
 					&cli.StringFlag{Name: "sort-order", Usage: "ASC or DESC"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -62,7 +62,7 @@ func requestsCmd() *cli.Command {
 							j, _ := json.Marshal(map[string]any{"page_context": pc})
 							p["data"] = string(j)
 						}
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.SignBase + "/requests",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -88,7 +88,7 @@ func requestsCmd() *cli.Command {
 						j, _ := json.Marshal(map[string]any{"page_context": pc})
 						params["data"] = string(j)
 					}
-					raw, err := c.Request("GET", c.SignBase+"/requests", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/requests", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -101,7 +101,7 @@ func requestsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a sign request",
 				ArgsUsage: "<request-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -110,7 +110,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.SignBase+"/requests/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/requests/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -124,7 +124,7 @@ func requestsCmd() *cli.Command {
 					&cli.StringFlag{Name: "file", Required: true, Usage: "Path to document file"},
 					&cli.StringFlag{Name: "data", Required: true, Usage: "JSON data for the request"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -134,7 +134,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("failed to read file: %w", err)
 					}
-					raw, err := c.Request("POST", c.SignBase+"/requests", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/requests", &zohttp.RequestOpts{
 						Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}},
 						Form:  map[string]string{"data": cmd.String("data")},
 					})
@@ -151,7 +151,7 @@ func requestsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Required: true, Usage: "JSON data for the update"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -160,7 +160,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.SignBase+"/requests/"+id, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.SignBase+"/requests/"+id, &zohttp.RequestOpts{
 						Form: map[string]string{"data": cmd.String("data")},
 					})
 					if err != nil {
@@ -176,7 +176,7 @@ func requestsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Required: true, Usage: "JSON data with fields and actions"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -185,7 +185,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/requests/"+id+"/submit", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/requests/"+id+"/submit", &zohttp.RequestOpts{
 						Form: map[string]string{"data": cmd.String("data")},
 					})
 					if err != nil {
@@ -202,7 +202,7 @@ func requestsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "recall-inprogress", Usage: "Recall if document is in progress"},
 					&cli.StringFlag{Name: "reason", Usage: "Reason for recalling"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -222,7 +222,7 @@ func requestsCmd() *cli.Command {
 					if len(form) > 0 {
 						opts = &zohttp.RequestOpts{Form: form}
 					}
-					raw, err := c.Request("PUT", c.SignBase+"/requests/"+id+"/delete", opts)
+					raw, err := c.Request(ctx, "PUT", c.SignBase+"/requests/"+id+"/delete", opts)
 					if err != nil {
 						return err
 					}
@@ -233,7 +233,7 @@ func requestsCmd() *cli.Command {
 				Name:      "recall",
 				Usage:     "Recall a sign request",
 				ArgsUsage: "<request-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -242,7 +242,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/requests/"+id+"/recall", nil)
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/requests/"+id+"/recall", nil)
 					if err != nil {
 						return err
 					}
@@ -253,7 +253,7 @@ func requestsCmd() *cli.Command {
 				Name:      "remind",
 				Usage:     "Send reminder for a sign request",
 				ArgsUsage: "<request-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -262,7 +262,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/requests/"+id+"/remind", nil)
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/requests/"+id+"/remind", nil)
 					if err != nil {
 						return err
 					}
@@ -276,7 +276,7 @@ func requestsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "expire-by", Required: true, Usage: "New expiration date"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -285,7 +285,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.SignBase+"/requests/"+id+"/extend", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.SignBase+"/requests/"+id+"/extend", &zohttp.RequestOpts{
 						Form: map[string]string{"expire_by": cmd.String("expire-by")},
 					})
 					if err != nil {
@@ -298,7 +298,7 @@ func requestsCmd() *cli.Command {
 				Name:      "correct",
 				Usage:     "Mark a sign request for correction",
 				ArgsUsage: "<request-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -307,7 +307,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/requests/"+id+"/markforcorrection", nil)
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/requests/"+id+"/markforcorrection", nil)
 					if err != nil {
 						return err
 					}
@@ -321,7 +321,7 @@ func requestsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -330,7 +330,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.SignBase+"/requests/"+id+"/pdf", nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.SignBase+"/requests/"+id+"/pdf", nil)
 					if err != nil {
 						return err
 					}
@@ -351,7 +351,7 @@ func requestsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					docID := cmd.Args().Get(1)
 					if id == "" || docID == "" {
@@ -361,7 +361,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.SignBase+"/requests/"+id+"/documents/"+docID+"/pdf", nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.SignBase+"/requests/"+id+"/documents/"+docID+"/pdf", nil)
 					if err != nil {
 						return err
 					}
@@ -382,7 +382,7 @@ func requestsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -391,7 +391,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.SignBase+"/requests/"+id+"/completioncertificate", nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.SignBase+"/requests/"+id+"/completioncertificate", nil)
 					if err != nil {
 						return err
 					}
@@ -409,7 +409,7 @@ func requestsCmd() *cli.Command {
 				Name:      "field-data",
 				Usage:     "Get form field data for a sign request",
 				ArgsUsage: "<request-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("request-id argument required")
@@ -418,7 +418,7 @@ func requestsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.SignBase+"/requests/"+id+"/fielddata", nil)
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/requests/"+id+"/fielddata", nil)
 					if err != nil {
 						return err
 					}
@@ -443,7 +443,7 @@ func templatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "sort-column", Usage: "Sort field"},
 					&cli.StringFlag{Name: "sort-order", Usage: "ASC or DESC"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -463,7 +463,7 @@ func templatesCmd() *cli.Command {
 							j, _ := json.Marshal(map[string]any{"page_context": pc})
 							p["data"] = string(j)
 						}
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.SignBase + "/templates",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -489,7 +489,7 @@ func templatesCmd() *cli.Command {
 						j, _ := json.Marshal(map[string]any{"page_context": pc})
 						params["data"] = string(j)
 					}
-					raw, err := c.Request("GET", c.SignBase+"/templates", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/templates", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -502,7 +502,7 @@ func templatesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a template",
 				ArgsUsage: "<template-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("template-id argument required")
@@ -511,7 +511,7 @@ func templatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.SignBase+"/templates/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/templates/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -525,7 +525,7 @@ func templatesCmd() *cli.Command {
 					&cli.StringFlag{Name: "file", Required: true, Usage: "Path to document file"},
 					&cli.StringFlag{Name: "data", Required: true, Usage: "JSON data for the template"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -535,7 +535,7 @@ func templatesCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("failed to read file: %w", err)
 					}
-					raw, err := c.Request("POST", c.SignBase+"/templates", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/templates", &zohttp.RequestOpts{
 						Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}},
 						Form:  map[string]string{"data": cmd.String("data")},
 					})
@@ -552,7 +552,7 @@ func templatesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Required: true, Usage: "JSON data with recipients and fields"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("template-id argument required")
@@ -561,7 +561,7 @@ func templatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/templates/"+id+"/createdocument", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/templates/"+id+"/createdocument", &zohttp.RequestOpts{
 						Form: map[string]string{"data": cmd.String("data")},
 					})
 					if err != nil {
@@ -574,7 +574,7 @@ func templatesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a template",
 				ArgsUsage: "<template-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("template-id argument required")
@@ -583,7 +583,7 @@ func templatesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.SignBase+"/templates/"+id+"/delete", nil)
+					raw, err := c.Request(ctx, "PUT", c.SignBase+"/templates/"+id+"/delete", nil)
 					if err != nil {
 						return err
 					}
@@ -602,12 +602,12 @@ func foldersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List folders",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.SignBase+"/folders", nil)
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/folders", nil)
 					if err != nil {
 						return err
 					}
@@ -620,12 +620,12 @@ func foldersCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Folder name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/folders", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/folders", &zohttp.RequestOpts{
 						Form: map[string]string{"folder_name": cmd.String("name")},
 					})
 					if err != nil {
@@ -642,12 +642,12 @@ func fieldTypesCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "field-types",
 		Usage: "List available field types",
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
-			raw, err := c.Request("GET", c.SignBase+"/fieldtypes", nil)
+			raw, err := c.Request(ctx, "GET", c.SignBase+"/fieldtypes", nil)
 			if err != nil {
 				return err
 			}
@@ -664,12 +664,12 @@ func requestTypesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List request types",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.SignBase+"/requesttypes", nil)
+					raw, err := c.Request(ctx, "GET", c.SignBase+"/requesttypes", nil)
 					if err != nil {
 						return err
 					}
@@ -682,12 +682,12 @@ func requestTypesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "data", Required: true, Usage: "JSON data for the request type"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.SignBase+"/requesttypes", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.SignBase+"/requesttypes", &zohttp.RequestOpts{
 						Form: map[string]string{"data": cmd.String("data")},
 					})
 					if err != nil {

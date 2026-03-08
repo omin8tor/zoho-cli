@@ -20,7 +20,7 @@ func eventsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List events",
 				Flags: []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -30,7 +30,7 @@ func eventsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -42,7 +42,7 @@ func eventsCmd() *cli.Command {
 				Usage:     "Get an event",
 				ArgsUsage: "<event-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -52,7 +52,7 @@ func eventsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -69,7 +69,7 @@ func eventsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ends-at", Usage: "End datetime (ISO 8601)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -89,7 +89,7 @@ func eventsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -107,7 +107,7 @@ func eventsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ends-at", Usage: "End datetime (ISO 8601)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -130,7 +130,7 @@ func eventsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -142,7 +142,7 @@ func eventsCmd() *cli.Command {
 				Usage:     "Delete an event",
 				ArgsUsage: "<event-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -152,7 +152,7 @@ func eventsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					raw, err := c.Request(ctx, "DELETE", url, nil)
 					if err != nil {
 						return err
 					}
@@ -175,7 +175,7 @@ func eventCommentsCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "event", Required: true, Usage: "Event ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -185,7 +185,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments"
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -200,7 +200,7 @@ func eventCommentsCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "event", Required: true, Usage: "Event ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -210,7 +210,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -225,7 +225,7 @@ func eventCommentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "event", Required: true, Usage: "Event ID"},
 					&cli.StringFlag{Name: "comment", Required: true, Usage: "Comment text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -235,7 +235,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -251,7 +251,7 @@ func eventCommentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "event", Required: true, Usage: "Event ID"},
 					&cli.StringFlag{Name: "comment", Required: true, Usage: "Updated comment text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -261,7 +261,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
+					raw, err := c.Request(ctx, "PATCH", url, &zohttp.RequestOpts{JSON: map[string]string{"content": cmd.String("comment")}})
 					if err != nil {
 						return err
 					}
@@ -276,7 +276,7 @@ func eventCommentsCmd() *cli.Command {
 					portalFlag, projectFlag,
 					&cli.StringFlag{Name: "event", Required: true, Usage: "Event ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -286,7 +286,7 @@ func eventCommentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/events/" + cmd.String("event") + "/comments/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					raw, err := c.Request(ctx, "DELETE", url, nil)
 					if err != nil {
 						return err
 					}
@@ -310,7 +310,7 @@ func attachmentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "type", Required: true, Usage: "Entity type (task, bug, forum)"},
 					&cli.StringFlag{Name: "entity-id", Required: true, Usage: "Entity ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -320,7 +320,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/attachments"
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{
 						Params: map[string]string{
 							"entity_type": cmd.String("type"),
 							"entity_id":   cmd.String("entity-id"),
@@ -337,7 +337,7 @@ func attachmentsCmd() *cli.Command {
 				Usage:     "Get a project attachment",
 				ArgsUsage: "<attachment-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -347,7 +347,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/attachments/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -361,7 +361,7 @@ func attachmentsCmd() *cli.Command {
 					portalFlag,
 					&cli.StringFlag{Name: "file", Required: true, Usage: "File path to upload"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -381,7 +381,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/attachments"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{
 						Files: map[string]zohttp.FileUpload{
 							"file": {Filename: filepath.Base(path), Data: fileBytes},
 						},
@@ -401,7 +401,7 @@ func attachmentsCmd() *cli.Command {
 					&cli.StringFlag{Name: "type", Required: true, Usage: "Entity type (task, issue, etc.)"},
 					&cli.StringFlag{Name: "entity-id", Required: true, Usage: "Entity ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -411,7 +411,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/attachments/" + cmd.Args().First()
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{
 						Form: map[string]string{
 							"entity_type": cmd.String("type"),
 							"entity_id":   cmd.String("entity-id"),
@@ -428,7 +428,7 @@ func attachmentsCmd() *cli.Command {
 				Usage:     "Dissociate an attachment from a project",
 				ArgsUsage: "<attachment-id>",
 				Flags:     []cli.Flag{portalFlag, projectFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -438,7 +438,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					url := base(c, portal, cmd.String("project")) + "/attachments/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					raw, err := c.Request(ctx, "DELETE", url, nil)
 					if err != nil {
 						return err
 					}

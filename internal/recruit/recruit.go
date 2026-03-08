@@ -39,12 +39,12 @@ func modulesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List available modules",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/settings/modules", nil)
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/settings/modules", nil)
 					if err != nil {
 						return err
 					}
@@ -55,7 +55,7 @@ func modulesCmd() *cli.Command {
 				Name:      "fields",
 				Usage:     "List fields for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -63,7 +63,7 @@ func modulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/settings/fields", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/settings/fields", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -76,7 +76,7 @@ func modulesCmd() *cli.Command {
 				Name:      "layouts",
 				Usage:     "List layouts for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -84,7 +84,7 @@ func modulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/settings/layouts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/settings/layouts", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -113,7 +113,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -132,7 +132,7 @@ func recordsCmd() *cli.Command {
 						params["sort_order"] = s
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.RecruitBase + "/" + cmd.Args().First(),
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -147,7 +147,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -158,7 +158,7 @@ func recordsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a single record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module name and record ID required")
 					}
@@ -166,7 +166,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/"+cmd.Args().Get(0)+"/"+cmd.Args().Get(1), nil)
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+cmd.Args().Get(0)+"/"+cmd.Args().Get(1), nil)
 					if err != nil {
 						return err
 					}
@@ -180,7 +180,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Record data as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -193,7 +193,7 @@ func recordsCmd() *cli.Command {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
 					body := map[string]any{"data": []any{parsed}}
-					raw, err := c.Request("POST", c.RecruitBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.RecruitBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -207,7 +207,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module name and record ID required")
 					}
@@ -220,7 +220,7 @@ func recordsCmd() *cli.Command {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
 					body := map[string]any{"data": []any{parsed}}
-					raw, err := c.Request("PUT", c.RecruitBase+"/"+cmd.Args().Get(0)+"/"+cmd.Args().Get(1), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.RecruitBase+"/"+cmd.Args().Get(0)+"/"+cmd.Args().Get(1), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -231,7 +231,7 @@ func recordsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module name and record ID required")
 					}
@@ -240,7 +240,7 @@ func recordsCmd() *cli.Command {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("DELETE", c.RecruitBase+"/"+module, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "DELETE", c.RecruitBase+"/"+module, &zohttp.RequestOpts{
 						Params: map[string]string{"ids": recordID},
 					})
 					if err != nil {
@@ -261,7 +261,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all results"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -280,7 +280,7 @@ func recordsCmd() *cli.Command {
 						params["word"] = v
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.RecruitBase + "/" + cmd.Args().First() + "/search",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -295,7 +295,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/"+cmd.Args().First()+"/search", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+cmd.Args().First()+"/search", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -315,7 +315,7 @@ func notesCmd() *cli.Command {
 				Name:      "list",
 				Usage:     "List notes on a record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module name and record ID required")
 					}
@@ -324,7 +324,7 @@ func notesCmd() *cli.Command {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("GET", c.RecruitBase+"/"+module+"/"+recordID+"/Notes", nil)
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+module+"/"+recordID+"/Notes", nil)
 					if err != nil {
 						return err
 					}
@@ -337,7 +337,7 @@ func notesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Note data as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -347,7 +347,7 @@ func notesCmd() *cli.Command {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
 					body := map[string]any{"data": []any{parsed}}
-					raw, err := c.Request("POST", c.RecruitBase+"/Notes", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.RecruitBase+"/Notes", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -358,7 +358,7 @@ func notesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a note",
 				ArgsUsage: "<note-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("note ID required")
 					}
@@ -366,7 +366,7 @@ func notesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.RecruitBase+"/Notes/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "DELETE", c.RecruitBase+"/Notes/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -386,7 +386,7 @@ func attachmentsCmd() *cli.Command {
 				Name:      "list",
 				Usage:     "List attachments on a record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module name and record ID required")
 					}
@@ -395,7 +395,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("GET", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments", nil)
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments", nil)
 					if err != nil {
 						return err
 					}
@@ -409,7 +409,7 @@ func attachmentsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "category", Usage: "Attachment category (e.g. Resume, Cover Letter, Offer, Others)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module name, record ID, and file path required")
 					}
@@ -430,7 +430,7 @@ func attachmentsCmd() *cli.Command {
 					if v := cmd.String("category"); v != "" {
 						params["attachments_category"] = v
 					}
-					raw, err := c.Request("POST", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
 						Params: params,
 						Files:  map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
 					})
@@ -447,7 +447,7 @@ func attachmentsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module name, record ID, and attachment ID required")
 					}
@@ -457,7 +457,7 @@ func attachmentsCmd() *cli.Command {
 					}
 					module, recordID, attID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
 					url := c.RecruitBase + "/" + module + "/" + recordID + "/Attachments/" + attID
-					body, _, _, err := c.RequestRaw("GET", url, nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -475,7 +475,7 @@ func attachmentsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an attachment",
 				ArgsUsage: "<module> <record-id> <attachment-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module name, record ID, and attachment ID required")
 					}
@@ -484,7 +484,7 @@ func attachmentsCmd() *cli.Command {
 						return err
 					}
 					module, recordID, attID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
-					raw, err := c.Request("DELETE", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments/"+attID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.RecruitBase+"/"+module+"/"+recordID+"/Attachments/"+attID, nil)
 					if err != nil {
 						return err
 					}
@@ -506,12 +506,12 @@ func tagsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "module", Required: true, Usage: "Module API name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/settings/tags", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/settings/tags", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.String("module")},
 					})
 					if err != nil {
@@ -527,7 +527,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "module", Required: true, Usage: "Module API name"},
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Tags data as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -537,7 +537,7 @@ func tagsCmd() *cli.Command {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
 					body := map[string]any{"tags": []any{parsed}}
-					raw, err := c.Request("POST", c.RecruitBase+"/settings/tags", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.RecruitBase+"/settings/tags", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.String("module")},
 						JSON:   body,
 					})
@@ -555,7 +555,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ids", Required: true, Usage: "Comma-separated record IDs"},
 					&cli.StringFlag{Name: "tag-names", Required: true, Usage: "Comma-separated tag names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -563,7 +563,7 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.RecruitBase+"/"+cmd.Args().First()+"/actions/add_tags", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.RecruitBase+"/"+cmd.Args().First()+"/actions/add_tags", &zohttp.RequestOpts{
 						Params: map[string]string{
 							"tag_names": cmd.String("tag-names"),
 							"ids":       cmd.String("ids"),
@@ -583,7 +583,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ids", Required: true, Usage: "Comma-separated record IDs"},
 					&cli.StringFlag{Name: "tag-names", Required: true, Usage: "Comma-separated tag names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("module name required")
 					}
@@ -591,7 +591,7 @@ func tagsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.RecruitBase+"/"+cmd.Args().First()+"/actions/remove_tags", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.RecruitBase+"/"+cmd.Args().First()+"/actions/remove_tags", &zohttp.RequestOpts{
 						Params: map[string]string{
 							"tag_names": cmd.String("tag-names"),
 							"ids":       cmd.String("ids"),
@@ -620,7 +620,7 @@ func associateCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("module name and record ID required")
 					}
@@ -631,7 +631,7 @@ func associateCmd() *cli.Command {
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
 					params := map[string]string{}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.RecruitBase + "/" + module + "/" + recordID + "/associate",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -646,7 +646,7 @@ func associateCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/"+module+"/"+recordID+"/associate", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+module+"/"+recordID+"/associate", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -670,7 +670,7 @@ func relatedCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("module name, record ID, and related module required")
 					}
@@ -681,7 +681,7 @@ func relatedCmd() *cli.Command {
 					module, recordID, relModule := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
 					params := map[string]string{}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.RecruitBase + "/" + module + "/" + recordID + "/" + relModule,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -696,7 +696,7 @@ func relatedCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/"+module+"/"+recordID+"/"+relModule, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/"+module+"/"+recordID+"/"+relModule, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -718,12 +718,12 @@ func usersCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "type", Value: "AllUsers", Usage: "User type filter"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.RecruitBase+"/users", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.RecruitBase+"/users", &zohttp.RequestOpts{
 						Params: map[string]string{"type": cmd.String("type")},
 					})
 					if err != nil {

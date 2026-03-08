@@ -47,12 +47,12 @@ func teamsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List teams",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.SprintsBase+"/teams/", nil)
+					raw, err := c.Request(ctx, "GET", c.SprintsBase+"/teams/", nil)
 					if err != nil {
 						return err
 					}
@@ -75,7 +75,7 @@ func projectsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -86,7 +86,7 @@ func projectsCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -101,7 +101,7 @@ func projectsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -112,7 +112,7 @@ func projectsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a project",
 				ArgsUsage: "<project-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -124,7 +124,7 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", nil)
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -144,7 +144,7 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -172,7 +172,7 @@ func projectsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, form); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/", &zohttp.RequestOpts{
 						Form: form,
 					})
 					if err != nil {
@@ -194,7 +194,7 @@ func projectsCmd() *cli.Command {
 					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -228,7 +228,7 @@ func projectsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, form); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", &zohttp.RequestOpts{
 						Form: form,
 					})
 					if err != nil {
@@ -241,7 +241,7 @@ func projectsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a project",
 				ArgsUsage: "<project-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -253,7 +253,7 @@ func projectsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", nil)
+					raw, err := c.Request(ctx, "DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -278,7 +278,7 @@ func sprintsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -297,7 +297,7 @@ func sprintsCmd() *cli.Command {
 						params["type"] = "[" + v + "]"
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/sprints/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -312,7 +312,7 @@ func sprintsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/sprints/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/sprints/", &zohttp.RequestOpts{
 						Params: params,
 					})
 					if err != nil {
@@ -325,7 +325,7 @@ func sprintsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a sprint",
 				ArgsUsage: "<project-id> <sprint-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint ID required")
 					}
@@ -337,7 +337,7 @@ func sprintsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", nil)
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -358,7 +358,7 @@ func sprintsCmd() *cli.Command {
 					&cli.StringFlag{Name: "users", Usage: "User IDs as JSON array"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -387,7 +387,7 @@ func sprintsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, form); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/sprints/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/sprints/", &zohttp.RequestOpts{
 						Form: form,
 					})
 					if err != nil {
@@ -409,7 +409,7 @@ func sprintsCmd() *cli.Command {
 					&cli.StringFlag{Name: "scrummaster", Usage: "Scrum master user ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint ID required")
 					}
@@ -443,7 +443,7 @@ func sprintsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, form); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", &zohttp.RequestOpts{
 						Form: form,
 					})
 					if err != nil {
@@ -456,7 +456,7 @@ func sprintsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a sprint",
 				ArgsUsage: "<project-id> <sprint-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint ID required")
 					}
@@ -468,7 +468,7 @@ func sprintsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", nil)
+					raw, err := c.Request(ctx, "DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -492,7 +492,7 @@ func itemsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint/backlog ID required")
 					}
@@ -506,7 +506,7 @@ func itemsCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().Get(0) + "/sprints/" + cmd.Args().Get(1) + "/item/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -521,7 +521,7 @@ func itemsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -532,7 +532,7 @@ func itemsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a specific item",
 				ArgsUsage: "<project-id> <sprint-id> <item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("project ID, sprint ID, and item ID required")
 					}
@@ -544,7 +544,7 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", nil)
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -569,7 +569,7 @@ func itemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and sprint/backlog ID required")
 					}
@@ -612,7 +612,7 @@ func itemsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, form); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/", &zohttp.RequestOpts{
 						Form: form,
 					})
 					if err != nil {
@@ -637,7 +637,7 @@ func itemsCmd() *cli.Command {
 					&cli.StringFlag{Name: "enddate", Usage: "End date (ISO format)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("project ID, sprint ID, and item ID required")
 					}
@@ -680,7 +680,7 @@ func itemsCmd() *cli.Command {
 					if err := internal.MergeJSONForm(cmd, form); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", &zohttp.RequestOpts{
 						Form: form,
 					})
 					if err != nil {
@@ -693,7 +693,7 @@ func itemsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an item",
 				ArgsUsage: "<project-id> <sprint-id> <item-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 3 {
 						return internal.NewValidationError("project ID, sprint ID, and item ID required")
 					}
@@ -705,7 +705,7 @@ func itemsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", nil)
+					raw, err := c.Request(ctx, "DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/sprints/"+cmd.Args().Get(1)+"/item/"+cmd.Args().Get(2)+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -729,7 +729,7 @@ func epicsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -743,7 +743,7 @@ func epicsCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/epic/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -758,7 +758,7 @@ func epicsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -776,7 +776,7 @@ func epicsCmd() *cli.Command {
 					&cli.StringFlag{Name: "color", Usage: "Color code (hex format)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -802,7 +802,7 @@ func epicsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/epic/", &zohttp.RequestOpts{
 						JSON: body,
 					})
 					if err != nil {
@@ -822,7 +822,7 @@ func epicsCmd() *cli.Command {
 					&cli.StringFlag{Name: "color", Usage: "Color code (hex format)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and epic ID required")
 					}
@@ -850,7 +850,7 @@ func epicsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/epic/"+cmd.Args().Get(1)+"/", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/epic/"+cmd.Args().Get(1)+"/", &zohttp.RequestOpts{
 						JSON: body,
 					})
 					if err != nil {
@@ -863,7 +863,7 @@ func epicsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an epic",
 				ArgsUsage: "<project-id> <epic-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 2 {
 						return internal.NewValidationError("project ID and epic ID required")
 					}
@@ -875,7 +875,7 @@ func epicsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/epic/"+cmd.Args().Get(1)+"/", nil)
+					raw, err := c.Request(ctx, "DELETE", teamBase(c, teamID)+"/projects/"+cmd.Args().Get(0)+"/epic/"+cmd.Args().Get(1)+"/", nil)
 					if err != nil {
 						return err
 					}
@@ -899,7 +899,7 @@ func statusesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -913,7 +913,7 @@ func statusesCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/itemstatus/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -928,7 +928,7 @@ func statusesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemstatus/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemstatus/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -952,7 +952,7 @@ func itemTypesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -966,7 +966,7 @@ func itemTypesCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/itemtype/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -981,7 +981,7 @@ func itemTypesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemtype/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/itemtype/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1005,7 +1005,7 @@ func prioritiesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					if cmd.Args().Len() < 1 {
 						return internal.NewValidationError("project ID required")
 					}
@@ -1019,7 +1019,7 @@ func prioritiesCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/projects/" + cmd.Args().First() + "/priority/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -1034,7 +1034,7 @@ func prioritiesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/priority/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/projects/"+cmd.Args().First()+"/priority/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1057,7 +1057,7 @@ func membersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1068,7 +1068,7 @@ func membersCmd() *cli.Command {
 					}
 					params := map[string]string{"action": "data"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      teamBase(c, teamID) + "/users/",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -1083,7 +1083,7 @@ func membersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", teamBase(c, teamID)+"/users/", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", teamBase(c, teamID)+"/users/", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}

@@ -29,7 +29,7 @@ func bankAccountsCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_id", Usage: "Currency ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -50,7 +50,7 @@ func bankAccountsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/bankaccounts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/bankaccounts", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -67,7 +67,7 @@ func bankAccountsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -80,7 +80,7 @@ func bankAccountsCmd() *cli.Command {
 
 					if cmd.Bool("all") || cmd.IsSet("limit") {
 
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 
 							Client: c,
 
@@ -108,7 +108,7 @@ func bankAccountsCmd() *cli.Command {
 						return output.JSON(items)
 
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/bankaccounts", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/bankaccounts", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -126,7 +126,7 @@ func bankAccountsCmd() *cli.Command {
 					&cli.StringFlag{Name: "currency_id", Usage: "Currency ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -151,7 +151,7 @@ func bankAccountsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/bankaccounts/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/bankaccounts/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -165,7 +165,7 @@ func bankAccountsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a bank account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -174,7 +174,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/bankaccounts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/bankaccounts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -185,7 +185,7 @@ func bankAccountsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a bank account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -194,7 +194,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/bankaccounts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/bankaccounts/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -205,7 +205,7 @@ func bankAccountsCmd() *cli.Command {
 				Name:      "deactivate",
 				Usage:     "Deactivate a bank account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -214,7 +214,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/inactive", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -225,7 +225,7 @@ func bankAccountsCmd() *cli.Command {
 				Name:      "activate",
 				Usage:     "Activate a bank account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -234,7 +234,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/active", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -248,7 +248,7 @@ func bankAccountsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "file", Required: true, Usage: "File path to upload"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -261,7 +261,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("reading file: %w", err)
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/statement", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/statement", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						Files:  map[string]zohttp.FileUpload{"statement": {Filename: filepath.Base(cmd.String("file")), Data: data}},
 					})
@@ -275,7 +275,7 @@ func bankAccountsCmd() *cli.Command {
 				Name:      "get-last-statement",
 				Usage:     "Get last imported statement",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -284,7 +284,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/statement", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/statement", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -295,7 +295,7 @@ func bankAccountsCmd() *cli.Command {
 				Name:      "delete-last-statement",
 				Usage:     "Delete last imported statement",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -304,7 +304,7 @@ func bankAccountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/statement", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/bankaccounts/"+cmd.Args().First()+"/statement", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -340,7 +340,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "paid_through_account_id", Usage: "Paid through account ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -389,7 +389,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -408,7 +408,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Fetch all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Max total records to fetch"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -427,7 +427,7 @@ func bankTransactionsCmd() *cli.Command {
 
 					if cmd.Bool("all") || cmd.IsSet("limit") {
 
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 
 							Client: c,
 
@@ -455,7 +455,7 @@ func bankTransactionsCmd() *cli.Command {
 						return output.JSON(items)
 
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/banktransactions", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/banktransactions", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -483,7 +483,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "paid_through_account_id", Usage: "Paid through account ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -538,7 +538,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/banktransactions/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/banktransactions/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -552,7 +552,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a bank transaction",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -561,7 +561,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/banktransactions/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/banktransactions/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -572,7 +572,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a bank transaction",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -581,7 +581,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/banktransactions/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/banktransactions/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -599,7 +599,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "reference_number", Usage: "Reference number"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -624,7 +624,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/match", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/match", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -638,7 +638,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "get-matching",
 				Usage:     "Get matching transactions",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -647,7 +647,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/match", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/match", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -658,7 +658,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "unmatch",
 				Usage:     "Unmatch a bank transaction",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -667,7 +667,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/unmatch", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/unmatch", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -678,7 +678,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "exclude",
 				Usage:     "Exclude a bank transaction",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -687,7 +687,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/exclude", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/exclude", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -698,7 +698,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "restore",
 				Usage:     "Restore a bank transaction",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -707,7 +707,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/restore", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/restore", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -731,7 +731,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "tax_id", Usage: "Tax ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -774,7 +774,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -799,7 +799,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "tax_id", Usage: "Tax ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -836,7 +836,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/expense", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/expense", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -850,7 +850,7 @@ func bankTransactionsCmd() *cli.Command {
 				Name:      "uncategorize",
 				Usage:     "Uncategorize a bank transaction",
 				ArgsUsage: "<transaction-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -859,7 +859,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/uncategorize", &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/uncategorize", &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -879,7 +879,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -910,7 +910,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/vendorpayment", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/vendorpayment", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -933,7 +933,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -964,7 +964,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/customerpayment", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/customerpayment", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -988,7 +988,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1022,7 +1022,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/creditnoterefund", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/creditnoterefund", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1046,7 +1046,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1080,7 +1080,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/vendorcreditrefund", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/vendorcreditrefund", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1104,7 +1104,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1138,7 +1138,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/customerpaymentrefund", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/customerpaymentrefund", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1162,7 +1162,7 @@ func bankTransactionsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1196,7 +1196,7 @@ func bankTransactionsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/vendorpaymentrefund", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/banktransactions/"+cmd.Args().First()+"/categorize/vendorpaymentrefund", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1230,7 +1230,7 @@ func bankRulesCmd() *cli.Command {
 					&cli.StringFlag{Name: "tax_id", Usage: "Tax ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1272,7 +1272,7 @@ func bankRulesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/bankrules", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/bankrules", &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1288,7 +1288,7 @@ func bankRulesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "account-id", Usage: "Filter"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1301,7 +1301,7 @@ func bankRulesCmd() *cli.Command {
 					if v := cmd.String("account-id"); v != "" {
 						params["account_id"] = v
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/bankrules", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/bankrules", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -1324,7 +1324,7 @@ func bankRulesCmd() *cli.Command {
 					&cli.StringFlag{Name: "tax_id", Usage: "Tax ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1368,7 +1368,7 @@ func bankRulesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/bankrules/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/bankrules/"+cmd.Args().First(), &zohttp.RequestOpts{
 						Params: orgParams(orgID),
 						JSON:   body,
 					})
@@ -1382,7 +1382,7 @@ func bankRulesCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a bank rule",
 				ArgsUsage: "<rule-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1391,7 +1391,7 @@ func bankRulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/bankrules/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/bankrules/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}
@@ -1402,7 +1402,7 @@ func bankRulesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a bank rule",
 				ArgsUsage: "<rule-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1411,7 +1411,7 @@ func bankRulesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.BooksBase+"/bankrules/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
+					raw, err := c.Request(ctx, "DELETE", c.BooksBase+"/bankrules/"+cmd.Args().First(), &zohttp.RequestOpts{Params: orgParams(orgID)})
 					if err != nil {
 						return err
 					}

@@ -50,12 +50,12 @@ func accountsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all mail accounts",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts", nil)
 					if err != nil {
 						return err
 					}
@@ -66,7 +66,7 @@ func accountsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a mail account",
 				ArgsUsage: "<account-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("account-id argument required")
@@ -75,7 +75,7 @@ func accountsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -94,7 +94,7 @@ func foldersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all folders",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -103,7 +103,7 @@ func foldersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/folders", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders", nil)
 					if err != nil {
 						return err
 					}
@@ -114,7 +114,7 @@ func foldersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a folder",
 				ArgsUsage: "<folder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("folder-id argument required")
@@ -127,7 +127,7 @@ func foldersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -143,7 +143,7 @@ func foldersCmd() *cli.Command {
 					&cli.StringFlag{Name: "parentFolderPath", Usage: "Parent folder path"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -163,7 +163,7 @@ func foldersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/accounts/"+accountID+"/folders", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/accounts/"+accountID+"/folders", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -180,7 +180,7 @@ func foldersCmd() *cli.Command {
 					&cli.StringFlag{Name: "parentFolderPath", Usage: "Parent folder path"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("folder-id argument required")
@@ -206,7 +206,7 @@ func foldersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/accounts/"+accountID+"/folders/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/accounts/"+accountID+"/folders/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -217,7 +217,7 @@ func foldersCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a folder",
 				ArgsUsage: "<folder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("folder-id argument required")
@@ -230,7 +230,7 @@ func foldersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/accounts/"+accountID+"/folders/"+id, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/accounts/"+accountID+"/folders/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -249,7 +249,7 @@ func labelsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List all labels",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -258,7 +258,7 @@ func labelsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/labels", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/labels", nil)
 					if err != nil {
 						return err
 					}
@@ -269,7 +269,7 @@ func labelsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a label",
 				ArgsUsage: "<label-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("label-id argument required")
@@ -282,7 +282,7 @@ func labelsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/labels/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/labels/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -297,7 +297,7 @@ func labelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "color", Usage: "Hex color"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -314,7 +314,7 @@ func labelsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/accounts/"+accountID+"/labels", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/accounts/"+accountID+"/labels", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -330,7 +330,7 @@ func labelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "color", Usage: "Hex color"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("label-id argument required")
@@ -353,7 +353,7 @@ func labelsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/accounts/"+accountID+"/labels/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/accounts/"+accountID+"/labels/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -364,7 +364,7 @@ func labelsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a label",
 				ArgsUsage: "<label-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("label-id argument required")
@@ -377,7 +377,7 @@ func labelsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/accounts/"+accountID+"/labels/"+id, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/accounts/"+accountID+"/labels/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -415,7 +415,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "responded", Usage: "Filter responded mails (true/false)"},
 					&cli.StringFlag{Name: "threaded", Usage: "Filter threaded mails (true/false)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -474,7 +474,7 @@ func messagesCmd() *cli.Command {
 							p["start"] = fmt.Sprintf("%d", state.Offset)
 							p["limit"] = "200"
 						}
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.MailBase + "/api/accounts/" + accountID + "/messages/view",
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -489,7 +489,7 @@ func messagesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/messages/view", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/messages/view", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -504,7 +504,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "start", Usage: "Starting index"},
 					&cli.StringFlag{Name: "limit", Usage: "Max results"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -522,7 +522,7 @@ func messagesCmd() *cli.Command {
 					if v := cmd.String("limit"); v != "" {
 						params["limit"] = v
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/messages/search", &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/messages/search", &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -536,7 +536,7 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -549,7 +549,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/details", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/details", nil)
 					if err != nil {
 						return err
 					}
@@ -563,7 +563,7 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -576,7 +576,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/content", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/content", nil)
 					if err != nil {
 						return err
 					}
@@ -590,7 +590,7 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -603,7 +603,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/header", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/header", nil)
 					if err != nil {
 						return err
 					}
@@ -614,7 +614,7 @@ func messagesCmd() *cli.Command {
 				Name:      "original",
 				Usage:     "Get original email message",
 				ArgsUsage: "<message-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -627,7 +627,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/messages/"+msgID+"/originalmessage", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/messages/"+msgID+"/originalmessage", nil)
 					if err != nil {
 						return err
 					}
@@ -641,7 +641,7 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -654,7 +654,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/attachmentinfo", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/attachmentinfo", nil)
 					if err != nil {
 						return err
 					}
@@ -669,7 +669,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					attachID := cmd.Args().Get(1)
 					if msgID == "" || attachID == "" {
@@ -683,7 +683,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/attachments/"+attachID, nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID+"/attachments/"+attachID, nil)
 					if err != nil {
 						return err
 					}
@@ -710,7 +710,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "format", Usage: "Mail format: html or plaintext"},
 					&cli.StringFlag{Name: "ask-receipt", Usage: "Request read receipt: yes or no"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -740,7 +740,7 @@ func messagesCmd() *cli.Command {
 					if cmd.IsSet("ask-receipt") {
 						body["askReceipt"] = cmd.String("ask-receipt")
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/accounts/"+accountID+"/messages", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/accounts/"+accountID+"/messages", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -767,7 +767,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "scheduleTime", Usage: "Schedule time"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -820,7 +820,7 @@ func messagesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/accounts/"+accountID+"/messages/"+msgID, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/accounts/"+accountID+"/messages/"+msgID, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -840,7 +840,7 @@ func messagesCmd() *cli.Command {
 					&cli.StringFlag{Name: "isFolderSpecific", Usage: "Folder specific mode (true/false)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -874,7 +874,7 @@ func messagesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/accounts/"+accountID+"/updatemessage", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/accounts/"+accountID+"/updatemessage", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -887,7 +887,7 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "file", Required: true, Usage: "Path to file"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -901,7 +901,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("failed to read file: %w", err)
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/accounts/"+accountID+"/messages/attachments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/accounts/"+accountID+"/messages/attachments", &zohttp.RequestOpts{
 						Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}},
 					})
 					if err != nil {
@@ -917,7 +917,7 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					msgID := cmd.Args().Get(0)
 					if msgID == "" {
 						return internal.NewValidationError("message-id argument required")
@@ -930,7 +930,7 @@ func messagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/accounts/"+accountID+"/folders/"+cmd.String("folder")+"/messages/"+msgID, nil)
 					if err != nil {
 						return err
 					}
@@ -957,7 +957,7 @@ func threadsCmd() *cli.Command {
 					&cli.StringFlag{Name: "isFolderSpecific", Usage: "Folder specific mode (true/false)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -985,7 +985,7 @@ func threadsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/accounts/"+accountID+"/updatethread", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/accounts/"+accountID+"/updatethread", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1004,12 +1004,12 @@ func signaturesCmd() *cli.Command {
 			{
 				Name:  "get",
 				Usage: "Get signatures",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/accounts/signature", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/accounts/signature", nil)
 					if err != nil {
 						return err
 					}
@@ -1026,7 +1026,7 @@ func signaturesCmd() *cli.Command {
 					&cli.StringFlag{Name: "assignUsers", Usage: "Comma-separated user emails"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1041,7 +1041,7 @@ func signaturesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/accounts/signature", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/accounts/signature", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1060,7 +1060,7 @@ func signaturesCmd() *cli.Command {
 					&cli.StringFlag{Name: "unassignUsers", Usage: "Comma-separated user emails"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1087,7 +1087,7 @@ func signaturesCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/accounts/signature", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/accounts/signature", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1097,12 +1097,12 @@ func signaturesCmd() *cli.Command {
 			{
 				Name:  "delete",
 				Usage: "Delete a signature",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/accounts/signature", nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/accounts/signature", nil)
 					if err != nil {
 						return err
 					}
@@ -1121,7 +1121,7 @@ func organizationCmd() *cli.Command {
 			{
 				Name:  "get",
 				Usage: "Get organization details",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1130,7 +1130,7 @@ func organizationCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID, nil)
 					if err != nil {
 						return err
 					}
@@ -1140,7 +1140,7 @@ func organizationCmd() *cli.Command {
 			{
 				Name:  "storage",
 				Usage: "Get organization storage info",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1149,7 +1149,7 @@ func organizationCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/storage", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/storage", nil)
 					if err != nil {
 						return err
 					}
@@ -1160,7 +1160,7 @@ func organizationCmd() *cli.Command {
 				Name:      "user-storage",
 				Usage:     "Get storage info for a user",
 				ArgsUsage: "<zuid>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					zuid := cmd.Args().Get(0)
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
@@ -1173,7 +1173,7 @@ func organizationCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/storage/"+zuid, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/storage/"+zuid, nil)
 					if err != nil {
 						return err
 					}
@@ -1189,7 +1189,7 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "attachmentStorage", Usage: "Attachment storage quota"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					zuid := cmd.Args().Get(0)
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
@@ -1212,7 +1212,7 @@ func organizationCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/storage/"+zuid, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/storage/"+zuid, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1222,7 +1222,7 @@ func organizationCmd() *cli.Command {
 			{
 				Name:  "spam-listing",
 				Usage: "Get organization spam listing data",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1231,7 +1231,7 @@ func organizationCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/antispam/data", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/antispam/data", nil)
 					if err != nil {
 						return err
 					}
@@ -1246,7 +1246,7 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "values", Usage: "Values (JSON array)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1265,7 +1265,7 @@ func organizationCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/antispam/data", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/antispam/data", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1280,7 +1280,7 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "values", Usage: "Values (JSON array)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1299,7 +1299,7 @@ func organizationCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/organization/"+orgID+"/antispam/data", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/organization/"+orgID+"/antispam/data", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1309,7 +1309,7 @@ func organizationCmd() *cli.Command {
 			{
 				Name:  "allowed-ips",
 				Usage: "Get allowed IPs",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1318,7 +1318,7 @@ func organizationCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/allowedIps", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/allowedIps", nil)
 					if err != nil {
 						return err
 					}
@@ -1332,7 +1332,7 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "allowedIps", Required: true, Usage: "Allowed IPs (JSON array)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1346,7 +1346,7 @@ func organizationCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/organization/"+orgID+"/allowedIps", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/organization/"+orgID+"/allowedIps", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1360,7 +1360,7 @@ func organizationCmd() *cli.Command {
 					&cli.StringFlag{Name: "allowedIps", Usage: "Allowed IPs (JSON array)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1376,7 +1376,7 @@ func organizationCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/organization/"+orgID+"/allowedIps", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/organization/"+orgID+"/allowedIps", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1395,7 +1395,7 @@ func domainsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List domains",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1404,7 +1404,7 @@ func domainsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/domains", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/domains", nil)
 					if err != nil {
 						return err
 					}
@@ -1415,7 +1415,7 @@ func domainsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a domain",
 				ArgsUsage: "<domain-name>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					name := cmd.Args().Get(0)
 					if name == "" {
 						return internal.NewValidationError("domain-name argument required")
@@ -1428,7 +1428,7 @@ func domainsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/domains/"+name, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/domains/"+name, nil)
 					if err != nil {
 						return err
 					}
@@ -1442,7 +1442,7 @@ func domainsCmd() *cli.Command {
 					&cli.StringFlag{Name: "domainName", Required: true, Usage: "Domain name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1456,7 +1456,7 @@ func domainsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/organization/"+orgID+"/domains", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/organization/"+orgID+"/domains", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1471,7 +1471,7 @@ func domainsCmd() *cli.Command {
 					&cli.StringFlag{Name: "domainName", Usage: "Domain name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					name := cmd.Args().Get(0)
 					if name == "" {
 						return internal.NewValidationError("domain-name argument required")
@@ -1491,7 +1491,7 @@ func domainsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/domains/"+name, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/domains/"+name, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1502,7 +1502,7 @@ func domainsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a domain",
 				ArgsUsage: "<domain-name>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					name := cmd.Args().Get(0)
 					if name == "" {
 						return internal.NewValidationError("domain-name argument required")
@@ -1515,7 +1515,7 @@ func domainsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/organization/"+orgID+"/domains/"+name, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/organization/"+orgID+"/domains/"+name, nil)
 					if err != nil {
 						return err
 					}
@@ -1534,7 +1534,7 @@ func groupsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List groups",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1543,7 +1543,7 @@ func groupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/groups", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/groups", nil)
 					if err != nil {
 						return err
 					}
@@ -1554,7 +1554,7 @@ func groupsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -1567,7 +1567,7 @@ func groupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/groups/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/groups/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -1584,7 +1584,7 @@ func groupsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1605,7 +1605,7 @@ func groupsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/organization/"+orgID+"/groups", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/organization/"+orgID+"/groups", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1623,7 +1623,7 @@ func groupsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -1652,7 +1652,7 @@ func groupsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/groups/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/groups/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1663,7 +1663,7 @@ func groupsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -1676,7 +1676,7 @@ func groupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/organization/"+orgID+"/groups/"+id, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/organization/"+orgID+"/groups/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -1687,7 +1687,7 @@ func groupsCmd() *cli.Command {
 				Name:      "moderation-emails",
 				Usage:     "Get moderation emails for a group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -1700,7 +1700,7 @@ func groupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/groups/"+id+"/messages", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/groups/"+id+"/messages", nil)
 					if err != nil {
 						return err
 					}
@@ -1711,7 +1711,7 @@ func groupsCmd() *cli.Command {
 				Name:      "moderation-email-content",
 				Usage:     "Get content of a moderation email",
 				ArgsUsage: "<group-id> <message-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					msgID := cmd.Args().Get(1)
 					if groupID == "" || msgID == "" {
@@ -1725,7 +1725,7 @@ func groupsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/groups/"+groupID+"/messages/"+msgID, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/groups/"+groupID+"/messages/"+msgID, nil)
 					if err != nil {
 						return err
 					}
@@ -1741,7 +1741,7 @@ func groupsCmd() *cli.Command {
 					&cli.StringFlag{Name: "messageId", Required: true, Usage: "Message IDs (JSON array)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -1760,7 +1760,7 @@ func groupsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/groups/"+id+"/messages", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/groups/"+id+"/messages", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1779,7 +1779,7 @@ func usersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List organization users",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1788,7 +1788,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/accounts/", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/accounts/", nil)
 					if err != nil {
 						return err
 					}
@@ -1799,7 +1799,7 @@ func usersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get a user",
 				ArgsUsage: "<zuid>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					zuid := cmd.Args().Get(0)
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
@@ -1812,7 +1812,7 @@ func usersCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/accounts/"+zuid, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/accounts/"+zuid, nil)
 					if err != nil {
 						return err
 					}
@@ -1829,7 +1829,7 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "roleId", Usage: "Role ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1848,7 +1848,7 @@ func usersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/organization/"+orgID+"/accounts/", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/organization/"+orgID+"/accounts/", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1866,7 +1866,7 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "roleId", Usage: "Role ID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					zuid := cmd.Args().Get(0)
 					if zuid == "" {
 						return internal.NewValidationError("zuid argument required")
@@ -1895,7 +1895,7 @@ func usersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/accounts/"+zuid, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/accounts/"+zuid, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1909,7 +1909,7 @@ func usersCmd() *cli.Command {
 					&cli.StringFlag{Name: "zuid", Usage: "User IDs (JSON array)"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1925,7 +1925,7 @@ func usersCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/organization/"+orgID+"/accounts", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/organization/"+orgID+"/accounts", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -1944,7 +1944,7 @@ func policyCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List policies",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1953,7 +1953,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy", nil)
 					if err != nil {
 						return err
 					}
@@ -1963,7 +1963,7 @@ func policyCmd() *cli.Command {
 			{
 				Name:  "email-restrictions",
 				Usage: "Get email restriction policy",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1972,7 +1972,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy/mailRestriction", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy/mailRestriction", nil)
 					if err != nil {
 						return err
 					}
@@ -1982,7 +1982,7 @@ func policyCmd() *cli.Command {
 			{
 				Name:  "account-restrictions",
 				Usage: "Get account restriction policy",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -1991,7 +1991,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy/accountRestriction", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy/accountRestriction", nil)
 					if err != nil {
 						return err
 					}
@@ -2001,7 +2001,7 @@ func policyCmd() *cli.Command {
 			{
 				Name:  "access-restrictions",
 				Usage: "Get access restriction policy",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2010,7 +2010,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy/accessRestriction", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy/accessRestriction", nil)
 					if err != nil {
 						return err
 					}
@@ -2020,7 +2020,7 @@ func policyCmd() *cli.Command {
 			{
 				Name:  "forward-restrictions",
 				Usage: "Get mail forward policy",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2029,7 +2029,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy/mailForwardPolicy", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy/mailForwardPolicy", nil)
 					if err != nil {
 						return err
 					}
@@ -2040,7 +2040,7 @@ func policyCmd() *cli.Command {
 				Name:      "users",
 				Usage:     "Get users assigned to a policy",
 				ArgsUsage: "<policy-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("policy-id argument required")
@@ -2053,7 +2053,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy/"+id+"/getUsers", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy/"+id+"/getUsers", nil)
 					if err != nil {
 						return err
 					}
@@ -2064,7 +2064,7 @@ func policyCmd() *cli.Command {
 				Name:      "groups",
 				Usage:     "Get groups assigned to a policy",
 				ArgsUsage: "<policy-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("policy-id argument required")
@@ -2077,7 +2077,7 @@ func policyCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/policy/"+id+"/getGroups", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/policy/"+id+"/getGroups", nil)
 					if err != nil {
 						return err
 					}
@@ -2092,7 +2092,7 @@ func policyCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2109,7 +2109,7 @@ func policyCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/organization/"+orgID+"/policy", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/organization/"+orgID+"/policy", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2125,7 +2125,7 @@ func policyCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Description"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("policy-id argument required")
@@ -2148,7 +2148,7 @@ func policyCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/policy/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/policy/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2167,7 +2167,7 @@ func logsCmd() *cli.Command {
 			{
 				Name:  "login-history",
 				Usage: "Get login history",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2176,7 +2176,7 @@ func logsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/accounts/reports/loginHistory", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/accounts/reports/loginHistory", nil)
 					if err != nil {
 						return err
 					}
@@ -2186,7 +2186,7 @@ func logsCmd() *cli.Command {
 			{
 				Name:  "audit",
 				Usage: "Get audit logs",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2195,7 +2195,7 @@ func logsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/activity", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/activity", nil)
 					if err != nil {
 						return err
 					}
@@ -2205,7 +2205,7 @@ func logsCmd() *cli.Command {
 			{
 				Name:  "smtp",
 				Usage: "Get SMTP logs",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2214,7 +2214,7 @@ func logsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/smtplogs", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/smtplogs", nil)
 					if err != nil {
 						return err
 					}
@@ -2233,7 +2233,7 @@ func antispamCmd() *cli.Command {
 			{
 				Name:  "options",
 				Usage: "Get anti-spam options",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2242,7 +2242,7 @@ func antispamCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/organization/"+orgID+"/antispam/options", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/organization/"+orgID+"/antispam/options", nil)
 					if err != nil {
 						return err
 					}
@@ -2257,7 +2257,7 @@ func antispamCmd() *cli.Command {
 					&cli.StringFlag{Name: "rejectSpam", Usage: "Reject spam"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2276,7 +2276,7 @@ func antispamCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/organization/"+orgID+"/antispam/options", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/organization/"+orgID+"/antispam/options", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2295,12 +2295,12 @@ func tasksCmd() *cli.Command {
 			{
 				Name:  "list-assigned",
 				Usage: "List tasks assigned to me",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks", &zohttp.RequestOpts{Params: map[string]string{"assignedTo": "me"}})
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks", &zohttp.RequestOpts{Params: map[string]string{"assignedTo": "me"}})
 					if err != nil {
 						return err
 					}
@@ -2310,12 +2310,12 @@ func tasksCmd() *cli.Command {
 			{
 				Name:  "list-created",
 				Usage: "List tasks created by me",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks", &zohttp.RequestOpts{Params: map[string]string{"createdBy": "me"}})
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks", &zohttp.RequestOpts{Params: map[string]string{"createdBy": "me"}})
 					if err != nil {
 						return err
 					}
@@ -2325,12 +2325,12 @@ func tasksCmd() *cli.Command {
 			{
 				Name:  "list-personal",
 				Usage: "List personal tasks",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/me", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/me", nil)
 					if err != nil {
 						return err
 					}
@@ -2341,7 +2341,7 @@ func tasksCmd() *cli.Command {
 				Name:      "list-group",
 				Usage:     "List group tasks",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -2350,7 +2350,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -2361,7 +2361,7 @@ func tasksCmd() *cli.Command {
 				Name:      "get-personal",
 				Usage:     "Get a personal task",
 				ArgsUsage: "<task-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
@@ -2370,7 +2370,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/me/"+id, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/me/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -2381,7 +2381,7 @@ func tasksCmd() *cli.Command {
 				Name:      "get-group",
 				Usage:     "Get a group task",
 				ArgsUsage: "<group-id> <task-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					taskID := cmd.Args().Get(1)
 					if groupID == "" || taskID == "" {
@@ -2391,7 +2391,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID, nil)
 					if err != nil {
 						return err
 					}
@@ -2410,7 +2410,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "assignee", Usage: "Assignee ZUID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -2435,7 +2435,7 @@ func tasksCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/tasks/me", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/tasks/me", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2455,7 +2455,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "assignee", Usage: "Assignee ZUID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -2484,7 +2484,7 @@ func tasksCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/tasks/groups/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/tasks/groups/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2504,7 +2504,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "assignee", Usage: "Assignee ZUID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
@@ -2535,7 +2535,7 @@ func tasksCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/tasks/me/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/tasks/me/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2555,7 +2555,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "assignee", Usage: "Assignee ZUID"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					taskID := cmd.Args().Get(1)
 					if groupID == "" || taskID == "" {
@@ -2587,7 +2587,7 @@ func tasksCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2598,7 +2598,7 @@ func tasksCmd() *cli.Command {
 				Name:      "delete-personal",
 				Usage:     "Delete a personal task",
 				ArgsUsage: "<task-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
@@ -2607,7 +2607,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/tasks/me/"+id, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/tasks/me/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -2618,7 +2618,7 @@ func tasksCmd() *cli.Command {
 				Name:      "delete-group",
 				Usage:     "Delete a group task",
 				ArgsUsage: "<group-id> <task-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					taskID := cmd.Args().Get(1)
 					if groupID == "" || taskID == "" {
@@ -2628,7 +2628,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID, nil)
 					if err != nil {
 						return err
 					}
@@ -2639,7 +2639,7 @@ func tasksCmd() *cli.Command {
 				Name:      "subtasks-personal",
 				Usage:     "List subtasks of a personal task",
 				ArgsUsage: "<task-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("task-id argument required")
@@ -2648,7 +2648,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/me/"+id+"/subtasks", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/me/"+id+"/subtasks", nil)
 					if err != nil {
 						return err
 					}
@@ -2659,7 +2659,7 @@ func tasksCmd() *cli.Command {
 				Name:      "subtasks-group",
 				Usage:     "List subtasks of a group task",
 				ArgsUsage: "<group-id> <task-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					taskID := cmd.Args().Get(1)
 					if groupID == "" || taskID == "" {
@@ -2669,7 +2669,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID+"/subtasks", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups/"+groupID+"/"+taskID+"/subtasks", nil)
 					if err != nil {
 						return err
 					}
@@ -2679,12 +2679,12 @@ func tasksCmd() *cli.Command {
 			{
 				Name:  "task-groups",
 				Usage: "List task groups",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups", nil)
 					if err != nil {
 						return err
 					}
@@ -2695,7 +2695,7 @@ func tasksCmd() *cli.Command {
 				Name:      "group-members",
 				Usage:     "List members of a task group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -2704,7 +2704,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups/"+id+"/members", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups/"+id+"/members", nil)
 					if err != nil {
 						return err
 					}
@@ -2715,7 +2715,7 @@ func tasksCmd() *cli.Command {
 				Name:      "projects",
 				Usage:     "List projects in a task group",
 				ArgsUsage: "<group-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -2724,7 +2724,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups/"+id+"/projects", nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups/"+id+"/projects", nil)
 					if err != nil {
 						return err
 					}
@@ -2735,7 +2735,7 @@ func tasksCmd() *cli.Command {
 				Name:      "project-tasks",
 				Usage:     "List tasks in a project",
 				ArgsUsage: "<group-id> <project-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					projectID := cmd.Args().Get(1)
 					if groupID == "" || projectID == "" {
@@ -2745,7 +2745,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.MailBase+"/api/tasks/groups/"+groupID+"/projects/"+projectID, nil)
+					raw, err := c.Request(ctx, "GET", c.MailBase+"/api/tasks/groups/"+groupID+"/projects/"+projectID, nil)
 					if err != nil {
 						return err
 					}
@@ -2762,7 +2762,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "color", Usage: "Project color"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("group-id argument required")
@@ -2782,7 +2782,7 @@ func tasksCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/tasks/groups/"+id+"/projects", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/tasks/groups/"+id+"/projects", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2799,7 +2799,7 @@ func tasksCmd() *cli.Command {
 					&cli.StringFlag{Name: "color", Usage: "Project color"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					projectID := cmd.Args().Get(1)
 					if groupID == "" || projectID == "" {
@@ -2822,7 +2822,7 @@ func tasksCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.MailBase+"/api/tasks/groups/"+groupID+"/projects/"+projectID, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/tasks/groups/"+groupID+"/projects/"+projectID, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -2833,7 +2833,7 @@ func tasksCmd() *cli.Command {
 				Name:      "delete-project",
 				Usage:     "Delete a project from a task group",
 				ArgsUsage: "<group-id> <project-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					projectID := cmd.Args().Get(1)
 					if groupID == "" || projectID == "" {
@@ -2843,7 +2843,7 @@ func tasksCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.MailBase+"/api/tasks/groups/"+groupID+"/projects/"+projectID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/tasks/groups/"+groupID+"/projects/"+projectID, nil)
 					if err != nil {
 						return err
 					}
@@ -2859,18 +2859,18 @@ func bookmarksCmd() *cli.Command {
 		Name:  "bookmarks",
 		Usage: "Mail bookmark operations",
 		Commands: []*cli.Command{
-			{Name: "list-personal", Usage: "List personal bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "list-personal", Usage: "List personal bookmarks", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/me", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/me", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "list-group", Usage: "List group bookmarks", ArgsUsage: "<group-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "list-group", Usage: "List group bookmarks", ArgsUsage: "<group-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -2879,13 +2879,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups/"+id, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "get-personal", Usage: "Get a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "get-personal", Usage: "Get a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
@@ -2894,13 +2894,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/me/"+id, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/me/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "get-group", Usage: "Get a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "get-group", Usage: "Get a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -2910,13 +2910,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups/"+g+"/"+b, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups/"+g+"/"+b, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-personal", Usage: "Create a personal bookmark", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Required: true, Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Required: true, Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-personal", Usage: "Create a personal bookmark", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Required: true, Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Required: true, Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
@@ -2933,13 +2933,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/links/me", &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/links/me", &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-group", Usage: "Create a group bookmark", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Required: true, Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Required: true, Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-group", Usage: "Create a group bookmark", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Required: true, Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Required: true, Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -2960,13 +2960,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/links/groups/"+id, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/links/groups/"+id, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-personal", Usage: "Update a personal bookmark", ArgsUsage: "<bookmark-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-personal", Usage: "Update a personal bookmark", ArgsUsage: "<bookmark-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
@@ -2991,13 +2991,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/me/"+id, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/me/"+id, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-group", Usage: "Update a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-group", Usage: "Update a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "link", Usage: "Bookmark link"}, &cli.StringFlag{Name: "title", Usage: "Bookmark title"}, &cli.StringFlag{Name: "summary", Usage: "Bookmark summary"}, &cli.StringFlag{Name: "collectionId", Usage: "Collection ID"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3023,13 +3023,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/groups/"+g+"/"+b, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/groups/"+g+"/"+b, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-personal", Usage: "Delete a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-personal", Usage: "Delete a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
@@ -3038,13 +3038,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/links/me/"+id, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/links/me/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-group", Usage: "Delete a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-group", Usage: "Delete a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3054,46 +3054,46 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/links/groups/"+g+"/"+b, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/links/groups/"+g+"/"+b, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "favorites", Usage: "List favorite bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "favorites", Usage: "List favorite bookmarks", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/favorites", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/favorites", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "shared", Usage: "List shared bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "shared", Usage: "List shared bookmarks", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "trash-personal", Usage: "List trashed personal bookmarks", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "trash-personal", Usage: "List trashed personal bookmarks", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/me/trash", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/me/trash", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "trash-group", Usage: "List trashed group bookmarks", ArgsUsage: "<group-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "trash-group", Usage: "List trashed group bookmarks", ArgsUsage: "<group-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3102,13 +3102,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups/"+id+"/trash", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups/"+id+"/trash", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "restore-group", Usage: "Restore a trashed group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "restore-group", Usage: "Restore a trashed group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3118,13 +3118,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/groups/"+g+"/"+b+"/restore", nil)
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/groups/"+g+"/"+b+"/restore", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "favorite-personal", Usage: "Favorite a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "favorite-personal", Usage: "Favorite a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
@@ -3133,13 +3133,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/me/"+id+"/favorite", nil)
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/me/"+id+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "favorite-group", Usage: "Favorite a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "favorite-group", Usage: "Favorite a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3149,13 +3149,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/groups/"+g+"/"+b+"/favorite", nil)
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/groups/"+g+"/"+b+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "unfavorite-personal", Usage: "Unfavorite a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "unfavorite-personal", Usage: "Unfavorite a personal bookmark", ArgsUsage: "<bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("bookmark-id argument required")
@@ -3164,13 +3164,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/links/me/"+id+"/favorite", nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/links/me/"+id+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "unfavorite-group", Usage: "Unfavorite a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "unfavorite-group", Usage: "Unfavorite a group bookmark", ArgsUsage: "<group-id> <bookmark-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3180,35 +3180,35 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/links/groups/"+g+"/"+b+"/favorite", nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/links/groups/"+g+"/"+b+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "link-groups", Usage: "List bookmark groups", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "link-groups", Usage: "List bookmark groups", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "collections-personal", Usage: "List personal bookmark collections", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "collections-personal", Usage: "List personal bookmark collections", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/me/collections", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/me/collections", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "collections-group", Usage: "List group bookmark collections", ArgsUsage: "<group-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "collections-group", Usage: "List group bookmark collections", ArgsUsage: "<group-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3217,13 +3217,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups/"+id+"/collections", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups/"+id+"/collections", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "collection-bookmarks-personal", Usage: "List bookmarks in a personal collection", ArgsUsage: "<collection-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "collection-bookmarks-personal", Usage: "List bookmarks in a personal collection", ArgsUsage: "<collection-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("collection-id argument required")
@@ -3232,13 +3232,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/me/collections/"+id, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/me/collections/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "collection-bookmarks-group", Usage: "List bookmarks in a group collection", ArgsUsage: "<group-id> <collection-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "collection-bookmarks-group", Usage: "List bookmarks in a group collection", ArgsUsage: "<group-id> <collection-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				col := cmd.Args().Get(1)
 				if g == "" || col == "" {
@@ -3248,13 +3248,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups/"+g+"/collections/"+col, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups/"+g+"/collections/"+col, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-collection-personal", Usage: "Create a personal bookmark collection", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-collection-personal", Usage: "Create a personal bookmark collection", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
@@ -3267,13 +3267,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/links/me/collections", &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/links/me/collections", &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-collection-group", Usage: "Create a group bookmark collection", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-collection-group", Usage: "Create a group bookmark collection", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3290,13 +3290,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/links/groups/"+id+"/collections", &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/links/groups/"+id+"/collections", &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-collection-personal", Usage: "Update a personal bookmark collection", ArgsUsage: "<collection-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-collection-personal", Usage: "Update a personal bookmark collection", ArgsUsage: "<collection-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("collection-id argument required")
@@ -3315,13 +3315,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/me/collections/"+id, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/me/collections/"+id, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-collection-group", Usage: "Update a group bookmark collection", ArgsUsage: "<group-id> <collection-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-collection-group", Usage: "Update a group bookmark collection", ArgsUsage: "<group-id> <collection-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Collection name"}, &cli.StringFlag{Name: "description", Usage: "Collection description"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				col := cmd.Args().Get(1)
 				if g == "" || col == "" {
@@ -3341,13 +3341,13 @@ func bookmarksCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/links/groups/"+g+"/collections/"+col, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/links/groups/"+g+"/collections/"+col, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-collection-personal", Usage: "Delete a personal bookmark collection", ArgsUsage: "<collection-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-collection-personal", Usage: "Delete a personal bookmark collection", ArgsUsage: "<collection-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("collection-id argument required")
@@ -3356,13 +3356,13 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/links/me/collections/"+id, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/links/me/collections/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-collection-group", Usage: "Delete a group bookmark collection", ArgsUsage: "<group-id> <collection-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-collection-group", Usage: "Delete a group bookmark collection", ArgsUsage: "<group-id> <collection-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				col := cmd.Args().Get(1)
 				if g == "" || col == "" {
@@ -3372,18 +3372,18 @@ func bookmarksCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/links/groups/"+g+"/collections/"+col, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/links/groups/"+g+"/collections/"+col, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "all-group-collections", Usage: "List all group bookmark collections", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "all-group-collections", Usage: "List all group bookmark collections", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/links/groups/collections", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/links/groups/collections", nil)
 				if err != nil {
 					return err
 				}
@@ -3398,18 +3398,18 @@ func notesCmd() *cli.Command {
 		Name:  "notes",
 		Usage: "Mail notes operations",
 		Commands: []*cli.Command{
-			{Name: "list-personal", Usage: "List personal notes", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "list-personal", Usage: "List personal notes", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/me", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/me", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "list-group", Usage: "List group notes", ArgsUsage: "<group-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "list-group", Usage: "List group notes", ArgsUsage: "<group-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3418,13 +3418,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/groups/"+id, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/groups/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "get-personal", Usage: "Get a personal note", ArgsUsage: "<note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "get-personal", Usage: "Get a personal note", ArgsUsage: "<note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
@@ -3433,13 +3433,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/me/"+id, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/me/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "get-group", Usage: "Get a group note", ArgsUsage: "<group-id> <note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "get-group", Usage: "Get a group note", ArgsUsage: "<group-id> <note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				if g == "" || n == "" {
@@ -3449,13 +3449,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/groups/"+g+"/"+n, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/groups/"+g+"/"+n, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-personal", Usage: "Create a personal note", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Required: true, Usage: "Note title"}, &cli.StringFlag{Name: "content", Required: true, Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-personal", Usage: "Create a personal note", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Required: true, Usage: "Note title"}, &cli.StringFlag{Name: "content", Required: true, Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
@@ -3472,13 +3472,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/notes/me", &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/notes/me", &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-group", Usage: "Create a group note", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Required: true, Usage: "Note title"}, &cli.StringFlag{Name: "content", Required: true, Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-group", Usage: "Create a group note", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Required: true, Usage: "Note title"}, &cli.StringFlag{Name: "content", Required: true, Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3499,13 +3499,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/notes/groups/"+id, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/notes/groups/"+id, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-personal", Usage: "Update a personal note", ArgsUsage: "<note-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Usage: "Note title"}, &cli.StringFlag{Name: "content", Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-personal", Usage: "Update a personal note", ArgsUsage: "<note-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Usage: "Note title"}, &cli.StringFlag{Name: "content", Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
@@ -3530,13 +3530,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/notes/me/"+id, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/notes/me/"+id, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-group", Usage: "Update a group note", ArgsUsage: "<group-id> <note-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Usage: "Note title"}, &cli.StringFlag{Name: "content", Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-group", Usage: "Update a group note", ArgsUsage: "<group-id> <note-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "title", Usage: "Note title"}, &cli.StringFlag{Name: "content", Usage: "Note content"}, &cli.StringFlag{Name: "bookId", Usage: "Notebook ID"}, &cli.StringFlag{Name: "color", Usage: "Note color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				if g == "" || n == "" {
@@ -3562,13 +3562,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/notes/groups/"+g+"/"+n, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/notes/groups/"+g+"/"+n, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-personal", Usage: "Delete a personal note", ArgsUsage: "<note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-personal", Usage: "Delete a personal note", ArgsUsage: "<note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
@@ -3577,13 +3577,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/me/"+id, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/me/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-group", Usage: "Delete a group note", ArgsUsage: "<group-id> <note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-group", Usage: "Delete a group note", ArgsUsage: "<group-id> <note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				if g == "" || n == "" {
@@ -3593,57 +3593,57 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/groups/"+g+"/"+n, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/groups/"+g+"/"+n, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "favorites", Usage: "List favorite notes", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "favorites", Usage: "List favorite notes", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/favorites", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/favorites", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "shared", Usage: "List notes shared to me", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "shared", Usage: "List notes shared to me", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/sharedtome", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/sharedtome", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "note-groups", Usage: "List note groups", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "note-groups", Usage: "List note groups", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/groups", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/groups", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "books-personal", Usage: "List personal notebooks", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "books-personal", Usage: "List personal notebooks", Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/me/books", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/me/books", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "books-group", Usage: "List group notebooks", ArgsUsage: "<group-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "books-group", Usage: "List group notebooks", ArgsUsage: "<group-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3652,13 +3652,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/groups/"+id+"/books", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/groups/"+id+"/books", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "book-notes-personal", Usage: "List notes in a personal notebook", ArgsUsage: "<book-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "book-notes-personal", Usage: "List notes in a personal notebook", ArgsUsage: "<book-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("book-id argument required")
@@ -3667,13 +3667,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/me/books/"+id, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/me/books/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "book-notes-group", Usage: "List notes in a group notebook", ArgsUsage: "<group-id> <book-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "book-notes-group", Usage: "List notes in a group notebook", ArgsUsage: "<group-id> <book-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3683,13 +3683,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/groups/"+g+"/books/"+b, nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/groups/"+g+"/books/"+b, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-book-personal", Usage: "Create a personal notebook", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-book-personal", Usage: "Create a personal notebook", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				c, err := zohttp.GetClient()
 				if err != nil {
 					return err
@@ -3702,13 +3702,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/notes/me/books", &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/notes/me/books", &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "create-book-group", Usage: "Create a group notebook", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "create-book-group", Usage: "Create a group notebook", ArgsUsage: "<group-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Required: true, Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("group-id argument required")
@@ -3725,13 +3725,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("POST", c.MailBase+"/api/notes/groups/"+id+"/books", &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "POST", c.MailBase+"/api/notes/groups/"+id+"/books", &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-book-personal", Usage: "Update a personal notebook", ArgsUsage: "<book-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-book-personal", Usage: "Update a personal notebook", ArgsUsage: "<book-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("book-id argument required")
@@ -3750,13 +3750,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/notes/me/books/"+id, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/notes/me/books/"+id, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "update-book-group", Usage: "Update a group notebook", ArgsUsage: "<group-id> <book-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "update-book-group", Usage: "Update a group notebook", ArgsUsage: "<group-id> <book-id>", Flags: []cli.Flag{&cli.StringFlag{Name: "name", Usage: "Notebook name"}, &cli.StringFlag{Name: "color", Usage: "Notebook color"}, &cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"}}, Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3776,13 +3776,13 @@ func notesCmd() *cli.Command {
 				if err := internal.MergeJSON(cmd, body); err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/notes/groups/"+g+"/books/"+b, &zohttp.RequestOpts{JSON: body})
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/notes/groups/"+g+"/books/"+b, &zohttp.RequestOpts{JSON: body})
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-book-personal", Usage: "Delete a personal notebook", ArgsUsage: "<book-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-book-personal", Usage: "Delete a personal notebook", ArgsUsage: "<book-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("book-id argument required")
@@ -3791,13 +3791,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/me/books/"+id, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/me/books/"+id, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-book-group", Usage: "Delete a group notebook", ArgsUsage: "<group-id> <book-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-book-group", Usage: "Delete a group notebook", ArgsUsage: "<group-id> <book-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				b := cmd.Args().Get(1)
 				if g == "" || b == "" {
@@ -3807,13 +3807,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/groups/"+g+"/books/"+b, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/groups/"+g+"/books/"+b, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "attachments-personal", Usage: "List attachments of a personal note", ArgsUsage: "<note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "attachments-personal", Usage: "List attachments of a personal note", ArgsUsage: "<note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
@@ -3822,13 +3822,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/me/"+id+"/attachments", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/me/"+id+"/attachments", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "attachments-group", Usage: "List attachments of a group note", ArgsUsage: "<group-id> <note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "attachments-group", Usage: "List attachments of a group note", ArgsUsage: "<group-id> <note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				if g == "" || n == "" {
@@ -3838,7 +3838,7 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("GET", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/attachments", nil)
+				raw, err := c.Request(ctx, "GET", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/attachments", nil)
 				if err != nil {
 					return err
 				}
@@ -3847,7 +3847,7 @@ func notesCmd() *cli.Command {
 			{
 				Name: "attachment-personal", Usage: "Download a personal note attachment", ArgsUsage: "<note-id> <attachment-id>",
 				Flags: []cli.Flag{&cli.StringFlag{Name: "output", Usage: "Output file path"}},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					noteID := cmd.Args().Get(0)
 					attachID := cmd.Args().Get(1)
 					if noteID == "" || attachID == "" {
@@ -3857,7 +3857,7 @@ func notesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.MailBase+"/api/notes/me/"+noteID+"/attachments/"+attachID, nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.MailBase+"/api/notes/me/"+noteID+"/attachments/"+attachID, nil)
 					if err != nil {
 						return err
 					}
@@ -3874,7 +3874,7 @@ func notesCmd() *cli.Command {
 			{
 				Name: "attachment-group", Usage: "Download a group note attachment", ArgsUsage: "<group-id> <note-id> <attachment-id>",
 				Flags: []cli.Flag{&cli.StringFlag{Name: "output", Usage: "Output file path"}},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					noteID := cmd.Args().Get(1)
 					attachID := cmd.Args().Get(2)
@@ -3885,7 +3885,7 @@ func notesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.MailBase+"/api/notes/groups/"+groupID+"/"+noteID+"/attachments/"+attachID, nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.MailBase+"/api/notes/groups/"+groupID+"/"+noteID+"/attachments/"+attachID, nil)
 					if err != nil {
 						return err
 					}
@@ -3902,7 +3902,7 @@ func notesCmd() *cli.Command {
 			{
 				Name: "upload-attachment-personal", Usage: "Upload an attachment to a personal note", ArgsUsage: "<note-id>",
 				Flags: []cli.Flag{&cli.StringFlag{Name: "file", Required: true, Usage: "Path to file"}},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					noteID := cmd.Args().Get(0)
 					if noteID == "" {
 						return internal.NewValidationError("note-id argument required")
@@ -3916,7 +3916,7 @@ func notesCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("failed to read file: %w", err)
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/notes/me/"+noteID+"/attachments", &zohttp.RequestOpts{Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}}})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/notes/me/"+noteID+"/attachments", &zohttp.RequestOpts{Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}}})
 					if err != nil {
 						return err
 					}
@@ -3926,7 +3926,7 @@ func notesCmd() *cli.Command {
 			{
 				Name: "upload-attachment-group", Usage: "Upload an attachment to a group note", ArgsUsage: "<group-id> <note-id>",
 				Flags: []cli.Flag{&cli.StringFlag{Name: "file", Required: true, Usage: "Path to file"}},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					groupID := cmd.Args().Get(0)
 					noteID := cmd.Args().Get(1)
 					if groupID == "" || noteID == "" {
@@ -3941,14 +3941,14 @@ func notesCmd() *cli.Command {
 					if err != nil {
 						return fmt.Errorf("failed to read file: %w", err)
 					}
-					raw, err := c.Request("POST", c.MailBase+"/api/notes/groups/"+groupID+"/"+noteID+"/attachments", &zohttp.RequestOpts{Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}}})
+					raw, err := c.Request(ctx, "POST", c.MailBase+"/api/notes/groups/"+groupID+"/"+noteID+"/attachments", &zohttp.RequestOpts{Files: map[string]zohttp.FileUpload{"file": {Filename: filepath.Base(filePath), Data: fileData}}})
 					if err != nil {
 						return err
 					}
 					return output.JSONRaw(raw)
 				},
 			},
-			{Name: "delete-attachment-personal", Usage: "Delete a personal note attachment", ArgsUsage: "<note-id> <attachment-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-attachment-personal", Usage: "Delete a personal note attachment", ArgsUsage: "<note-id> <attachment-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				n := cmd.Args().Get(0)
 				a := cmd.Args().Get(1)
 				if n == "" || a == "" {
@@ -3958,13 +3958,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/me/"+n+"/attachments/"+a, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/me/"+n+"/attachments/"+a, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "delete-attachment-group", Usage: "Delete a group note attachment", ArgsUsage: "<group-id> <note-id> <attachment-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "delete-attachment-group", Usage: "Delete a group note attachment", ArgsUsage: "<group-id> <note-id> <attachment-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				a := cmd.Args().Get(2)
@@ -3975,13 +3975,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/attachments/"+a, nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/attachments/"+a, nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "favorite-personal", Usage: "Favorite a personal note", ArgsUsage: "<note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "favorite-personal", Usage: "Favorite a personal note", ArgsUsage: "<note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
@@ -3990,13 +3990,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/notes/me/"+id+"/favorite", nil)
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/notes/me/"+id+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "favorite-group", Usage: "Favorite a group note", ArgsUsage: "<group-id> <note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "favorite-group", Usage: "Favorite a group note", ArgsUsage: "<group-id> <note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				if g == "" || n == "" {
@@ -4006,13 +4006,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("PUT", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/favorite", nil)
+				raw, err := c.Request(ctx, "PUT", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "unfavorite-personal", Usage: "Unfavorite a personal note", ArgsUsage: "<note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "unfavorite-personal", Usage: "Unfavorite a personal note", ArgsUsage: "<note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				id := cmd.Args().Get(0)
 				if id == "" {
 					return internal.NewValidationError("note-id argument required")
@@ -4021,13 +4021,13 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/me/"+id+"/favorite", nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/me/"+id+"/favorite", nil)
 				if err != nil {
 					return err
 				}
 				return output.JSONRaw(raw)
 			}},
-			{Name: "unfavorite-group", Usage: "Unfavorite a group note", ArgsUsage: "<group-id> <note-id>", Action: func(_ context.Context, cmd *cli.Command) error {
+			{Name: "unfavorite-group", Usage: "Unfavorite a group note", ArgsUsage: "<group-id> <note-id>", Action: func(ctx context.Context, cmd *cli.Command) error {
 				g := cmd.Args().Get(0)
 				n := cmd.Args().Get(1)
 				if g == "" || n == "" {
@@ -4037,7 +4037,7 @@ func notesCmd() *cli.Command {
 				if err != nil {
 					return err
 				}
-				raw, err := c.Request("DELETE", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/favorite", nil)
+				raw, err := c.Request(ctx, "DELETE", c.MailBase+"/api/notes/groups/"+g+"/"+n+"/favorite", nil)
 				if err != nil {
 					return err
 				}

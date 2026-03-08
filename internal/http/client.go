@@ -2,6 +2,7 @@ package zohttp
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -98,8 +99,8 @@ type FileUpload struct {
 	Data     []byte
 }
 
-func (c *Client) Request(method, rawURL string, opts *RequestOpts) (json.RawMessage, error) {
-	body, err := c.doRequest(method, rawURL, opts)
+func (c *Client) Request(ctx context.Context, method, rawURL string, opts *RequestOpts) (json.RawMessage, error) {
+	body, err := c.doRequest(ctx, method, rawURL, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +110,8 @@ func (c *Client) Request(method, rawURL string, opts *RequestOpts) (json.RawMess
 	return json.RawMessage(body), nil
 }
 
-func (c *Client) RequestRaw(method, rawURL string, params map[string]string) ([]byte, http.Header, int, error) {
-	req, err := c.buildRequest(method, rawURL, &RequestOpts{Params: params})
+func (c *Client) RequestRaw(ctx context.Context, method, rawURL string, params map[string]string) ([]byte, http.Header, int, error) {
+	req, err := c.buildRequest(ctx, method, rawURL, &RequestOpts{Params: params})
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -125,7 +126,7 @@ func (c *Client) RequestRaw(method, rawURL string, params map[string]string) ([]
 		if err := c.handleRetry(resp); err != nil {
 			return nil, nil, 0, err
 		}
-		req, err = c.buildRequest(method, rawURL, &RequestOpts{Params: params})
+		req, err = c.buildRequest(ctx, method, rawURL, &RequestOpts{Params: params})
 		if err != nil {
 			return nil, nil, 0, err
 		}
@@ -155,8 +156,8 @@ func (c *Client) RequestRaw(method, rawURL string, params map[string]string) ([]
 	return body, resp.Header, resp.StatusCode, err
 }
 
-func (c *Client) doRequest(method, rawURL string, opts *RequestOpts) ([]byte, error) {
-	req, err := c.buildRequest(method, rawURL, opts)
+func (c *Client) doRequest(ctx context.Context, method, rawURL string, opts *RequestOpts) ([]byte, error) {
+	req, err := c.buildRequest(ctx, method, rawURL, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +172,7 @@ func (c *Client) doRequest(method, rawURL string, opts *RequestOpts) ([]byte, er
 		if err := c.handleRetry(resp); err != nil {
 			return nil, err
 		}
-		req, err = c.buildRequest(method, rawURL, opts)
+		req, err = c.buildRequest(ctx, method, rawURL, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +222,7 @@ func (c *Client) handleRetry(resp *http.Response) error {
 	return nil
 }
 
-func (c *Client) buildRequest(method, rawURL string, opts *RequestOpts) (*http.Request, error) {
+func (c *Client) buildRequest(ctx context.Context, method, rawURL string, opts *RequestOpts) (*http.Request, error) {
 	if opts == nil {
 		opts = &RequestOpts{}
 	}
@@ -280,7 +281,7 @@ func (c *Client) buildRequest(method, rawURL string, opts *RequestOpts) (*http.R
 		contentType = "application/x-www-form-urlencoded"
 	}
 
-	req, err := http.NewRequest(method, rawURL, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, rawURL, bodyReader)
 	if err != nil {
 		return nil, err
 	}

@@ -47,12 +47,12 @@ func modulesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "include-hidden", Usage: "Include hidden/system modules"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/settings/modules", nil)
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/settings/modules", nil)
 					if err != nil {
 						return err
 					}
@@ -78,12 +78,12 @@ func modulesCmd() *cli.Command {
 				Name:      "fields",
 				Usage:     "List fields for a CRM module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/settings/fields", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/settings/fields", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -100,12 +100,12 @@ func modulesCmd() *cli.Command {
 				Name:      "related-lists",
 				Usage:     "List related lists for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/settings/related_lists", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/settings/related_lists", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -122,12 +122,12 @@ func modulesCmd() *cli.Command {
 				Name:      "layouts",
 				Usage:     "List layouts for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/settings/layouts", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/settings/layouts", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -144,12 +144,12 @@ func modulesCmd() *cli.Command {
 				Name:      "custom-views",
 				Usage:     "List custom views for a module",
 				ArgsUsage: "<module>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/settings/custom_views", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/settings/custom_views", &zohttp.RequestOpts{
 						Params: map[string]string{"module": cmd.Args().First()},
 					})
 					if err != nil {
@@ -182,7 +182,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum records when auto-paginating"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -200,7 +200,7 @@ func recordsCmd() *cli.Command {
 						params["sort_order"] = s
 					}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						records, err := pagination.Paginate(pagination.PaginationConfig{
+						records, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      c.CRMBase + "/" + module,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -215,7 +215,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(records)
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/"+module, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/"+module, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -229,7 +229,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field API names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -243,7 +243,7 @@ func recordsCmd() *cli.Command {
 					if len(params) > 0 {
 						opts = &zohttp.RequestOpts{Params: params}
 					}
-					raw, err := c.Request("GET", c.CRMBase+"/"+module+"/"+recordID, opts)
+					raw, err := c.Request(ctx, "GET", c.CRMBase+"/"+module+"/"+recordID, opts)
 					if err != nil {
 						return err
 					}
@@ -265,7 +265,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Record data as JSON string"},
 					&cli.StringFlag{Name: "trigger", Usage: "Comma-separated triggers: approval,workflow,blueprint"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -278,7 +278,7 @@ func recordsCmd() *cli.Command {
 					if t := cmd.String("trigger"); t != "" {
 						body["trigger"] = splitComma(t)
 					}
-					raw, err := c.Request("POST", c.CRMBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -293,7 +293,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "json", Required: true, Usage: "Fields to update as JSON"},
 					&cli.StringFlag{Name: "trigger", Usage: "Comma-separated triggers"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -307,7 +307,7 @@ func recordsCmd() *cli.Command {
 					if t := cmd.String("trigger"); t != "" {
 						body["trigger"] = splitComma(t)
 					}
-					raw, err := c.Request("PUT", c.CRMBase+"/"+module+"/"+recordID, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.CRMBase+"/"+module+"/"+recordID, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -318,13 +318,13 @@ func recordsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a record",
 				ArgsUsage: "<module> <record-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					module, recordID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("DELETE", c.CRMBase+"/"+module+"/"+recordID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.CRMBase+"/"+module+"/"+recordID, nil)
 					if err != nil {
 						return err
 					}
@@ -344,7 +344,7 @@ func recordsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all records"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum records when auto-paginating"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -364,7 +364,7 @@ func recordsCmd() *cli.Command {
 					}
 					url := c.CRMBase + "/" + cmd.Args().First() + "/search"
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      url,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -379,7 +379,7 @@ func recordsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -395,7 +395,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "duplicate-check", Usage: "Comma-separated duplicate check fields"},
 					&cli.StringFlag{Name: "trigger", Usage: "Comma-separated triggers"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -411,7 +411,7 @@ func recordsCmd() *cli.Command {
 					if t := cmd.String("trigger"); t != "" {
 						body["trigger"] = splitComma(t)
 					}
-					raw, err := c.Request("POST", c.CRMBase+"/"+cmd.Args().First()+"/upsert", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+cmd.Args().First()+"/upsert", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -422,13 +422,13 @@ func recordsCmd() *cli.Command {
 				Name:      "bulk-delete",
 				Usage:     "Delete multiple records",
 				ArgsUsage: "<module> <ids>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					module, ids := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("DELETE", c.CRMBase+"/"+module, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "DELETE", c.CRMBase+"/"+module, &zohttp.RequestOpts{
 						Params: map[string]string{"ids": ids},
 					})
 					if err != nil {
@@ -455,7 +455,7 @@ func notesCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all notes"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum notes when auto-paginating"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -468,7 +468,7 @@ func notesCmd() *cli.Command {
 					params := map[string]string{"fields": fields}
 					url := c.CRMBase + "/" + module + "/" + recordID + "/Notes"
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      url,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -483,7 +483,7 @@ func notesCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -498,7 +498,7 @@ func notesCmd() *cli.Command {
 					&cli.StringFlag{Name: "content", Required: true, Usage: "Note content"},
 					&cli.StringFlag{Name: "title", Usage: "Note title"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -509,7 +509,7 @@ func notesCmd() *cli.Command {
 						note["Note_Title"] = t
 					}
 					body := map[string]any{"data": []any{note}}
-					raw, err := c.Request("POST", c.CRMBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+module+"/"+recordID+"/Notes", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -524,7 +524,7 @@ func notesCmd() *cli.Command {
 					&cli.StringFlag{Name: "title", Usage: "Note title"},
 					&cli.StringFlag{Name: "content", Usage: "Note content"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -537,7 +537,7 @@ func notesCmd() *cli.Command {
 						note["Note_Content"] = ct
 					}
 					body := map[string]any{"data": []any{note}}
-					raw, err := c.Request("PUT", c.CRMBase+"/Notes/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.CRMBase+"/Notes/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -548,12 +548,12 @@ func notesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a note",
 				ArgsUsage: "<note-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.CRMBase+"/Notes/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "DELETE", c.CRMBase+"/Notes/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -578,7 +578,7 @@ func relatedCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all related records"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum related records when auto-paginating"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -591,7 +591,7 @@ func relatedCmd() *cli.Command {
 					params := map[string]string{"fields": fields}
 					url := c.CRMBase + "/" + module + "/" + recordID + "/" + relList
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      url,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -606,7 +606,7 @@ func relatedCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -629,7 +629,7 @@ func usersCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all users"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum users when auto-paginating"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -637,7 +637,7 @@ func usersCmd() *cli.Command {
 					url := c.CRMBase + "/users"
 					params := map[string]string{"type": "AllUsers"}
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      url,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -652,7 +652,7 @@ func usersCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -676,7 +676,7 @@ func ownerCmd() *cli.Command {
 					&cli.StringFlag{Name: "owner", Required: true, Usage: "New owner user ID"},
 					&cli.BoolFlag{Name: "notify", Value: true, Usage: "Notify new owner"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -686,7 +686,7 @@ func ownerCmd() *cli.Command {
 						"owner":  map[string]string{"id": cmd.String("owner")},
 						"notify": cmd.Bool("notify"),
 					}
-					raw, err := c.Request("POST", c.CRMBase+"/"+module+"/"+recordID+"/actions/change_owner", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+module+"/"+recordID+"/actions/change_owner", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -704,13 +704,13 @@ func coqlCmd() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "query", Required: true, Usage: "COQL query string"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
 			}
 			body := map[string]string{"select_query": cmd.String("query")}
-			raw, err := c.Request("POST", c.CRMBase+"/coql", &zohttp.RequestOpts{JSON: body})
+			raw, err := c.Request(ctx, "POST", c.CRMBase+"/coql", &zohttp.RequestOpts{JSON: body})
 			if err != nil {
 				return err
 			}
@@ -724,7 +724,7 @@ func searchGlobalCmd() *cli.Command {
 		Name:      "search-global",
 		Usage:     "Search across all CRM modules",
 		ArgsUsage: "<word>",
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
@@ -732,7 +732,7 @@ func searchGlobalCmd() *cli.Command {
 			params := map[string]string{
 				"searchword": cmd.Args().First(),
 			}
-			raw, err := c.Request("GET", c.CRMBase+"/search", &zohttp.RequestOpts{Params: params})
+			raw, err := c.Request(ctx, "GET", c.CRMBase+"/search", &zohttp.RequestOpts{Params: params})
 			if err != nil {
 				return err
 			}
@@ -755,7 +755,7 @@ func attachmentsCmd() *cli.Command {
 					&cli.BoolFlag{Name: "all", Usage: "Auto-paginate all attachments"},
 					&cli.IntFlag{Name: "limit", Usage: "Maximum attachments when auto-paginating"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -768,7 +768,7 @@ func attachmentsCmd() *cli.Command {
 					params := map[string]string{"fields": fields}
 					url := c.CRMBase + "/" + module + "/" + recordID + "/Attachments"
 					if cmd.Bool("all") || cmd.IsSet("limit") {
-						items, err := pagination.Paginate(pagination.PaginationConfig{
+						items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 							Client:   c,
 							URL:      url,
 							Opts:     &zohttp.RequestOpts{Params: params},
@@ -783,7 +783,7 @@ func attachmentsCmd() *cli.Command {
 						}
 						return output.JSON(items)
 					}
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 					if err != nil {
 						return err
 					}
@@ -794,7 +794,7 @@ func attachmentsCmd() *cli.Command {
 				Name:      "upload",
 				Usage:     "Upload an attachment to a record",
 				ArgsUsage: "<module> <record-id> <file-path>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -811,7 +811,7 @@ func attachmentsCmd() *cli.Command {
 							break
 						}
 					}
-					raw, err := c.Request("POST", c.CRMBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+module+"/"+recordID+"/Attachments", &zohttp.RequestOpts{
 						Files: map[string]zohttp.FileUpload{"file": {Filename: name, Data: data}},
 					})
 					if err != nil {
@@ -827,14 +827,14 @@ func attachmentsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					module, recordID, attID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
 					url := c.CRMBase + "/" + module + "/" + recordID + "/Attachments/" + attID
-					body, _, _, err := c.RequestRaw("GET", url, nil)
+					body, _, _, err := c.RequestRaw(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -852,13 +852,13 @@ func attachmentsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete an attachment",
 				ArgsUsage: "<module> <record-id> <attachment-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					module, recordID, attID := cmd.Args().Get(0), cmd.Args().Get(1), cmd.Args().Get(2)
-					raw, err := c.Request("DELETE", c.CRMBase+"/"+module+"/"+recordID+"/Attachments/"+attID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.CRMBase+"/"+module+"/"+recordID+"/Attachments/"+attID, nil)
 					if err != nil {
 						return err
 					}
@@ -877,7 +877,7 @@ func convertCmd() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "json", Usage: "Conversion options as JSON"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
@@ -891,7 +891,7 @@ func convertCmd() *cli.Command {
 				opts = map[string]any{}
 			}
 			body := map[string]any{"data": []any{opts}}
-			raw, err := c.Request("POST", c.CRMBase+"/Leads/"+cmd.Args().First()+"/actions/convert", &zohttp.RequestOpts{JSON: body})
+			raw, err := c.Request(ctx, "POST", c.CRMBase+"/Leads/"+cmd.Args().First()+"/actions/convert", &zohttp.RequestOpts{JSON: body})
 			if err != nil {
 				return err
 			}
@@ -913,7 +913,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ids", Required: true, Usage: "Comma-separated record IDs"},
 					&cli.StringFlag{Name: "tags", Required: true, Usage: "Comma-separated tag names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -927,7 +927,7 @@ func tagsCmd() *cli.Command {
 						"tags": tagObjs,
 						"ids":  splitComma(cmd.String("ids")),
 					}
-					raw, err := c.Request("POST", c.CRMBase+"/"+cmd.Args().First()+"/actions/add_tags", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+cmd.Args().First()+"/actions/add_tags", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -942,7 +942,7 @@ func tagsCmd() *cli.Command {
 					&cli.StringFlag{Name: "ids", Required: true, Usage: "Comma-separated record IDs"},
 					&cli.StringFlag{Name: "tags", Required: true, Usage: "Comma-separated tag names"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -956,7 +956,7 @@ func tagsCmd() *cli.Command {
 						"tags": tagObjs,
 						"ids":  splitComma(cmd.String("ids")),
 					}
-					raw, err := c.Request("POST", c.CRMBase+"/"+cmd.Args().First()+"/actions/remove_tags", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CRMBase+"/"+cmd.Args().First()+"/actions/remove_tags", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}

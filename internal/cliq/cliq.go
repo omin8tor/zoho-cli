@@ -32,12 +32,12 @@ func channelsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List channels",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/channels", nil)
+					raw, err := c.Request(ctx, "GET", c.CliqBase+"/api/v2/channels", nil)
 					if err != nil {
 						return err
 					}
@@ -57,12 +57,12 @@ func channelsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get channel info",
 				ArgsUsage: "<channel-name>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/channelsbyname/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.CliqBase+"/api/v2/channelsbyname/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -77,7 +77,7 @@ func channelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "description", Usage: "Channel description"},
 					&cli.StringFlag{Name: "level", Usage: "Channel level (organization, team, private, external)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -89,7 +89,7 @@ func channelsCmd() *cli.Command {
 					if l := cmd.String("level"); l != "" {
 						body["level"] = l
 					}
-					raw, err := c.Request("POST", c.CliqBase+"/api/v2/channels", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CliqBase+"/api/v2/channels", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -104,7 +104,7 @@ func channelsCmd() *cli.Command {
 					&cli.StringFlag{Name: "text", Required: true, Usage: "Message text"},
 					&cli.StringFlag{Name: "bot", Usage: "Bot name to send as"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -113,7 +113,7 @@ func channelsCmd() *cli.Command {
 					if b := cmd.String("bot"); b != "" {
 						body["bot"] = map[string]string{"name": b}
 					}
-					raw, err := c.Request("POST", c.CliqBase+"/api/v2/channelsbyname/"+cmd.Args().First()+"/message", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.CliqBase+"/api/v2/channelsbyname/"+cmd.Args().First()+"/message", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -124,12 +124,12 @@ func channelsCmd() *cli.Command {
 				Name:      "members",
 				Usage:     "List channel members",
 				ArgsUsage: "<channel-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/channels/"+cmd.Args().First()+"/members", nil)
+					raw, err := c.Request(ctx, "GET", c.CliqBase+"/api/v2/channels/"+cmd.Args().First()+"/members", nil)
 					if err != nil {
 						return err
 					}
@@ -140,12 +140,12 @@ func channelsCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a channel",
 				ArgsUsage: "<channel-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.CliqBase+"/api/v2/channels/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "DELETE", c.CliqBase+"/api/v2/channels/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -168,12 +168,12 @@ func chatsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "text", Required: true, Usage: "Message text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.CliqBase+"/api/v2/chats/"+cmd.Args().First()+"/message", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.CliqBase+"/api/v2/chats/"+cmd.Args().First()+"/message", &zohttp.RequestOpts{
 						JSON: map[string]string{"text": cmd.String("text")},
 					})
 					if err != nil {
@@ -198,12 +198,12 @@ func buddiesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "text", Required: true, Usage: "Message text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.CliqBase+"/api/v2/buddies/"+cmd.Args().First()+"/message", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.CliqBase+"/api/v2/buddies/"+cmd.Args().First()+"/message", &zohttp.RequestOpts{
 						JSON: map[string]string{"text": cmd.String("text")},
 					})
 					if err != nil {
@@ -228,12 +228,12 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.IntFlag{Name: "limit", Value: 50, Usage: "Number of messages"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/chats/"+cmd.Args().First()+"/messages", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", c.CliqBase+"/api/v2/chats/"+cmd.Args().First()+"/messages", &zohttp.RequestOpts{
 						Params: map[string]string{"limit": fmt.Sprintf("%d", cmd.Int("limit"))},
 					})
 					if err != nil {
@@ -249,13 +249,13 @@ func messagesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "text", Required: true, Usage: "New message text"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					chatID, msgID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("PUT", c.CliqBase+"/api/v2/chats/"+chatID+"/messages/"+msgID, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PUT", c.CliqBase+"/api/v2/chats/"+chatID+"/messages/"+msgID, &zohttp.RequestOpts{
 						JSON: map[string]string{"text": cmd.String("text")},
 					})
 					if err != nil {
@@ -268,13 +268,13 @@ func messagesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Delete a message",
 				ArgsUsage: "<chat-id> <message-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					chatID, msgID := cmd.Args().Get(0), cmd.Args().Get(1)
-					raw, err := c.Request("DELETE", c.CliqBase+"/api/v2/chats/"+chatID+"/messages/"+msgID, nil)
+					raw, err := c.Request(ctx, "DELETE", c.CliqBase+"/api/v2/chats/"+chatID+"/messages/"+msgID, nil)
 					if err != nil {
 						return err
 					}
@@ -293,12 +293,12 @@ func usersCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List users in the organization",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/users", nil)
+					raw, err := c.Request(ctx, "GET", c.CliqBase+"/api/v2/users", nil)
 					if err != nil {
 						return err
 					}
@@ -309,12 +309,12 @@ func usersCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get user details",
 				ArgsUsage: "<user-id-or-email>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CliqBase+"/api/v2/users/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.CliqBase+"/api/v2/users/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}

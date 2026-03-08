@@ -30,9 +30,9 @@ func requirePortal(cmd *cli.Command) (string, error) {
 	return internal.RequireFlag(cmd, "portal", "ZOHO_PORTAL_ID")
 }
 
-func paginateProjectsList(c *zohttp.Client, cmd *cli.Command, url, itemsKey string, params map[string]string) error {
+func paginateProjectsList(ctx context.Context, c *zohttp.Client, cmd *cli.Command, url, itemsKey string, params map[string]string) error {
 	if cmd.Bool("all") || cmd.IsSet("limit") {
-		items, err := pagination.Paginate(pagination.PaginationConfig{
+		items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 			Client:   c,
 			URL:      url,
 			Opts:     &zohttp.RequestOpts{Params: params},
@@ -47,7 +47,7 @@ func paginateProjectsList(c *zohttp.Client, cmd *cli.Command, url, itemsKey stri
 		}
 		return output.JSON(items)
 	}
-	raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+	raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func projectsCoreCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List all projects",
 				Flags: []cli.Flag{portalFlag, allFlag, limitFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -129,7 +129,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects"
-					return paginateProjectsList(c, cmd, url, "", nil)
+					return paginateProjectsList(ctx, c, cmd, url, "", nil)
 				},
 			},
 			{
@@ -137,7 +137,7 @@ func projectsCoreCmd() *cli.Command {
 				Usage:     "Get a single project",
 				ArgsUsage: "<project-id>",
 				Flags:     []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -147,7 +147,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects/" + cmd.Args().First()
-					raw, err := c.Request("GET", url, nil)
+					raw, err := c.Request(ctx, "GET", url, nil)
 					if err != nil {
 						return err
 					}
@@ -161,7 +161,7 @@ func projectsCoreCmd() *cli.Command {
 					portalFlag,
 					&cli.StringFlag{Name: "query", Required: true, Usage: "Search query"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -171,7 +171,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/search"
-					raw, err := c.Request("GET", url, &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{
 						Params: map[string]string{
 							"search_term": cmd.String("query"),
 							"module":      "all",
@@ -192,7 +192,7 @@ func projectsCoreCmd() *cli.Command {
 					&cli.StringFlag{Name: "name", Required: true, Usage: "Project name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -206,7 +206,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects"
-					raw, err := c.Request("POST", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -224,7 +224,7 @@ func projectsCoreCmd() *cli.Command {
 					&cli.StringFlag{Name: "status", Usage: "Project status"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -247,7 +247,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects/" + cmd.Args().First()
-					raw, err := c.Request("PATCH", url, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PATCH", url, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -259,7 +259,7 @@ func projectsCoreCmd() *cli.Command {
 				Usage:     "Delete a project",
 				ArgsUsage: "<project-id>",
 				Flags:     []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -269,7 +269,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects/" + cmd.Args().First()
-					raw, err := c.Request("DELETE", url, nil)
+					raw, err := c.Request(ctx, "DELETE", url, nil)
 					if err != nil {
 						return err
 					}
@@ -281,7 +281,7 @@ func projectsCoreCmd() *cli.Command {
 				Usage:     "Move a project to trash",
 				ArgsUsage: "<project-id>",
 				Flags:     []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -291,7 +291,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects/" + cmd.Args().First() + "/trash"
-					raw, err := c.Request("POST", url, nil)
+					raw, err := c.Request(ctx, "POST", url, nil)
 					if err != nil {
 						return err
 					}
@@ -303,7 +303,7 @@ func projectsCoreCmd() *cli.Command {
 				Usage:     "Restore a project from trash",
 				ArgsUsage: "<project-id>",
 				Flags:     []cli.Flag{portalFlag},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -313,7 +313,7 @@ func projectsCoreCmd() *cli.Command {
 						return err
 					}
 					url := c.ProjectsBase + "/portal/" + portal + "/projects/" + cmd.Args().First() + "/restore"
-					raw, err := c.Request("POST", url, nil)
+					raw, err := c.Request(ctx, "POST", url, nil)
 					if err != nil {
 						return err
 					}

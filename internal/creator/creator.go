@@ -61,12 +61,12 @@ func applicationsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List applications",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.CreatorBase+"/meta/applications", nil)
+					raw, err := c.Request(ctx, "GET", c.CreatorBase+"/meta/applications", nil)
 					if err != nil {
 						return err
 					}
@@ -92,7 +92,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "fields", Usage: "Comma-separated field names (when field_config=custom)"},
 					&cli.StringFlag{Name: "cursor", Usage: "Record cursor for pagination"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -119,7 +119,7 @@ func recordsCmd() *cli.Command {
 					if v := cmd.String("cursor"); v != "" {
 						headers["record_cursor"] = v
 					}
-					raw, err := c.Request("GET", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report"), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "GET", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report"), &zohttp.RequestOpts{
 						Params:  params,
 						Headers: headers,
 					})
@@ -136,7 +136,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("record-id argument required")
@@ -153,7 +153,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/"+id, nil)
+					raw, err := c.Request(ctx, "GET", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -167,7 +167,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "form", Required: true, Usage: "Form link name"},
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -184,7 +184,7 @@ func recordsCmd() *cli.Command {
 					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
-					raw, err := c.Request("POST", dataBase(c.CreatorBase, owner, app)+"/form/"+cmd.String("form"), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", dataBase(c.CreatorBase, owner, app)+"/form/"+cmd.String("form"), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -199,7 +199,7 @@ func recordsCmd() *cli.Command {
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("record-id argument required")
@@ -220,7 +220,7 @@ func recordsCmd() *cli.Command {
 					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
-					raw, err := c.Request("PATCH", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/"+id, &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PATCH", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/"+id, &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -234,7 +234,7 @@ func recordsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("record-id argument required")
@@ -251,7 +251,7 @@ func recordsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/"+id, nil)
+					raw, err := c.Request(ctx, "DELETE", dataBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -270,7 +270,7 @@ func reportsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List reports in an application",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -283,7 +283,7 @@ func reportsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", metaBase(c.CreatorBase, owner, app)+"/reports", nil)
+					raw, err := c.Request(ctx, "GET", metaBase(c.CreatorBase, owner, app)+"/reports", nil)
 					if err != nil {
 						return err
 					}
@@ -302,7 +302,7 @@ func formsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List forms in an application",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -315,7 +315,7 @@ func formsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", metaBase(c.CreatorBase, owner, app)+"/forms", nil)
+					raw, err := c.Request(ctx, "GET", metaBase(c.CreatorBase, owner, app)+"/forms", nil)
 					if err != nil {
 						return err
 					}
@@ -337,7 +337,7 @@ func fieldsCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "form", Required: true, Usage: "Form link name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -350,7 +350,7 @@ func fieldsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", metaBase(c.CreatorBase, owner, app)+"/form/"+cmd.String("form")+"/fields", nil)
+					raw, err := c.Request(ctx, "GET", metaBase(c.CreatorBase, owner, app)+"/form/"+cmd.String("form")+"/fields", nil)
 					if err != nil {
 						return err
 					}
@@ -369,7 +369,7 @@ func pagesCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List pages in an application",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -382,7 +382,7 @@ func pagesCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", metaBase(c.CreatorBase, owner, app)+"/pages", nil)
+					raw, err := c.Request(ctx, "GET", metaBase(c.CreatorBase, owner, app)+"/pages", nil)
 					if err != nil {
 						return err
 					}
@@ -401,7 +401,7 @@ func sectionsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List sections in an application",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -414,7 +414,7 @@ func sectionsCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", metaBase(c.CreatorBase, owner, app)+"/sections", nil)
+					raw, err := c.Request(ctx, "GET", metaBase(c.CreatorBase, owner, app)+"/sections", nil)
 					if err != nil {
 						return err
 					}
@@ -437,7 +437,7 @@ func bulkReadCmd() *cli.Command {
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body with query fields/criteria/max_records"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -454,7 +454,7 @@ func bulkReadCmd() *cli.Command {
 					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
-					raw, err := c.Request("POST", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/read", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/read", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -468,7 +468,7 @@ func bulkReadCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("job-id argument required")
@@ -485,7 +485,7 @@ func bulkReadCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/read/"+id, nil)
+					raw, err := c.Request(ctx, "GET", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/read/"+id, nil)
 					if err != nil {
 						return err
 					}
@@ -508,7 +508,7 @@ func bulkWriteCmd() *cli.Command {
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 					&cli.StringFlag{Name: "json", Required: true, Usage: "JSON body with query fields/criteria"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -525,7 +525,7 @@ func bulkWriteCmd() *cli.Command {
 					if err := json.Unmarshal([]byte(cmd.String("json")), &body); err != nil {
 						return internal.NewValidationError(fmt.Sprintf("invalid JSON: %v", err))
 					}
-					raw, err := c.Request("POST", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/write", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/write", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -539,7 +539,7 @@ func bulkWriteCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "report", Required: true, Usage: "Report link name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					id := cmd.Args().Get(0)
 					if id == "" {
 						return internal.NewValidationError("job-id argument required")
@@ -556,7 +556,7 @@ func bulkWriteCmd() *cli.Command {
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/write/"+id, nil)
+					raw, err := c.Request(ctx, "GET", bulkBase(c.CreatorBase, owner, app)+"/report/"+cmd.String("report")+"/write/"+id, nil)
 					if err != nil {
 						return err
 					}

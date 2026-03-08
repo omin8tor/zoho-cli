@@ -17,12 +17,12 @@ func organizationsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List organizations",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/organizations", nil)
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/organizations", nil)
 					if err != nil {
 						return err
 					}
@@ -43,7 +43,7 @@ func organizationsCmd() *cli.Command {
 					&cli.StringFlag{Name: "portal_name", Usage: "Customer portal name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -70,7 +70,7 @@ func organizationsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("POST", c.BooksBase+"/organizations", &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "POST", c.BooksBase+"/organizations", &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}
@@ -81,12 +81,12 @@ func organizationsCmd() *cli.Command {
 				Name:      "get",
 				Usage:     "Get an organization",
 				ArgsUsage: "<org-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.BooksBase+"/organizations/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.BooksBase+"/organizations/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -108,7 +108,7 @@ func organizationsCmd() *cli.Command {
 					&cli.StringFlag{Name: "portal_name", Usage: "Customer portal name"},
 					&cli.StringFlag{Name: "json", Usage: "Additional fields as JSON"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -141,7 +141,7 @@ func organizationsCmd() *cli.Command {
 					if err := internal.MergeJSON(cmd, body); err != nil {
 						return err
 					}
-					raw, err := c.Request("PUT", c.BooksBase+"/organizations/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
+					raw, err := c.Request(ctx, "PUT", c.BooksBase+"/organizations/"+cmd.Args().First(), &zohttp.RequestOpts{JSON: body})
 					if err != nil {
 						return err
 					}

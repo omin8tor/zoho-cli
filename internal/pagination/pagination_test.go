@@ -1,6 +1,7 @@
 package pagination
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -447,7 +448,7 @@ func TestPaginateMultiPage(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "items",
@@ -481,7 +482,7 @@ func TestPaginateWithLimit(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "items",
@@ -505,7 +506,7 @@ func TestPaginateLimitExactPage(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "items",
@@ -529,7 +530,7 @@ func TestPaginateEmptyResponse(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "items",
@@ -554,7 +555,7 @@ func TestPaginatePassesParams(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	_, err := Paginate(PaginationConfig{
+	_, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		Opts:     &zohttp.RequestOpts{Params: map[string]string{"status": "active"}},
@@ -580,7 +581,7 @@ func TestPaginatePassesHeaders(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	_, err := Paginate(PaginationConfig{
+	_, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		Opts:     &zohttp.RequestOpts{Headers: map[string]string{"orgId": "12345"}},
@@ -614,7 +615,7 @@ func TestPaginateCRMWithToken(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -648,7 +649,7 @@ func TestPaginateOffsetBased(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -679,7 +680,7 @@ func TestPaginateWorkDrivePattern(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -714,7 +715,7 @@ func TestPaginateSignPattern(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "requests",
@@ -737,7 +738,7 @@ func TestPaginateProjectsRawArray(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "",
@@ -768,7 +769,7 @@ func TestPaginatePeopleNestedResponse(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "response.result",
@@ -793,7 +794,7 @@ func TestPaginateDefaultMethod(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	Paginate(PaginationConfig{
+	Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -815,7 +816,7 @@ func TestPaginateCustomMethod(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	Paginate(PaginationConfig{
+	Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		Method:   "POST",
 		URL:      server.URL,
@@ -838,7 +839,7 @@ func TestPaginateDefaultPageSize(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	Paginate(PaginationConfig{
+	Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -857,7 +858,7 @@ func TestPaginateHTTPError(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -887,7 +888,7 @@ func TestPaginateErrorMidPagination(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "data",
@@ -919,7 +920,7 @@ func TestPaginateCRMWrapper(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateCRM(c, server.URL, nil, 0)
+	items, err := PaginateCRM(context.Background(), c, server.URL, nil, 0)
 	if err != nil {
 		t.Fatalf("PaginateCRM: %v", err)
 	}
@@ -938,7 +939,7 @@ func TestPaginateProjectsWrapper(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateProjects(c, server.URL, "tasks", nil, 0)
+	items, err := PaginateProjects(context.Background(), c, server.URL, "tasks", nil, 0)
 	if err != nil {
 		t.Fatalf("PaginateProjects: %v", err)
 	}
@@ -954,7 +955,7 @@ func TestPaginateProjectsWrapperRawArray(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateProjects(c, server.URL, "", nil, 0)
+	items, err := PaginateProjects(context.Background(), c, server.URL, "", nil, 0)
 	if err != nil {
 		t.Fatalf("PaginateProjects: %v", err)
 	}
@@ -973,7 +974,7 @@ func TestPaginateWorkDriveWrapper(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateWorkDrive(c, server.URL, nil, 0)
+	items, err := PaginateWorkDrive(context.Background(), c, server.URL, nil, 0)
 	if err != nil {
 		t.Fatalf("PaginateWorkDrive: %v", err)
 	}
@@ -997,7 +998,7 @@ func TestPaginateWorkDriveWrapperMultiPage(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateWorkDrive(c, server.URL, nil, 0)
+	items, err := PaginateWorkDrive(context.Background(), c, server.URL, nil, 0)
 	if err != nil {
 		t.Fatalf("PaginateWorkDrive: %v", err)
 	}
@@ -1015,7 +1016,7 @@ func TestPaginateCRMWrapperWithMaxPages(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateCRM(c, server.URL, nil, 2)
+	items, err := PaginateCRM(context.Background(), c, server.URL, nil, 2)
 	if err != nil {
 		t.Fatalf("PaginateCRM: %v", err)
 	}
@@ -1043,7 +1044,7 @@ func TestPaginateIndexRangePattern(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "items",
@@ -1072,7 +1073,7 @@ func TestPaginateLimitZeroMeansNoLimit(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		ItemsKey: "items",
@@ -1096,7 +1097,7 @@ func TestPaginateNilOpts(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := Paginate(PaginationConfig{
+	items, err := Paginate(context.Background(), PaginationConfig{
 		Client:   c,
 		URL:      server.URL,
 		Opts:     nil,
@@ -1130,7 +1131,7 @@ func TestPaginateProjectsWrapperMultiPage(t *testing.T) {
 	defer server.Close()
 
 	c := testClient(server.URL)
-	items, err := PaginateProjects(c, server.URL, "tasks", nil, 0)
+	items, err := PaginateProjects(context.Background(), c, server.URL, "tasks", nil, 0)
 	if err != nil {
 		t.Fatalf("PaginateProjects: %v", err)
 	}
@@ -1152,7 +1153,7 @@ func TestPaginateProjectsWrapperWithParams(t *testing.T) {
 
 	c := testClient(server.URL)
 	params := map[string]string{"status": "open"}
-	items, err := PaginateProjects(c, server.URL, "tasks", params, 0)
+	items, err := PaginateProjects(context.Background(), c, server.URL, "tasks", params, 0)
 	if err != nil {
 		t.Fatalf("PaginateProjects: %v", err)
 	}

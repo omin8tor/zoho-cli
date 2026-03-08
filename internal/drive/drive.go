@@ -53,9 +53,9 @@ func jsonapiHeaders() map[string]string {
 	return map[string]string{"Content-Type": jsonapiCT}
 }
 
-func paginateWorkDriveList(c *zohttp.Client, cmd *cli.Command, url string, params map[string]string) error {
+func paginateWorkDriveList(ctx context.Context, c *zohttp.Client, cmd *cli.Command, url string, params map[string]string) error {
 	if cmd.Bool("all") || cmd.IsSet("limit") {
-		items, err := pagination.Paginate(pagination.PaginationConfig{
+		items, err := pagination.Paginate(ctx, pagination.PaginationConfig{
 			Client:   c,
 			URL:      url,
 			Opts:     &zohttp.RequestOpts{Params: params},
@@ -70,7 +70,7 @@ func paginateWorkDriveList(c *zohttp.Client, cmd *cli.Command, url string, param
 		}
 		return output.JSON(items)
 	}
-	raw, err := c.Request("GET", url, &zohttp.RequestOpts{Params: params})
+	raw, err := c.Request(ctx, "GET", url, &zohttp.RequestOpts{Params: params})
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func filesCmd() *cli.Command {
 					allFlag,
 					limitFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -116,19 +116,19 @@ func filesCmd() *cli.Command {
 					if t := cmd.String("type"); t != "" {
 						params["filter[type]"] = t
 					}
-					return paginateWorkDriveList(c, cmd, url, params)
+					return paginateWorkDriveList(ctx, c, cmd, url, params)
 				},
 			},
 			{
 				Name:      "get",
 				Usage:     "Get file info",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/files/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/files/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -146,7 +146,7 @@ func filesCmd() *cli.Command {
 					allFlag,
 					limitFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -161,7 +161,7 @@ func filesCmd() *cli.Command {
 					if t := cmd.String("type"); t != "" {
 						params["filter[type]"] = t
 					}
-					return paginateWorkDriveList(c, cmd, url, params)
+					return paginateWorkDriveList(ctx, c, cmd, url, params)
 				},
 			},
 			{
@@ -171,13 +171,13 @@ func filesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "name", Required: true, Usage: "New name"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					body := jsonapiBody(map[string]any{"name": cmd.String("name")})
-					raw, err := c.Request("PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -194,13 +194,13 @@ func filesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "to", Required: true, Usage: "Destination folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					body := jsonapiBody(map[string]any{"resource_id": cmd.Args().First()})
-					raw, err := c.Request("POST", c.WorkDriveBase+"/files/"+cmd.String("to")+"/copy", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.WorkDriveBase+"/files/"+cmd.String("to")+"/copy", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -217,13 +217,13 @@ func filesCmd() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "to", Required: true, Usage: "Destination folder ID"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					body := jsonapiBody(map[string]any{"parent_id": cmd.String("to")})
-					raw, err := c.Request("PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -237,13 +237,13 @@ func filesCmd() *cli.Command {
 				Name:      "trash",
 				Usage:     "Move a file to trash",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					body := jsonapiBody(map[string]any{"status": 51})
-					raw, err := c.Request("PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -257,13 +257,13 @@ func filesCmd() *cli.Command {
 				Name:      "delete",
 				Usage:     "Permanently delete a file",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					body := jsonapiBody(map[string]any{"status": 61})
-					raw, err := c.Request("PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -277,13 +277,13 @@ func filesCmd() *cli.Command {
 				Name:      "restore",
 				Usage:     "Restore a file from trash",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					body := jsonapiBody(map[string]any{"status": 1})
-					raw, err := c.Request("PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "PATCH", c.WorkDriveBase+"/files/"+cmd.Args().First(), &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -301,25 +301,25 @@ func filesCmd() *cli.Command {
 					allFlag,
 					limitFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
 					url := c.WorkDriveBase + "/teamfolders/" + cmd.String("team-folder") + "/trashedfiles"
-					return paginateWorkDriveList(c, cmd, url, nil)
+					return paginateWorkDriveList(ctx, c, cmd, url, nil)
 				},
 			},
 			{
 				Name:      "versions",
 				Usage:     "List file versions",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/versions", nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/versions", nil)
 					if err != nil {
 						return err
 					}
@@ -343,7 +343,7 @@ func foldersCmd() *cli.Command {
 					allFlag,
 					limitFlag,
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -353,7 +353,7 @@ func foldersCmd() *cli.Command {
 						return err
 					}
 					url := c.WorkDriveBase + "/teams/" + team + "/teamfolders"
-					return paginateWorkDriveList(c, cmd, url, nil)
+					return paginateWorkDriveList(ctx, c, cmd, url, nil)
 				},
 			},
 			{
@@ -364,7 +364,7 @@ func foldersCmd() *cli.Command {
 					&cli.StringFlag{Name: "parent", Required: true, Usage: "Parent folder ID"},
 					&cli.StringFlag{Name: "type", Value: "folder", Usage: "folder, zohowriter, zohosheet, zohoshow"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -382,7 +382,7 @@ func foldersCmd() *cli.Command {
 						attrs["service_type"] = st
 					}
 					body := jsonapiBody(attrs)
-					raw, err := c.Request("POST", c.WorkDriveBase+"/files", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.WorkDriveBase+"/files", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -396,12 +396,12 @@ func foldersCmd() *cli.Command {
 				Name:      "breadcrumb",
 				Usage:     "Show folder path",
 				ArgsUsage: "<folder-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/breadcrumbs", nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/breadcrumbs", nil)
 					if err != nil {
 						return err
 					}
@@ -421,7 +421,7 @@ func downloadCmd() *cli.Command {
 			&cli.StringFlag{Name: "output", Usage: "Output file path"},
 			&cli.StringFlag{Name: "format", Value: "native", Usage: "native, txt, html, pdf, docx"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
@@ -435,7 +435,7 @@ func downloadCmd() *cli.Command {
 			} else {
 				url = c.WorkDriveBase + "/download/" + fileID
 			}
-			body, _, _, err := c.RequestRaw("GET", url, params)
+			body, _, _, err := c.RequestRaw(ctx, "GET", url, params)
 			if err != nil {
 				return err
 			}
@@ -460,7 +460,7 @@ func uploadCmd() *cli.Command {
 			&cli.StringFlag{Name: "folder", Required: true, Usage: "Destination folder ID"},
 			&cli.BoolFlag{Name: "override", Usage: "Override existing file"},
 		},
-		Action: func(_ context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c, err := zohttp.GetClient()
 			if err != nil {
 				return err
@@ -484,7 +484,7 @@ func uploadCmd() *cli.Command {
 			if cmd.Bool("override") {
 				form["override-name-exist"] = "true"
 			}
-			raw, err := c.Request("POST", c.WorkDriveBase+"/upload", &zohttp.RequestOpts{
+			raw, err := c.Request(ctx, "POST", c.WorkDriveBase+"/upload", &zohttp.RequestOpts{
 				Files: map[string]zohttp.FileUpload{"content": {Filename: name, Data: data}},
 				Form:  form,
 			})
@@ -505,12 +505,12 @@ func shareCmd() *cli.Command {
 				Name:      "permissions",
 				Usage:     "List file permissions",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/permissions", nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/permissions", nil)
 					if err != nil {
 						return err
 					}
@@ -525,7 +525,7 @@ func shareCmd() *cli.Command {
 					&cli.StringFlag{Name: "email", Required: true, Usage: "Email to share with"},
 					&cli.StringFlag{Name: "role", Value: "viewer", Usage: "viewer, commenter, editor, organizer"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -546,7 +546,7 @@ func shareCmd() *cli.Command {
 							},
 						},
 					}
-					raw, err := c.Request("POST", c.WorkDriveBase+"/permissions", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.WorkDriveBase+"/permissions", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -560,12 +560,12 @@ func shareCmd() *cli.Command {
 				Name:      "revoke",
 				Usage:     "Revoke file access",
 				ArgsUsage: "<permission-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					_, err = c.Request("DELETE", c.WorkDriveBase+"/permissions/"+cmd.Args().First(), nil)
+					_, err = c.Request(ctx, "DELETE", c.WorkDriveBase+"/permissions/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -576,12 +576,12 @@ func shareCmd() *cli.Command {
 				Name:      "links",
 				Usage:     "List share links for a file",
 				ArgsUsage: "<file-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/links", nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/files/"+cmd.Args().First()+"/links", nil)
 					if err != nil {
 						return err
 					}
@@ -599,7 +599,7 @@ func shareCmd() *cli.Command {
 					&cli.StringFlag{Name: "expiration", Usage: "Expiry date YYYY-MM-DD"},
 					&cli.StringFlag{Name: "password", Usage: "Link password"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -629,7 +629,7 @@ func shareCmd() *cli.Command {
 							"attributes": attrs,
 						},
 					}
-					raw, err := c.Request("POST", c.WorkDriveBase+"/links", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.WorkDriveBase+"/links", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: jsonapiHeaders(),
 					})
@@ -643,12 +643,12 @@ func shareCmd() *cli.Command {
 				Name:      "unlink",
 				Usage:     "Delete a share link",
 				ArgsUsage: "<link-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					_, err = c.Request("DELETE", c.WorkDriveBase+"/links/"+cmd.Args().First(), nil)
+					_, err = c.Request(ctx, "DELETE", c.WorkDriveBase+"/links/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -667,12 +667,12 @@ func teamsCmd() *cli.Command {
 			{
 				Name:  "me",
 				Usage: "Get current user info",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/users/me", nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/users/me", nil)
 					if err != nil {
 						return err
 					}
@@ -683,12 +683,12 @@ func teamsCmd() *cli.Command {
 				Name:      "members",
 				Usage:     "List team members",
 				ArgsUsage: "<team-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WorkDriveBase+"/teams/"+cmd.Args().First()+"/users", nil)
+					raw, err := c.Request(ctx, "GET", c.WorkDriveBase+"/teams/"+cmd.Args().First()+"/users", nil)
 					if err != nil {
 						return err
 					}

@@ -33,7 +33,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "folder", Required: true, Usage: "Parent folder ID in WorkDrive"},
 					&cli.StringFlag{Name: "type", Value: "writer", Usage: "writer, sheet, or show"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -52,7 +52,7 @@ func Commands() *cli.Command {
 							},
 						},
 					}
-					raw, err := c.Request("POST", c.WorkDriveBase+"/files", &zohttp.RequestOpts{
+					raw, err := c.Request(ctx, "POST", c.WorkDriveBase+"/files", &zohttp.RequestOpts{
 						JSON:    body,
 						Headers: map[string]string{"Content-Type": jsonapiCT},
 					})
@@ -66,12 +66,12 @@ func Commands() *cli.Command {
 				Name:      "details",
 				Usage:     "Get document metadata",
 				ArgsUsage: "<doc-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WriterBase+"/documents/"+cmd.Args().First(), nil)
+					raw, err := c.Request(ctx, "GET", c.WriterBase+"/documents/"+cmd.Args().First(), nil)
 					if err != nil {
 						return err
 					}
@@ -82,12 +82,12 @@ func Commands() *cli.Command {
 				Name:      "fields",
 				Usage:     "List merge fields in a document",
 				ArgsUsage: "<doc-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("GET", c.WriterBase+"/documents/"+cmd.Args().First()+"/fields", nil)
+					raw, err := c.Request(ctx, "GET", c.WriterBase+"/documents/"+cmd.Args().First()+"/fields", nil)
 					if err != nil {
 						return err
 					}
@@ -103,7 +103,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "format", Value: "pdf", Usage: "pdf, docx, or inline"},
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
@@ -119,7 +119,7 @@ func Commands() *cli.Command {
 							"merge_data":    mergeData,
 							"output_format": "inline",
 						}
-						raw, err := c.Request("POST", c.WriterBase+"/documents/"+docID+"/merge", &zohttp.RequestOpts{JSON: body})
+						raw, err := c.Request(ctx, "POST", c.WriterBase+"/documents/"+docID+"/merge", &zohttp.RequestOpts{JSON: body})
 						if err != nil {
 							return err
 						}
@@ -131,7 +131,7 @@ func Commands() *cli.Command {
 					}
 					mergeJSON, _ := json.Marshal(mergeData)
 					params["merge_data"] = string(mergeJSON)
-					body, _, _, err := c.RequestRaw("POST", c.WriterBase+"/documents/"+docID+"/merge", params)
+					body, _, _, err := c.RequestRaw(ctx, "POST", c.WriterBase+"/documents/"+docID+"/merge", params)
 					if err != nil {
 						return err
 					}
@@ -149,12 +149,12 @@ func Commands() *cli.Command {
 				Name:      "trash",
 				Usage:     "Move a document to trash",
 				ArgsUsage: "<doc-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.WriterBase+"/documents/"+cmd.Args().First()+"/trash", nil)
+					raw, err := c.Request(ctx, "DELETE", c.WriterBase+"/documents/"+cmd.Args().First()+"/trash", nil)
 					if err != nil {
 						return err
 					}
@@ -165,12 +165,12 @@ func Commands() *cli.Command {
 				Name:      "delete",
 				Usage:     "Permanently delete a trashed document",
 				ArgsUsage: "<doc-id>",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					raw, err := c.Request("DELETE", c.WriterBase+"/documents/"+cmd.Args().First()+"/delete", nil)
+					raw, err := c.Request(ctx, "DELETE", c.WriterBase+"/documents/"+cmd.Args().First()+"/delete", nil)
 					if err != nil {
 						return err
 					}
@@ -184,12 +184,12 @@ func Commands() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "format", Value: "txt", Usage: "txt or html"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.WriterBase+"/download/"+cmd.Args().First(), map[string]string{"format": cmd.String("format")})
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.WriterBase+"/download/"+cmd.Args().First(), map[string]string{"format": cmd.String("format")})
 					if err != nil {
 						if strings.Contains(err.Error(), "R3002") {
 							return output.JSON(map[string]string{"error": "Document is empty — Zoho cannot export empty documents (R3002)"})
@@ -214,12 +214,12 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "format", Value: "txt", Usage: "txt, html, pdf, docx, odt, rtf, epub"},
 					&cli.StringFlag{Name: "output", Usage: "Output file path"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					c, err := zohttp.GetClient()
 					if err != nil {
 						return err
 					}
-					body, _, _, err := c.RequestRaw("GET", c.WriterBase+"/download/"+cmd.Args().First(), map[string]string{"format": cmd.String("format")})
+					body, _, _, err := c.RequestRaw(ctx, "GET", c.WriterBase+"/download/"+cmd.Args().First(), map[string]string{"format": cmd.String("format")})
 					if err != nil {
 						if strings.Contains(err.Error(), "R3002") {
 							return output.JSON(map[string]string{"error": "Document is empty — Zoho cannot export empty documents (R3002)"})

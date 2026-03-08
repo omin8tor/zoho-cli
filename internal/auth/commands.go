@@ -24,7 +24,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "dc", Value: "com", Usage: "Data center (com, eu, in, com.au, jp, ca, sa, uk, com.cn)"},
 					&cli.StringFlag{Name: "scopes", Usage: "Comma-separated OAuth scopes (defaults to all)"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return DeviceFlowLogin(
 						cmd.String("client-id"),
 						cmd.String("client-secret"),
@@ -43,7 +43,7 @@ func Commands() *cli.Command {
 					&cli.StringFlag{Name: "dc", Value: "com", Usage: "Data center"},
 					&cli.StringFlag{Name: "server", Usage: "Accounts server URL override"},
 				},
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return SelfClientExchange(
 						cmd.String("client-id"),
 						cmd.String("client-secret"),
@@ -56,7 +56,7 @@ func Commands() *cli.Command {
 			{
 				Name:  "status",
 				Usage: "Show current authentication status",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					config, err := ResolveAuth()
 					if err != nil {
 						return internal.NewAuthError("Not authenticated. Run `zoho auth login` to authenticate.")
@@ -73,7 +73,7 @@ func Commands() *cli.Command {
 			{
 				Name:  "refresh",
 				Usage: "Force refresh the access token",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					config, err := ResolveAuth()
 					if err != nil {
 						return err
@@ -93,7 +93,7 @@ func Commands() *cli.Command {
 			{
 				Name:  "logout",
 				Usage: "Clear stored authentication tokens",
-				Action: func(_ context.Context, cmd *cli.Command) error {
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 					removed := false
 					if _, err := os.Stat(TokensFile()); err == nil {
 						os.Remove(TokensFile())

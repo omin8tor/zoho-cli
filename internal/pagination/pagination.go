@@ -1,6 +1,7 @@
 package pagination
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"strings"
@@ -26,7 +27,7 @@ type PaginationConfig struct {
 	HasMore  func(raw json.RawMessage, fetched int, pageSize int) (bool, *PageState)
 }
 
-func Paginate(cfg PaginationConfig) ([]json.RawMessage, error) {
+func Paginate(ctx context.Context, cfg PaginationConfig) ([]json.RawMessage, error) {
 	if cfg.Method == "" {
 		cfg.Method = "GET"
 	}
@@ -55,7 +56,7 @@ func Paginate(cfg PaginationConfig) ([]json.RawMessage, error) {
 			opts.Files = cfg.Opts.Files
 		}
 
-		raw, err := cfg.Client.Request(cfg.Method, cfg.URL, opts)
+		raw, err := cfg.Client.Request(ctx, cfg.Method, cfg.URL, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -272,12 +273,12 @@ func HasMoreSign(raw json.RawMessage, _ int, _ int) (bool, *PageState) {
 	return env.PageContext.HasMoreRows, nil
 }
 
-func PaginateCRM(client *zohttp.Client, url string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
+func PaginateCRM(ctx context.Context, client *zohttp.Client, url string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
 	limit := 0
 	if maxPages > 0 {
 		limit = maxPages * 200
 	}
-	return Paginate(PaginationConfig{
+	return Paginate(ctx, PaginationConfig{
 		Client:   client,
 		URL:      url,
 		Opts:     &zohttp.RequestOpts{Params: params},
@@ -289,12 +290,12 @@ func PaginateCRM(client *zohttp.Client, url string, params map[string]string, ma
 	})
 }
 
-func PaginateProjects(client *zohttp.Client, url string, itemsKey string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
+func PaginateProjects(ctx context.Context, client *zohttp.Client, url string, itemsKey string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
 	limit := 0
 	if maxPages > 0 {
 		limit = maxPages * 100
 	}
-	return Paginate(PaginationConfig{
+	return Paginate(ctx, PaginationConfig{
 		Client:   client,
 		URL:      url,
 		Opts:     &zohttp.RequestOpts{Params: params},
@@ -306,12 +307,12 @@ func PaginateProjects(client *zohttp.Client, url string, itemsKey string, params
 	})
 }
 
-func PaginateWorkDrive(client *zohttp.Client, url string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
+func PaginateWorkDrive(ctx context.Context, client *zohttp.Client, url string, params map[string]string, maxPages int) ([]json.RawMessage, error) {
 	limit := 0
 	if maxPages > 0 {
 		limit = maxPages * 50
 	}
-	return Paginate(PaginationConfig{
+	return Paginate(ctx, PaginationConfig{
 		Client:   client,
 		URL:      url,
 		Opts:     &zohttp.RequestOpts{Params: params},
