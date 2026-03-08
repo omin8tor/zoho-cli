@@ -263,13 +263,9 @@ func TestBiginContactsCRUD(t *testing.T) {
 	})
 
 	t.Run("list", func(t *testing.T) {
-		out := zoho(t, "bigin", "records", "list", "Contacts", "--per-page", "5")
-		m := parseJSON(t, out)
-		data, ok := m["data"].([]any)
-		if !ok {
-			t.Fatalf("expected data array in response:\n%s", truncate(out, 500))
-		}
-		if len(data) == 0 {
+		out := zoho(t, "bigin", "records", "list", "Contacts", "--limit", "5")
+		arr := parseJSONArray(t, out)
+		if len(arr) == 0 {
 			t.Fatal("expected at least one contact")
 		}
 	})
@@ -319,11 +315,10 @@ func TestBiginPipelinesCRUD(t *testing.T) {
 	var pipelineRecordName string
 
 	t.Run("list", func(t *testing.T) {
-		out := zoho(t, "bigin", "records", "list", "Pipelines", "--per-page", "5")
-		m := parseJSON(t, out)
-		_, ok := m["data"].([]any)
-		if !ok {
-			t.Logf("no existing pipeline records, or data not array:\n%s", truncate(out, 500))
+		out := zoho(t, "bigin", "records", "list", "Pipelines", "--limit", "5")
+		arr := parseJSONArray(t, out)
+		if len(arr) == 0 {
+			t.Log("no existing pipeline records")
 		}
 	})
 

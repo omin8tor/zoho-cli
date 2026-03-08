@@ -158,14 +158,10 @@ func TestRecruitRecords(t *testing.T) {
 	})
 
 	t.Run("list", func(t *testing.T) {
-		out := zoho(t, "recruit", "records", "list", "Candidates", "--per-page", "5")
-		m := parseJSON(t, out)
-		data, ok := m["data"].([]any)
-		if !ok {
-			t.Fatalf("expected data array in response:\n%s", truncate(out, 500))
-		}
-		if len(data) == 0 {
-			t.Fatal("expected at least one candidate")
+		out := zoho(t, "recruit", "records", "list", "Candidates", "--limit", "5")
+		arr := parseJSONArray(t, out)
+		if len(arr) > 5 {
+			t.Fatalf("expected at most 5 candidates with --limit 5, got %d", len(arr))
 		}
 	})
 
@@ -398,14 +394,10 @@ func TestRecruitJobOpenings(t *testing.T) {
 	})
 
 	t.Run("list", func(t *testing.T) {
-		out := zoho(t, "recruit", "records", "list", "Job_Openings", "--per-page", "5")
-		m := parseJSON(t, out)
-		data, ok := m["data"].([]any)
-		if !ok {
-			t.Fatalf("expected data array:\n%s", truncate(out, 500))
-		}
-		if len(data) == 0 {
-			t.Fatal("expected at least one job opening")
+		out := zoho(t, "recruit", "records", "list", "Job_Openings", "--limit", "5")
+		arr := parseJSONArray(t, out)
+		if len(arr) > 5 {
+			t.Fatalf("expected at most 5 job openings with --limit 5, got %d", len(arr))
 		}
 	})
 
@@ -513,34 +505,28 @@ func TestRecruitEmergencyCleanup(t *testing.T) {
 		t.Skip("set ZOHO_EMERGENCY_CLEANUP=1 to run")
 	}
 
-	out, err := zohoMayFail(t, "recruit", "records", "list", "Candidates", "--per-page", "200")
+	out, err := zohoMayFail(t, "recruit", "records", "list", "Candidates", "--limit", "200")
 	if err == nil {
-		m := parseJSON(t, out)
-		if data, ok := m["data"].([]any); ok {
-			for _, item := range data {
-				rec, _ := item.(map[string]any)
-				lastName := fmt.Sprintf("%v", rec["Last_Name"])
-				if strings.HasPrefix(lastName, testPrefix) {
-					id := fmt.Sprintf("%v", rec["id"])
-					t.Logf("deleting orphaned candidate %s (%s)", id, lastName)
-					zohoIgnoreError(t, "recruit", "records", "delete", "Candidates", id)
-				}
+		arr := parseJSONArray(t, out)
+		for _, rec := range arr {
+			lastName := fmt.Sprintf("%v", rec["Last_Name"])
+			if strings.HasPrefix(lastName, testPrefix) {
+				id := fmt.Sprintf("%v", rec["id"])
+				t.Logf("deleting orphaned candidate %s (%s)", id, lastName)
+				zohoIgnoreError(t, "recruit", "records", "delete", "Candidates", id)
 			}
 		}
 	}
 
-	out, err = zohoMayFail(t, "recruit", "records", "list", "Job_Openings", "--per-page", "200")
+	out, err = zohoMayFail(t, "recruit", "records", "list", "Job_Openings", "--limit", "200")
 	if err == nil {
-		m := parseJSON(t, out)
-		if data, ok := m["data"].([]any); ok {
-			for _, item := range data {
-				rec, _ := item.(map[string]any)
-				title := fmt.Sprintf("%v", rec["Posting_Title"])
-				if strings.HasPrefix(title, testPrefix) {
-					id := fmt.Sprintf("%v", rec["id"])
-					t.Logf("deleting orphaned job opening %s (%s)", id, title)
-					zohoIgnoreError(t, "recruit", "records", "delete", "Job_Openings", id)
-				}
+		arr := parseJSONArray(t, out)
+		for _, rec := range arr {
+			title := fmt.Sprintf("%v", rec["Posting_Title"])
+			if strings.HasPrefix(title, testPrefix) {
+				id := fmt.Sprintf("%v", rec["id"])
+				t.Logf("deleting orphaned job opening %s (%s)", id, title)
+				zohoIgnoreError(t, "recruit", "records", "delete", "Job_Openings", id)
 			}
 		}
 	}

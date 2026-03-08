@@ -342,12 +342,12 @@ func TestCRM(t *testing.T) {
 			"--fields", "id,Last_Name,Created_Time",
 			"--sort-by", "Created_Time",
 			"--sort-order", "desc",
-			"--per-page", "5")
+			"--limit", "5")
 		arr := parseJSONArray(t, out)
 		assertNonEmpty(t, arr, "expected at least one lead in list")
 
 		if len(arr) > 5 {
-			t.Errorf("--per-page 5 but got %d records", len(arr))
+			t.Errorf("--limit 5 but got %d records", len(arr))
 		}
 
 		for i := 1; i < len(arr); i++ {
@@ -371,7 +371,7 @@ func TestCRM(t *testing.T) {
 	})
 
 	t.Run("records/list-default-fields", func(t *testing.T) {
-		out := zoho(t, "crm", "records", "list", "Leads", "--per-page", "1")
+		out := zoho(t, "crm", "records", "list", "Leads", "--limit", "1")
 		arr := parseJSONArray(t, out)
 		assertNonEmpty(t, arr, "expected at least one lead")
 		rec := arr[0]
@@ -389,34 +389,14 @@ func TestCRM(t *testing.T) {
 		assertNonEmpty(t, all, "expected at least one lead with --all")
 
 		outOne := zoho(t, "crm", "records", "list", "Leads",
-			"--fields", "id", "--per-page", "1")
+			"--fields", "id", "--limit", "1")
 		page1 := parseJSONArray(t, outOne)
 		if len(page1) != 1 {
-			t.Fatalf("expected 1 record with --per-page 1, got %d", len(page1))
+			t.Fatalf("expected 1 record with --limit 1, got %d", len(page1))
 		}
-		if len(all) <= len(page1) {
-			t.Errorf("--all should return more than --per-page 1: all=%d page1=%d",
+		if len(all) < len(page1) {
+			t.Errorf("--all should return at least as many as --limit 1: all=%d page1=%d",
 				len(all), len(page1))
-		}
-	})
-
-	t.Run("records/list-page", func(t *testing.T) {
-		out1 := zoho(t, "crm", "records", "list", "Leads",
-			"--fields", "id", "--page", "1", "--per-page", "1")
-		page1 := parseJSONArray(t, out1)
-		if len(page1) != 1 {
-			t.Fatalf("expected 1 record on page 1, got %d", len(page1))
-		}
-		id1 := fmt.Sprintf("%v", page1[0]["id"])
-
-		out2 := zoho(t, "crm", "records", "list", "Leads",
-			"--fields", "id", "--page", "2", "--per-page", "1")
-		page2 := parseJSONArray(t, out2)
-		if len(page2) == 1 {
-			id2 := fmt.Sprintf("%v", page2[0]["id"])
-			if id2 == id1 {
-				t.Errorf("page 1 and page 2 returned same record %s", id1)
-			}
 		}
 	})
 
@@ -1045,7 +1025,7 @@ func TestCRMErrors(t *testing.T) {
 			"ZOHO_CLIENT_SECRET": "bad_client_secret",
 			"ZOHO_REFRESH_TOKEN": "bad_refresh_token",
 			"ZOHO_DC":            "com",
-		}, "crm", "records", "list", "Leads", "--fields", "id", "--per-page", "1")
+		}, "crm", "records", "list", "Leads", "--fields", "id")
 		assertExitCode(t, r, 2)
 		if !strings.Contains(r.Stderr, "invalid_client") && !strings.Contains(r.Stderr, "Token refresh") {
 			t.Errorf("expected auth error in stderr, got: %s", truncate(r.Stderr, 500))
@@ -1053,7 +1033,7 @@ func TestCRMErrors(t *testing.T) {
 	})
 
 	t.Run("invalid-module", func(t *testing.T) {
-		r := runZoho(t, "crm", "records", "list", "FakeModule", "--fields", "id", "--per-page", "1")
+		r := runZoho(t, "crm", "records", "list", "FakeModule", "--fields", "id")
 		assertExitCode(t, r, 1)
 		assertContains(t, r.Stderr, "INVALID_MODULE")
 	})

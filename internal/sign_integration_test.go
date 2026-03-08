@@ -173,16 +173,11 @@ func TestSign(t *testing.T) {
 
 	t.Run("requests/list", func(t *testing.T) {
 		requireID(t, requestID, "requests/create must have succeeded")
-		out := zoho(t, "sign", "requests", "list", "--row-count", "10")
-		m := parseJSON(t, out)
-		requests, ok := m["requests"].([]any)
-		if !ok {
-			t.Fatalf("expected requests array in response:\n%s", truncate(out, 500))
-		}
+		out := zoho(t, "sign", "requests", "list", "--limit", "10")
+		requests := parseJSONArray(t, out)
 		found := false
 		for _, r := range requests {
-			rm, _ := r.(map[string]any)
-			if fmt.Sprintf("%v", rm["request_id"]) == requestID {
+			if fmt.Sprintf("%v", r["request_id"]) == requestID {
 				found = true
 				break
 			}
@@ -194,17 +189,12 @@ func TestSign(t *testing.T) {
 
 	t.Run("requests/list-pagination", func(t *testing.T) {
 		out := zoho(t, "sign", "requests", "list",
-			"--row-count", "2",
-			"--start-index", "1",
+			"--limit", "2",
 			"--sort-column", "created_time",
 			"--sort-order", "DESC")
-		m := parseJSON(t, out)
-		if _, ok := m["requests"].([]any); !ok {
-			t.Fatalf("expected requests array in paginated response:\n%s", truncate(out, 500))
-		}
-		if pc, ok := m["page_context"].(map[string]any); ok {
-			t.Logf("page_context: row_count=%v, start_index=%v, has_more_rows=%v",
-				pc["row_count"], pc["start_index"], pc["has_more_rows"])
+		arr := parseJSONArray(t, out)
+		if len(arr) > 2 {
+			t.Fatalf("expected at most 2 requests with --limit 2, got %d", len(arr))
 		}
 	})
 
@@ -458,32 +448,26 @@ func TestSignEmergencyCleanup(t *testing.T) {
 		t.Skip("set ZOHO_EMERGENCY_CLEANUP=1 to run")
 	}
 
-	out, err := zohoMayFail(t, "sign", "requests", "list", "--row-count", "100")
+	out, err := zohoMayFail(t, "sign", "requests", "list", "--limit", "100")
 	if err == nil {
-		m := parseJSON(t, out)
-		if requests, ok := m["requests"].([]any); ok {
-			for _, item := range requests {
-				im, _ := item.(map[string]any)
-				name := fmt.Sprintf("%v", im["request_name"])
-				if strings.HasPrefix(name, testPrefix) {
-					id := fmt.Sprintf("%v", im["request_id"])
-					zohoIgnoreError(t, "sign", "requests", "delete", id)
-				}
+		arr := parseJSONArray(t, out)
+		for _, im := range arr {
+			name := fmt.Sprintf("%v", im["request_name"])
+			if strings.HasPrefix(name, testPrefix) {
+				id := fmt.Sprintf("%v", im["request_id"])
+				zohoIgnoreError(t, "sign", "requests", "delete", id)
 			}
 		}
 	}
 
-	out, err = zohoMayFail(t, "sign", "templates", "list", "--row-count", "100")
+	out, err = zohoMayFail(t, "sign", "templates", "list", "--limit", "100")
 	if err == nil {
-		m := parseJSON(t, out)
-		if templates, ok := m["templates"].([]any); ok {
-			for _, item := range templates {
-				im, _ := item.(map[string]any)
-				name := fmt.Sprintf("%v", im["template_name"])
-				if strings.HasPrefix(name, testPrefix) {
-					id := fmt.Sprintf("%v", im["template_id"])
-					zohoIgnoreError(t, "sign", "templates", "delete", id)
-				}
+		arr := parseJSONArray(t, out)
+		for _, im := range arr {
+			name := fmt.Sprintf("%v", im["template_name"])
+			if strings.HasPrefix(name, testPrefix) {
+				id := fmt.Sprintf("%v", im["template_id"])
+				zohoIgnoreError(t, "sign", "templates", "delete", id)
 			}
 		}
 	}

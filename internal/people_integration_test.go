@@ -72,18 +72,15 @@ func TestPeopleRecords(t *testing.T) {
 
 	t.Run("list-employees", func(t *testing.T) {
 		out := zoho(t, "people", "records", "list", "employee", "--limit", "5")
-		m := parseJSON(t, out)
-		assertPeopleStatusZero(t, m)
+		_ = parseJSONArray(t, out)
 	})
 
 	t.Run("list-with-search", func(t *testing.T) {
-		out, err := zohoMayFail(t, "people", "records", "list", "employee",
-			"--limit", "1", "--sindex", "1")
+		out, err := zohoMayFail(t, "people", "records", "list", "employee", "--limit", "1")
 		if err != nil {
 			t.Skipf("skipping: list with pagination failed: %v", err)
 		}
-		m := parseJSON(t, out)
-		assertPeopleStatusZero(t, m)
+		_ = parseJSONArray(t, out)
 	})
 }
 
