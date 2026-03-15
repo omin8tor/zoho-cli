@@ -1,6 +1,6 @@
 ---
 name: zoho-cli
-description: Interact with Zoho REST APIs (CRM, Projects, WorkDrive, Writer, Cliq) via CLI. 118 commands for records, tasks, files, documents, and messaging. Use when the user needs to query, create, update, or manage data in any Zoho product, or when automating Zoho workflows.
+description: Interact with Zoho REST APIs (20 products: CRM, Projects, WorkDrive, Books, Mail, Desk, Expense, Inventory, Invoice, Billing, Sheet, Sign, People, Sprints, Creator, Bigin, Recruit, Cliq, Writer) via CLI. 1600+ commands for records, tasks, files, invoices, tickets, email, and more. Use when the user needs to query, create, update, or manage data in any Zoho product, or when automating Zoho workflows.
 license: GPL-3.0
 compatibility: Requires the zoho-cli binary (Go). Needs network access to Zoho APIs. Needs ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, and ZOHO_REFRESH_TOKEN env vars (or interactive auth).
 metadata:
@@ -10,7 +10,7 @@ metadata:
 
 # zoho-cli
 
-CLI for Zoho REST APIs. Single binary, JSON to stdout, 118 commands across CRM, Projects, WorkDrive, Writer, and Cliq.
+CLI for Zoho REST APIs. Single binary, JSON to stdout, 1600+ commands across 20 products.
 
 ## Install
 
@@ -51,10 +51,12 @@ Every command outputs JSON to stdout. Errors go to stderr. Exit codes: 0=success
 
 The CLI is a thin wrapper — it passes through raw Zoho API responses without transformation. What Zoho returns is what you get.
 
+All list commands support `--all` (fetch every page) and `--limit N` (fetch up to N records). Without these flags, you get a single page with the raw envelope.
+
 Pipe into `jq` for filtering:
 
 ```bash
-zoho crm records list Contacts --fields "Full_Name,Email" | jq '.[].Email'
+zoho crm records list Contacts --fields "Full_Name,Email" --all | jq '.[].Email'
 ```
 
 ## Quick reference by product
@@ -100,7 +102,71 @@ zoho drive upload ./file.xlsx --folder FOLDER_ID
 zoho drive share add FILE_ID --email user@company.com --role editor
 ```
 
-Navigate top-down: teams -> folders -> files. Set `ZOHO_TEAM_ID` env var to avoid passing `--team` every time. The flag overrides the env var.
+Navigate top-down: teams -> folders -> files. Set `ZOHO_TEAM_ID` env var to avoid passing `--team` every time.
+
+### Books
+
+```bash
+zoho books invoices list --org ORG_ID
+zoho books contacts list --org ORG_ID
+zoho books invoices create --org ORG_ID --json '{"customer_id":"460000000026049","line_items":[{"item_id":"460000000026065","quantity":1}]}'
+zoho books expenses list --org ORG_ID
+zoho books items list --org ORG_ID
+```
+
+Every Books command needs `--org`. Set `ZOHO_BOOKS_ORG_ID` env var to skip the flag.
+
+### Mail
+
+```bash
+zoho mail accounts list
+zoho mail folders list --account ACCOUNT_ID
+zoho mail messages list --account ACCOUNT_ID --folder FOLDER_ID
+zoho mail messages get --account ACCOUNT_ID --folder FOLDER_ID --message MESSAGE_ID
+```
+
+Set `ZOHO_MAIL_ACCOUNT_ID` for the account default.
+
+### Desk
+
+```bash
+zoho desk tickets list --org ORG_ID
+zoho desk tickets get --org ORG_ID --id TICKET_ID
+zoho desk contacts list --org ORG_ID
+zoho desk search --org ORG_ID --module tickets --query "printer issue"
+```
+
+### Expense
+
+```bash
+zoho expense expenses list --org ORG_ID
+zoho expense reports list --org ORG_ID
+zoho expense categories list --org ORG_ID
+```
+
+### People
+
+```bash
+zoho people forms list
+zoho people records list --form employee
+zoho people attendance list --sdate 2025-01-01 --edate 2025-01-31
+```
+
+### Sprints
+
+```bash
+zoho sprints teams list
+zoho sprints projects list --team TEAM_ID
+zoho sprints items list --team TEAM_ID --project PROJECT_ID --sprint SPRINT_ID
+```
+
+### Sign
+
+```bash
+zoho sign requests list
+zoho sign templates list
+zoho sign requests get --id REQUEST_ID
+```
 
 ### Writer
 
@@ -123,13 +189,15 @@ zoho cliq buddies message user@company.com --text "hello"
 zoho cliq messages list CHAT_ID
 ```
 
+### Also supported
+
+**Bigin** (34 commands), **Billing** (88), **Creator** (15), **Inventory** (108), **Invoice** (103), **Recruit** (23), **Sheet** (85). Run `zoho <product> --help` for details.
+
 ## Coverage
 
-Supported now: **CRM** (29 commands), **Projects** (39), **WorkDrive** (26), **Writer** (7), **Cliq** (12).
+Supported: **Books** (515), **Projects** (232), **Mail** (159), **Inventory** (108), **Invoice** (103), **Billing** (88), **Sheet** (85), **Expense** (81), **Bigin** (34), **CRM** (29), **Desk** (28), **Sign** (24), **Drive** (24), **Sprints** (24), **Recruit** (23), **People** (18), **Creator** (15), **Cliq** (13), **Writer** (8), **Auth** (5).
 
-Not yet supported: Desk, Books, People, Recruit, Analytics, Sign, Campaigns, Mail, Calendar, Sheet, Show, Inventory, Invoice, Expense, Billing, Forms, SalesIQ, Bookings, Social, Survey, Meeting, Connect, Flow, Creator, Sprints, BugTracker, Bigin, Voice, Commerce, Backstage, Marketing Automation, FSM, Assist, Directory, Shifts, Contracts, Practice, Checkout, Lens, Learn, ZeptoMail, Notebook, TeamInbox, Office Integrator, ToDo, PDF Editor, IoT, DataPrep, Apptics, Vault, Catalyst, Webinar, PageSense, LandingPage, CommunitySpaces, Thrive, Sites, RouteIQ, Workerly, Solo, Procurement.
-
-If the user asks about an unsupported product, tell them zoho-cli doesn't cover it yet and suggest they open an issue at https://github.com/omin8tor/zoho-cli/issues.
+Not yet supported: Analytics, Campaigns, SalesIQ, Meeting, Bookings, Voice, Vault, Marketing Automation, PageSense, Assist, Learn, Showtime, Backstage, and others. If the user asks about an unsupported product, tell them zoho-cli doesn't cover it yet and suggest they open an issue at https://github.com/omin8tor/zoho-cli/issues.
 
 ## Data centers
 

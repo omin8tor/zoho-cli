@@ -1,824 +1,1966 @@
 # Command reference
 
-118 commands. Run `zoho --help-all` for the native output with all flags.
+1600+ commands across 20 products. Run `zoho --help-all` for the full native output with all flags.
 
 ## Contents
 
-- [auth](#auth) (5 commands)
-- [crm](#crm) (29 commands)
-- [projects](#projects) (39 commands)
-- [drive](#drive) (26 commands)
-- [writer](#writer) (7 commands)
-- [cliq](#cliq) (12 commands)
+- [auth](#auth) (6 commands)
+- [bigin](#bigin) (45 commands)
+- [billing](#billing) (104 commands)
+- [books](#books) (554 commands)
+- [cliq](#cliq) (19 commands)
+- [creator](#creator) (25 commands)
+- [crm](#crm) (38 commands)
+- [desk](#desk) (34 commands)
+- [drive](#drive) (29 commands)
+- [expense](#expense) (94 commands)
+- [inventory](#inventory) (128 commands)
+- [invoice](#invoice) (119 commands)
+- [mail](#mail) (176 commands)
+- [people](#people) (25 commands)
+- [projects](#projects) (280 commands)
+- [recruit](#recruit) (32 commands)
+- [sheet](#sheet) (97 commands)
+- [sign](#sign) (29 commands)
+- [sprints](#sprints) (34 commands)
+- [writer](#writer) (9 commands)
 
 ---
 
 ## auth
 
-### zoho auth login
-
-Authenticate via device flow (interactive, opens browser).
-
-```
-zoho auth login --client-id ID --client-secret SECRET [--dc com] [--scopes "scope1,scope2"]
-```
-
-### zoho auth self-client
-
-Exchange a self-client code from Zoho API Console.
-
-```
-zoho auth self-client --code CODE --client-id ID --client-secret SECRET [--dc com] [--server URL]
-```
-
-### zoho auth status
-
-Show current auth status (token validity, data center, scopes).
-
-```
-zoho auth status
-```
-
-### zoho auth refresh
-
-Force-refresh the access token.
-
-```
-zoho auth refresh
-```
-
-### zoho auth logout
-
-Clear stored tokens.
-
-```
-zoho auth logout
-```
-
----
-
-## crm
-
-### zoho crm modules list
-
-List CRM modules.
-
-```
-zoho crm modules list [--include-hidden]
-```
-
-### zoho crm modules fields
-
-List fields for a module.
-
-```
-zoho crm modules fields <module>
-```
-
-### zoho crm modules related-lists
-
-List related lists for a module.
-
-```
-zoho crm modules related-lists <module>
-```
-
-### zoho crm modules layouts
-
-List layouts for a module.
-
-```
-zoho crm modules layouts <module>
-```
-
-### zoho crm modules custom-views
-
-List custom views for a module.
-
-```
-zoho crm modules custom-views <module>
-```
-
-### zoho crm records list
-
-List records. Requires `--fields`.
-
-```
-zoho crm records list <module> --fields "Field1,Field2" [--sort-by Field] [--sort-order asc|desc] [--page N] [--per-page N] [--all]
-```
-
-### zoho crm records get
-
-Get one record by ID. Requires `--fields`.
-
-```
-zoho crm records get <module> <record-id> --fields "Field1,Field2"
-```
-
-### zoho crm records create
-
-Create a record.
-
-```
-zoho crm records create <module> --json '{"Field":"Value"}' [--trigger approval,workflow,blueprint]
-```
-
-### zoho crm records update
-
-Update a record.
-
-```
-zoho crm records update <module> <record-id> --json '{"Field":"NewValue"}' [--trigger ...]
-```
-
-### zoho crm records delete
-
-Delete a record.
-
-```
-zoho crm records delete <module> <record-id>
-```
-
-### zoho crm records search
-
-Search records by keyword, email, phone, or criteria.
-
-```
-zoho crm records search <module> [--word text] [--email addr] [--phone num] [--criteria "(Field:op:Value)"] [--fields "..."] [--page N] [--per-page N]
-```
-
-### zoho crm records upsert
-
-Insert or update based on duplicate check fields.
-
-```
-zoho crm records upsert <module> --json '{"..."}' --duplicate-check "Email" [--trigger ...]
-```
-
-### zoho crm records bulk-delete
-
-Delete multiple records.
-
-```
-zoho crm records bulk-delete <module> "id1,id2,id3"
-```
-
-### zoho crm notes list
-
-List notes on a record. Requires `--fields`.
-
-```
-zoho crm notes list <module> <record-id> [--fields "..."] [--page N] [--per-page N]
-```
-
-### zoho crm notes add
-
-Add a note.
-
-```
-zoho crm notes add <module> <record-id> --content "text" [--title "title"]
-```
-
-### zoho crm notes update
-
-```
-zoho crm notes update <note-id> [--title "..."] [--content "..."]
-```
-
-### zoho crm notes delete
-
-```
-zoho crm notes delete <note-id>
-```
-
-### zoho crm related list
-
-List related records.
-
-```
-zoho crm related list <module> <record-id> <related-list> [--fields "..."] [--page N] [--per-page N]
-```
-
-### zoho crm users list
-
-```
-zoho crm users list [--page N] [--per-page N]
-```
-
-### zoho crm owner change
-
-Change record owner.
-
-```
-zoho crm owner change <module> <record-id> --owner USER_ID [--notify]
-```
-
-### zoho crm coql
-
-Run a COQL query. Needs `ZohoCRM.coql.READ` scope.
-
-```
-zoho crm coql --query "SELECT Field FROM Module WHERE condition LIMIT N"
-```
-
-### zoho crm search-global
-
-Search across all CRM modules.
-
-```
-zoho crm search-global <word> [--page N] [--per-page N]
-```
-
-### zoho crm attachments list
-
-```
-zoho crm attachments list <module> <record-id> [--fields "..."] [--page N] [--per-page N]
-```
-
-### zoho crm attachments upload
-
-```
-zoho crm attachments upload <module> <record-id> <file-path>
-```
-
-### zoho crm attachments download
-
-```
-zoho crm attachments download <module> <record-id> <attachment-id> [--output path]
-```
-
-### zoho crm attachments delete
-
-```
-zoho crm attachments delete <module> <record-id> <attachment-id>
-```
-
-### zoho crm convert
-
-Convert a lead to contact/account/deal.
-
-```
-zoho crm convert <record-id> [--json '{"overwrite":true,"notify_lead_owner":true}']
-```
-
-### zoho crm tags add
-
-```
-zoho crm tags add <module> --ids "id1,id2" --tags "tag1,tag2"
-```
-
-### zoho crm tags remove
-
-```
-zoho crm tags remove <module> --ids "id1,id2" --tags "tag1,tag2"
-```
-
----
-
-## projects
-
-All Projects commands need a portal ID. Pass `--portal PORTAL_ID` or set `ZOHO_PORTAL_ID` env var. The flag overrides the env var.
-
-### zoho projects core list
-
-```
-zoho projects core list --portal ID
-```
-
-### zoho projects core get
-
-```
-zoho projects core get <project-id> --portal ID
-```
-
-### zoho projects core search
-
-```
-zoho projects core search --portal ID --query "text"
-```
-
-### zoho projects core create
-
-```
-zoho projects core create --portal ID --name "Name" [--json '{"..."}']
-```
-
-### zoho projects core update
-
-```
-zoho projects core update <project-id> --portal ID --json '{"..."}' 
-```
-
-### zoho projects tasks list
-
-```
-zoho projects tasks list --portal ID --project PID [--status open|closed|"in progress"] [--priority none|low|medium|high]
-```
-
-### zoho projects tasks my
-
-List your tasks across all projects.
-
-```
-zoho projects tasks my --portal ID [--status ...] [--priority ...]
-```
-
-### zoho projects tasks get
-
-```
-zoho projects tasks get <task-id> --portal ID --project PID
-```
-
-### zoho projects tasks create
-
-```
-zoho projects tasks create --portal ID --project PID --name "Task" [--json '{"..."}']
-```
-
-### zoho projects tasks update
-
-```
-zoho projects tasks update <task-id> --portal ID --project PID --json '{"..."}' 
-```
-
-### zoho projects tasks delete
-
-```
-zoho projects tasks delete <task-id> --portal ID --project PID
-```
-
-### zoho projects tasks subtasks
-
-```
-zoho projects tasks subtasks <task-id> --portal ID --project PID
-```
-
-### zoho projects tasks add-subtask
-
-```
-zoho projects tasks add-subtask --portal ID --project PID --parent TASK_ID --name "Subtask" [--json '{"..."}']
-```
-
-### zoho projects issues list
-
-```
-zoho projects issues list --portal ID --project PID
-```
-
-### zoho projects issues get
-
-```
-zoho projects issues get <issue-id> --portal ID --project PID
-```
-
-### zoho projects issues create
-
-```
-zoho projects issues create --portal ID --project PID --name "Issue" [--json '{"..."}']
-```
-
-### zoho projects issues update
-
-```
-zoho projects issues update <issue-id> --portal ID --project PID --json '{"..."}' 
-```
-
-### zoho projects issues delete
-
-```
-zoho projects issues delete <issue-id> --portal ID --project PID
-```
-
-### zoho projects issues defaults
-
-Get default statuses, severities, priorities for issues.
-
-```
-zoho projects issues defaults --portal ID --project PID
-```
-
-### zoho projects issue-comments list
-
-```
-zoho projects issue-comments list --portal ID --project PID --issue ISSUE_ID
-```
-
-### zoho projects issue-comments add
-
-```
-zoho projects issue-comments add --portal ID --project PID --issue ISSUE_ID --comment "text"
-```
-
-### zoho projects comments list
-
-Task comments.
-
-```
-zoho projects comments list --portal ID --project PID --task TASK_ID
-```
-
-### zoho projects comments add
-
-```
-zoho projects comments add --portal ID --project PID --task TASK_ID --comment "text"
-```
-
-### zoho projects comments update
-
-```
-zoho projects comments update <comment-id> --portal ID --project PID --task TASK_ID --comment "text"
-```
-
-### zoho projects comments delete
-
-```
-zoho projects comments delete <comment-id> --portal ID --project PID --task TASK_ID
-```
-
-### zoho projects tasklists list
-
-```
-zoho projects tasklists list --portal ID --project PID
-```
-
-### zoho projects tasklists create
-
-```
-zoho projects tasklists create --portal ID --project PID --name "Name" [--json '{"..."}']
-```
-
-### zoho projects tasklists update
-
-```
-zoho projects tasklists update <tasklist-id> --portal ID --project PID --json '{"..."}' 
-```
-
-### zoho projects tasklists delete
-
-```
-zoho projects tasklists delete <tasklist-id> --portal ID --project PID
-```
-
-### zoho projects timelogs list
-
-```
-zoho projects timelogs list --portal ID --project PID [--module task|issue|general]
-```
-
-### zoho projects timelogs add
-
-```
-zoho projects timelogs add --portal ID --project PID --date 2025-01-15 --hours 2 [--task TASK_ID] [--bill-status "Billable"] [--notes "text"]
-```
-
-### zoho projects users list
-
-```
-zoho projects users list --portal ID --project PID
-```
-
-### zoho projects milestones list
-
-```
-zoho projects milestones list --portal ID --project PID
-```
-
-### zoho projects milestones get
-
-```
-zoho projects milestones get <milestone-id> --portal ID --project PID
-```
-
-### zoho projects milestones create
-
-```
-zoho projects milestones create --portal ID --project PID --name "Name" --start 2025-01-01 --end 2025-03-31 [--json '{"..."}']
-```
-
-### zoho projects milestones update
-
-```
-zoho projects milestones update <milestone-id> --portal ID --project PID --json '{"..."}' 
-```
-
-### zoho projects milestones delete
-
-```
-zoho projects milestones delete <milestone-id> --portal ID --project PID
-```
-
-### zoho projects dependencies add
-
-```
-zoho projects dependencies add <task-id> --portal ID --project PID --depends-on OTHER_TASK_ID [--type FS|SS|FF|SF]
-```
-
-### zoho projects dependencies remove
-
-```
-zoho projects dependencies remove <task-id> <dependency-id> --portal ID --project PID
-```
-
----
-
-## drive
-
-### zoho drive teams me
-
-Get current user info.
-
-```
-zoho drive teams me
-```
-
-### zoho drive teams list
-
-```
-zoho drive teams list
-```
-
-### zoho drive teams members
-
-```
-zoho drive teams members <team-id>
-```
-
-### zoho drive folders list
-
-List top-level team folders.
-
-```
-zoho drive folders list --team TEAM_ID    # or set ZOHO_TEAM_ID env var
-```
-
-### zoho drive folders create
-
-```
-zoho drive folders create --name "Name" --parent FOLDER_ID [--type folder|zohowriter|zohosheet|zohoshow]
-```
-
-### zoho drive folders breadcrumb
-
-Show the full path to a folder.
-
-```
-zoho drive folders breadcrumb <folder-id>
-```
-
-### zoho drive files list
-
-List contents of a folder.
-
-```
-zoho drive files list --folder FOLDER_ID [--type file|folder|image]
-```
-
-### zoho drive files get
-
-```
-zoho drive files get <file-id>
-```
-
-### zoho drive files search
-
-```
-zoho drive files search --query "keyword" --team TEAM_ID [--mode all|name|content] [--type ...]    # or set ZOHO_TEAM_ID env var
-```
-
-### zoho drive files rename
-
-```
-zoho drive files rename <file-id> --name "New Name"
-```
-
-### zoho drive files copy
-
-```
-zoho drive files copy <file-id> --to DESTINATION_FOLDER_ID
-```
-
-### zoho drive files move
-
-```
-zoho drive files move <file-id> --to DESTINATION_FOLDER_ID
-```
-
-### zoho drive files trash
-
-```
-zoho drive files trash <file-id>
-```
-
-### zoho drive files delete
-
-Permanently delete.
-
-```
-zoho drive files delete <file-id>
-```
-
-### zoho drive files restore
-
-Restore from trash.
-
-```
-zoho drive files restore <file-id>
-```
-
-### zoho drive files trash-list
-
-List trashed files in a team folder.
-
-```
-zoho drive files trash-list --team-folder TEAMFOLDER_ID
-```
-
-### zoho drive files versions
-
-```
-zoho drive files versions <file-id>
-```
-
-### zoho drive download
-
-```
-zoho drive download <file-id> [--output path] [--format native|txt|html|pdf|docx]
-```
-
-### zoho drive upload
-
-```
-zoho drive upload <file-path> --folder FOLDER_ID [--override]
-```
-
-### zoho drive share permissions
-
-```
-zoho drive share permissions <file-id>
-```
-
-### zoho drive share add
-
-```
-zoho drive share add <file-id> --email user@co.com [--role viewer|commenter|editor|organizer]
-```
-
-### zoho drive share revoke
-
-```
-zoho drive share revoke <permission-id>
-```
-
-### zoho drive share links
-
-List share links for a file.
-
-```
-zoho drive share links <file-id>
-```
-
-### zoho drive share link
-
-Create or get a share link.
-
-```
-zoho drive share link <file-id> [--role viewer|commenter|editor] [--allow-download] [--name "Link Name"] [--expiration 2025-12-31] [--password secret]
-```
-
-### zoho drive share unlink
-
-```
-zoho drive share unlink <link-id>
-```
-
----
-
-## writer
-
-### zoho writer create
-
-```
-zoho writer create --name "Doc Name" [--folder FOLDER_ID] [--type writer|sheet|show]
-```
-
-### zoho writer details
-
-```
-zoho writer details <doc-id>
-```
-
-### zoho writer fields
-
-List merge fields in a template.
-
-```
-zoho writer fields <doc-id>
-```
-
-### zoho writer merge
-
-Merge data into a template and export.
-
-```
-zoho writer merge <doc-id> --json '{"field":"value"}' [--format pdf|docx|inline] [--output path]
-```
-
-### zoho writer delete
-
-```
-zoho writer delete <doc-id>
-```
-
-### zoho writer read
-
-Read document content as text.
-
-```
-zoho writer read <doc-id> [--format txt|html]
-```
-
-### zoho writer download
-
-```
-zoho writer download <doc-id> [--format txt|html|pdf|docx|odt|rtf|epub] [--output path]
-```
-
----
+- `zoho auth` — Authentication management
+- `zoho auth login` — Authenticate via device flow OAuth
+- `zoho auth self-client` — Authenticate via self-client code exchange
+- `zoho auth status` — Show current authentication status
+- `zoho auth refresh` — Force refresh the access token
+- `zoho auth logout` — Clear stored authentication tokens
+
+## bigin
+
+- `zoho bigin` — Zoho Bigin operations
+- `zoho bigin modules` — Bigin module operations
+- `zoho bigin modules list` — List available Bigin modules
+- `zoho bigin modules get` — Get a specific module
+- `zoho bigin modules fields` — List fields for a Bigin module
+- `zoho bigin modules layouts` — List layouts for a module
+- `zoho bigin modules related-lists` — List related lists for a module
+- `zoho bigin records` — Bigin record operations
+- `zoho bigin records list` — List records in a module
+- `zoho bigin records get` — Get a single record
+- `zoho bigin records create` — Create a record
+- `zoho bigin records update` — Update a record
+- `zoho bigin records delete` — Delete a record
+- `zoho bigin records upsert` — Upsert a record (insert or update)
+- `zoho bigin records bulk-delete` — Delete multiple records
+- `zoho bigin records deleted` — List deleted records
+- `zoho bigin records count` — Get record count for a module
+- `zoho bigin notes` — Bigin record notes
+- `zoho bigin notes list` — List notes on a record
+- `zoho bigin notes add` — Add a note to a record
+- `zoho bigin notes update` — Update a note
+- `zoho bigin notes delete` — Delete a note
+- `zoho bigin attachments` — Bigin record attachments
+- `zoho bigin attachments list` — List attachments on a record
+- `zoho bigin attachments upload` — Upload an attachment to a record
+- `zoho bigin attachments download` — Download an attachment
+- `zoho bigin attachments delete` — Delete an attachment
+- `zoho bigin tags` — Bigin tag operations
+- `zoho bigin tags add` — Add tags to records
+- `zoho bigin tags remove` — Remove tags from records
+- `zoho bigin users` — Bigin users
+- `zoho bigin users list` — List Bigin users
+- `zoho bigin users get` — Get a specific user
+- `zoho bigin org` — Bigin organization details
+- `zoho bigin org get` — Get organization details
+- `zoho bigin roles` — Bigin roles
+- `zoho bigin roles list` — List roles
+- `zoho bigin roles get` — Get a specific role
+- `zoho bigin profiles` — Bigin profiles
+- `zoho bigin profiles list` — List profiles
+- `zoho bigin profiles get` — Get a specific profile
+- `zoho bigin related` — Bigin related records
+- `zoho bigin related list` — List related records
+- `zoho bigin coql` — Run a COQL query
+- `zoho bigin search` — Search records in a module
+
+## billing
+
+- `zoho billing` — Zoho Billing operations
+- `zoho billing products` — Product operations
+- `zoho billing products list` — List all products
+- `zoho billing products get` — Retrieve a product
+- `zoho billing products create` — Create a product
+- `zoho billing products update` — Update a product
+- `zoho billing products delete` — Delete a product
+- `zoho billing products mark-active` — Mark a product as active
+- `zoho billing products mark-inactive` — Mark a product as inactive
+- `zoho billing plans` — Plan operations
+- `zoho billing plans list` — List all plans
+- `zoho billing plans get` — Retrieve a plan
+- `zoho billing plans create` — Create a plan
+- `zoho billing plans update` — Update a plan
+- `zoho billing plans delete` — Delete a plan
+- `zoho billing plans mark-active` — Mark a plan as active
+- `zoho billing plans mark-inactive` — Mark a plan as inactive
+- `zoho billing addons` — Addon operations
+- `zoho billing addons list` — List all addons
+- `zoho billing addons get` — Retrieve an addon
+- `zoho billing addons create` — Create an addon
+- `zoho billing addons update` — Update an addon
+- `zoho billing addons delete` — Delete an addon
+- `zoho billing addons mark-active` — Mark an addon as active
+- `zoho billing addons mark-inactive` — Mark an addon as inactive
+- `zoho billing coupons` — Coupon operations
+- `zoho billing coupons list` — List all coupons
+- `zoho billing coupons get` — Retrieve a coupon
+- `zoho billing coupons create` — Create a coupon
+- `zoho billing coupons update` — Update a coupon
+- `zoho billing coupons delete` — Delete a coupon
+- `zoho billing coupons mark-active` — Mark a coupon as active
+- `zoho billing coupons mark-inactive` — Mark a coupon as inactive
+- `zoho billing customers` — Customer operations
+- `zoho billing customers list` — List all customers
+- `zoho billing customers get` — Retrieve a customer
+- `zoho billing customers create` — Create a customer
+- `zoho billing customers update` — Update a customer
+- `zoho billing customers delete` — Delete a customer
+- `zoho billing customers mark-active` — Mark a customer as active
+- `zoho billing customers mark-inactive` — Mark a customer as inactive
+- `zoho billing subscriptions` — Subscription operations
+- `zoho billing subscriptions list` — List all subscriptions
+- `zoho billing subscriptions get` — Retrieve a subscription
+- `zoho billing subscriptions create` — Create a subscription
+- `zoho billing subscriptions update` — Update a subscription
+- `zoho billing subscriptions delete` — Delete a subscription
+- `zoho billing subscriptions cancel` — Cancel a subscription
+- `zoho billing subscriptions reactivate` — Reactivate a subscription
+- `zoho billing subscriptions scheduled-changes` — View scheduled changes for a subscription
+- `zoho billing invoices` — Invoice operations
+- `zoho billing invoices list` — List all invoices
+- `zoho billing invoices get` — Retrieve an invoice
+- `zoho billing invoices create` — Create an invoice
+- `zoho billing invoices update` — Update an invoice
+- `zoho billing invoices delete` — Delete an invoice
+- `zoho billing invoices convert-to-open` — Convert an invoice to open
+- `zoho billing invoices void` — Void an invoice
+- `zoho billing invoices email` — Email an invoice
+- `zoho billing invoices collect-charge` — Collect charge for an invoice
+- `zoho billing invoices write-off` — Write off an invoice
+- `zoho billing invoices cancel-write-off` — Cancel write off of an invoice
+- `zoho billing invoices apply-credits` — Apply credits to an invoice
+- `zoho billing invoices add-items` — Add items to a pending invoice
+- `zoho billing invoices delete-item` — Delete an item from a pending invoice
+- `zoho billing payments` — Payment operations
+- `zoho billing payments list` — List all payments
+- `zoho billing payments get` — Retrieve a payment
+- `zoho billing credit-notes` — Credit note operations
+- `zoho billing credit-notes list` — List all credit notes
+- `zoho billing credit-notes get` — Retrieve a credit note
+- `zoho billing credit-notes create` — Create a credit note
+- `zoho billing credit-notes delete` — Delete a credit note
+- `zoho billing credit-notes email` — Email a credit note
+- `zoho billing credit-notes void` — Void a credit note
+- `zoho billing credit-notes open-voided` — Open a voided credit note
+- `zoho billing credit-notes apply-credits` — Apply credits to multiple invoices
+- `zoho billing hosted-pages` — Hosted page operations
+- `zoho billing hosted-pages list` — List all hosted pages
+- `zoho billing hosted-pages get` — Retrieve a hosted page
+- `zoho billing hosted-pages create-subscription` — Create a subscription via hosted page
+- `zoho billing hosted-pages update-subscription` — Update a subscription via hosted page
+- `zoho billing hosted-pages update-card` — Update card via hosted page
+- `zoho billing events` — Event operations
+- `zoho billing events list` — List all events
+- `zoho billing events get` — Retrieve an event
+- `zoho billing organizations` — Organization operations
+- `zoho billing organizations list` — List all organizations
+- `zoho billing organizations get` — Retrieve an organization
+- `zoho billing currencies` — Currency operations
+- `zoho billing currencies list` — List all currencies
+- `zoho billing currencies get` — Retrieve a currency
+- `zoho billing currencies create` — Create a currency
+- `zoho billing currencies update` — Update a currency
+- `zoho billing currencies delete` — Delete a currency
+- `zoho billing taxes` — Tax operations
+- `zoho billing taxes list` — List all taxes
+- `zoho billing taxes get` — Retrieve a tax
+- `zoho billing taxes create` — Create a tax
+- `zoho billing taxes update` — Update a tax
+- `zoho billing taxes delete` — Delete a tax
+- `zoho billing users` — User operations
+- `zoho billing users list` — List all users
+- `zoho billing users get` — Retrieve a user
+
+## books
+
+- `zoho books` — Zoho Books operations
+- `zoho books organizations` — Organization operations
+- `zoho books organizations list` — List organizations
+- `zoho books organizations create` — Create an organization
+- `zoho books organizations get` — Get an organization
+- `zoho books organizations update` — Update an organization
+- `zoho books contacts` — Contact operations
+- `zoho books contacts create` — Create a contact
+- `zoho books contacts update-by-custom-field` — Update a contact by custom field
+- `zoho books contacts list` — List contacts
+- `zoho books contacts update` — Update a contact
+- `zoho books contacts get` — Get a contact
+- `zoho books contacts delete` — Delete a contact
+- `zoho books contacts mark-active` — Mark a contact as active
+- `zoho books contacts mark-inactive` — Mark a contact as inactive
+- `zoho books contacts enable-portal` — Enable portal for a contact
+- `zoho books contacts enable-payment-reminders` — Enable payment reminders for a contact
+- `zoho books contacts disable-payment-reminders` — Disable payment reminders for a contact
+- `zoho books contacts email-statement` — Email statement to a contact
+- `zoho books contacts get-statement-mail-content` — Get statement email content for a contact
+- `zoho books contacts email` — Email a contact
+- `zoho books contacts list-comments` — List comments for a contact
+- `zoho books contacts add-address` — Add address to a contact
+- `zoho books contacts get-addresses` — Get addresses for a contact
+- `zoho books contacts edit-address` — Edit an address for a contact
+- `zoho books contacts delete-address` — Delete an address for a contact
+- `zoho books contacts list-refunds` — List refunds for a contact
+- `zoho books contacts track-1099` — Track 1099 for a contact
+- `zoho books contacts untrack-1099` — Untrack 1099 for a contact
+- `zoho books contacts get-unused-retainer-payments` — Get unused retainer payments for a contact
+- `zoho books contact-persons` — Contact person operations
+- `zoho books contact-persons create` — Create a contact person
+- `zoho books contact-persons update` — Update a contact person
+- `zoho books contact-persons delete` — Delete a contact person
+- `zoho books contact-persons list` — List contact persons
+- `zoho books contact-persons get` — Get a contact person
+- `zoho books contact-persons mark-primary` — Mark a contact person as primary
+- `zoho books estimates` — Estimate operations
+- `zoho books estimates create` — Create an estimate
+- `zoho books estimates update-by-custom-field` — Update an estimate by custom field
+- `zoho books estimates list` — List estimates
+- `zoho books estimates update` — Update an estimate
+- `zoho books estimates get` — Get an estimate
+- `zoho books estimates delete` — Delete an estimate
+- `zoho books estimates update-custom-fields` — Update custom fields of an estimate
+- `zoho books estimates mark-sent` — Mark an estimate as sent
+- `zoho books estimates mark-accepted` — Mark an estimate as accepted
+- `zoho books estimates mark-declined` — Mark an estimate as declined
+- `zoho books estimates submit-for-approval` — Submit an estimate for approval
+- `zoho books estimates approve` — Approve an estimate
+- `zoho books estimates email` — Email an estimate
+- `zoho books estimates get-email-content` — Get email content of an estimate
+- `zoho books estimates email-multiple` — Email multiple estimates
+- `zoho books estimates update-billing-address` — Update billing address of an estimate
+- `zoho books estimates update-shipping-address` — Update shipping address of an estimate
+- `zoho books estimates list-templates` — List estimate templates
+- `zoho books estimates update-template` — Update template of an estimate
+- `zoho books estimates add-comment` — Add a comment to an estimate
+- `zoho books estimates list-comments` — List comments of an estimate
+- `zoho books estimates update-comment` — Update a comment on an estimate
+- `zoho books estimates delete-comment` — Delete a comment on an estimate
+- `zoho books sales-orders` — Sales order operations
+- `zoho books sales-orders create` — Create a sales order
+- `zoho books sales-orders update-by-custom-field` — Update a sales order by custom field
+- `zoho books sales-orders list` — List sales orders
+- `zoho books sales-orders update` — Update a sales order
+- `zoho books sales-orders get` — Get a sales order
+- `zoho books sales-orders delete` — Delete a sales order
+- `zoho books sales-orders update-custom-fields` — Update custom fields of a sales order
+- `zoho books sales-orders mark-open` — Mark a sales order as open
+- `zoho books sales-orders mark-void` — Mark a sales order as void
+- `zoho books sales-orders update-sub-status` — Update sub-status of a sales order
+- `zoho books sales-orders email` — Email a sales order
+- `zoho books sales-orders get-email-content` — Get email content of a sales order
+- `zoho books sales-orders submit-for-approval` — Submit a sales order for approval
+- `zoho books sales-orders approve` — Approve a sales order
+- `zoho books sales-orders update-billing-address` — Update billing address of a sales order
+- `zoho books sales-orders update-shipping-address` — Update shipping address of a sales order
+- `zoho books sales-orders list-templates` — List sales order templates
+- `zoho books sales-orders update-template` — Update template of a sales order
+- `zoho books sales-orders add-attachment` — Add attachment to a sales order
+- `zoho books sales-orders update-attachment-preference` — Update attachment preference of a sales order
+- `zoho books sales-orders get-attachment` — Get attachment of a sales order
+- `zoho books sales-orders delete-attachment` — Delete attachment of a sales order
+- `zoho books sales-orders add-comment` — Add a comment to a sales order
+- `zoho books sales-orders list-comments` — List comments of a sales order
+- `zoho books sales-orders update-comment` — Update a comment on a sales order
+- `zoho books sales-orders delete-comment` — Delete a comment on a sales order
+- `zoho books sales-receipts` — Sales receipt operations
+- `zoho books sales-receipts create` — Create a sales receipt
+- `zoho books sales-receipts list` — List sales receipts
+- `zoho books sales-receipts update` — Update a sales receipt
+- `zoho books sales-receipts get` — Get a sales receipt
+- `zoho books sales-receipts delete` — Delete a sales receipt
+- `zoho books sales-receipts email` — Email a sales receipt
+- `zoho books invoices` — Invoice operations
+- `zoho books invoices create` — Create an invoice
+- `zoho books invoices update-by-custom-field` — Update an invoice by custom field
+- `zoho books invoices list` — List invoices
+- `zoho books invoices update` — Update an invoice
+- `zoho books invoices get` — Get an invoice
+- `zoho books invoices delete` — Delete an invoice
+- `zoho books invoices mark-sent` — Mark an invoice as sent
+- `zoho books invoices void` — Void an invoice
+- `zoho books invoices mark-draft` — Mark an invoice as draft
+- `zoho books invoices email-multiple` — Email multiple invoices
+- `zoho books invoices create-instant` — Create an instant invoice
+- `zoho books invoices associate-salesorder` — Associate a sales order with an invoice
+- `zoho books invoices submit-for-approval` — Submit an invoice for approval
+- `zoho books invoices approve` — Approve an invoice
+- `zoho books invoices email` — Email an invoice
+- `zoho books invoices get-email-content` — Get email content of an invoice
+- `zoho books invoices remind-customer` — Send payment reminder for an invoice
+- `zoho books invoices get-payment-reminder-content` — Get payment reminder content of an invoice
+- `zoho books invoices bulk-reminder` — Send bulk payment reminders
+- `zoho books invoices disable-payment-reminder` — Disable payment reminder for an invoice
+- `zoho books invoices enable-payment-reminder` — Enable payment reminder for an invoice
+- `zoho books invoices write-off` — Write off an invoice
+- `zoho books invoices cancel-write-off` — Cancel write-off of an invoice
+- `zoho books invoices update-billing-address` — Update billing address of an invoice
+- `zoho books invoices update-shipping-address` — Update shipping address of an invoice
+- `zoho books invoices list-templates` — List invoice templates
+- `zoho books invoices update-template` — Update template of an invoice
+- `zoho books invoices list-payments` — List payments of an invoice
+- `zoho books invoices list-credits-applied` — List credits applied to an invoice
+- `zoho books invoices apply-credits` — Apply credits to an invoice
+- `zoho books invoices delete-payment` — Delete a payment from an invoice
+- `zoho books invoices delete-applied-credit` — Delete an applied credit from an invoice
+- `zoho books invoices add-attachment` — Add attachment to an invoice
+- `zoho books invoices update-attachment-preference` — Update attachment preference of an invoice
+- `zoho books invoices get-attachment` — Get attachment of an invoice
+- `zoho books invoices delete-attachment` — Delete attachment of an invoice
+- `zoho books invoices retrieve-document` — Retrieve documents of an invoice
+- `zoho books invoices delete-invoice-attachment` — Delete an invoice document attachment
+- `zoho books invoices delete-expense-receipt` — Delete an expense receipt from an invoice
+- `zoho books invoices update-custom-fields` — Update custom fields of an invoice
+- `zoho books invoices add-comment` — Add a comment to an invoice
+- `zoho books invoices list-comments` — List comments of an invoice
+- `zoho books invoices update-comment` — Update a comment on an invoice
+- `zoho books invoices delete-comment` — Delete a comment on an invoice
+- `zoho books invoices generate-payment-link` — Generate payment link for an invoice
+- `zoho books recurring-invoices` — Recurring invoice operations
+- `zoho books recurring-invoices create` — Create a recurring invoice
+- `zoho books recurring-invoices update-by-custom-field` — Update a recurring invoice by custom field
+- `zoho books recurring-invoices list` — List recurring invoices
+- `zoho books recurring-invoices update` — Update a recurring invoice
+- `zoho books recurring-invoices get` — Get a recurring invoice
+- `zoho books recurring-invoices delete` — Delete a recurring invoice
+- `zoho books recurring-invoices stop` — Stop a recurring invoice
+- `zoho books recurring-invoices resume` — Resume a recurring invoice
+- `zoho books recurring-invoices update-template` — Update template of a recurring invoice
+- `zoho books recurring-invoices list-history` — List history of a recurring invoice
+- `zoho books credit-notes` — Credit note operations
+- `zoho books credit-notes create` — Create a credit note
+- `zoho books credit-notes update-by-custom-field` — Update a credit note by custom field
+- `zoho books credit-notes list` — List credit notes
+- `zoho books credit-notes update` — Update a credit note
+- `zoho books credit-notes get` — Get a credit note
+- `zoho books credit-notes delete` — Delete a credit note
+- `zoho books credit-notes email` — Email a credit note
+- `zoho books credit-notes get-email-content` — Get email content of a credit note
+- `zoho books credit-notes void` — Void a credit note
+- `zoho books credit-notes convert-to-draft` — Convert a credit note to draft
+- `zoho books credit-notes convert-to-open` — Convert a credit note to open
+- `zoho books credit-notes submit-for-approval` — Submit a credit note for approval
+- `zoho books credit-notes approve` — Approve a credit note
+- `zoho books credit-notes email-history` — Get email history of a credit note
+- `zoho books credit-notes update-billing-address` — Update billing address of a credit note
+- `zoho books credit-notes update-shipping-address` — Update shipping address of a credit note
+- `zoho books credit-notes list-templates` — List credit note templates
+- `zoho books credit-notes update-template` — Update template of a credit note
+- `zoho books credit-notes credit-to-invoice` — Apply credit note to invoices
+- `zoho books credit-notes list-invoices-credited` — List invoices credited
+- `zoho books credit-notes delete-invoices-credited` — Delete invoices credited
+- `zoho books credit-notes add-comment` — Add a comment to a credit note
+- `zoho books credit-notes list-comments` — List comments of a credit note
+- `zoho books credit-notes delete-comment` — Delete a comment on a credit note
+- `zoho books credit-notes refund` — Refund a credit note
+- `zoho books credit-notes list-refunds` — List refunds of a credit note
+- `zoho books credit-notes update-refund` — Update a refund of a credit note
+- `zoho books credit-notes get-refund` — Get a refund of a credit note
+- `zoho books credit-notes delete-refund` — Delete a refund of a credit note
+- `zoho books customer-debit-notes` — Customer debit note operations
+- `zoho books customer-debit-notes create` — Create a customer debit note
+- `zoho books customer-debit-notes list` — List customer debit notes
+- `zoho books customer-debit-notes update` — Update a customer debit note
+- `zoho books customer-debit-notes get` — Get a customer debit note
+- `zoho books customer-debit-notes delete` — Delete a customer debit note
+- `zoho books customer-payments` — Customer payment operations
+- `zoho books customer-payments create` — Create a customer payment
+- `zoho books customer-payments update-by-custom-field` — Update a customer payment by custom field
+- `zoho books customer-payments list` — List customer payments
+- `zoho books customer-payments update` — Update a customer payment
+- `zoho books customer-payments get` — Get a customer payment
+- `zoho books customer-payments delete` — Delete a customer payment
+- `zoho books customer-payments refund-excess` — Refund excess of a customer payment
+- `zoho books customer-payments list-refunds` — List refunds of a customer payment
+- `zoho books customer-payments update-custom-fields` — Update custom fields of a customer payment
+- `zoho books customer-payments update-refund` — Update a refund of a customer payment
+- `zoho books customer-payments get-refund` — Get a refund of a customer payment
+- `zoho books customer-payments delete-refund` — Delete a refund of a customer payment
+- `zoho books expenses` — Expense operations
+- `zoho books expenses create` — Create an expense
+- `zoho books expenses update-by-custom-field` — Update an expense by custom field
+- `zoho books expenses list` — List expenses
+- `zoho books expenses update` — Update an expense
+- `zoho books expenses get` — Get an expense
+- `zoho books expenses delete` — Delete an expense
+- `zoho books expenses list-history` — List history of an expense
+- `zoho books expenses create-employee` — Create an employee
+- `zoho books expenses list-employees` — List employees
+- `zoho books expenses get-employee` — Get an employee
+- `zoho books expenses delete-employee` — Delete an employee
+- `zoho books expenses add-receipt` — Add receipt to an expense
+- `zoho books expenses get-receipt` — Get receipt of an expense
+- `zoho books expenses delete-receipt` — Delete receipt of an expense
+- `zoho books expenses add-attachment` — Add attachment to an expense
+- `zoho books recurring-expenses` — Recurring expense operations
+- `zoho books recurring-expenses create` — Create a recurring expense
+- `zoho books recurring-expenses update-by-custom-field` — Update a recurring expense by custom field
+- `zoho books recurring-expenses list` — List recurring expenses
+- `zoho books recurring-expenses update` — Update a recurring expense
+- `zoho books recurring-expenses get` — Get a recurring expense
+- `zoho books recurring-expenses delete` — Delete a recurring expense
+- `zoho books recurring-expenses stop` — Stop a recurring expense
+- `zoho books recurring-expenses resume` — Resume a recurring expense
+- `zoho books recurring-expenses list-child-expenses` — List child expenses of a recurring expense
+- `zoho books recurring-expenses list-history` — List history of a recurring expense
+- `zoho books retainer-invoices` — Retainer invoice operations
+- `zoho books retainer-invoices create` — Create a retainer invoice
+- `zoho books retainer-invoices list` — List retainer invoices
+- `zoho books retainer-invoices update` — Update a retainer invoice
+- `zoho books retainer-invoices get` — Get a retainer invoice
+- `zoho books retainer-invoices delete` — Delete a retainer invoice
+- `zoho books retainer-invoices mark-sent` — Mark a retainer invoice as sent
+- `zoho books retainer-invoices void` — Void a retainer invoice
+- `zoho books retainer-invoices mark-draft` — Mark a retainer invoice as draft
+- `zoho books retainer-invoices submit-for-approval` — Submit a retainer invoice for approval
+- `zoho books retainer-invoices approve` — Approve a retainer invoice
+- `zoho books retainer-invoices email` — Email a retainer invoice
+- `zoho books retainer-invoices get-email-content` — Get email content of a retainer invoice
+- `zoho books retainer-invoices update-billing-address` — Update billing address of a retainer invoice
+- `zoho books retainer-invoices list-templates` — List retainer invoice templates
+- `zoho books retainer-invoices update-template` — Update template of a retainer invoice
+- `zoho books retainer-invoices add-attachment` — Add attachment to a retainer invoice
+- `zoho books retainer-invoices get-attachment` — Get attachment of a retainer invoice
+- `zoho books retainer-invoices delete-attachment` — Delete attachment of a retainer invoice
+- `zoho books retainer-invoices add-comment` — Add a comment to a retainer invoice
+- `zoho books retainer-invoices list-comments` — List comments of a retainer invoice
+- `zoho books retainer-invoices update-comment` — Update a comment on a retainer invoice
+- `zoho books retainer-invoices delete-comment` — Delete a comment on a retainer invoice
+- `zoho books purchase-orders` — Purchase order operations
+- `zoho books purchase-orders create` — Create a purchase order
+- `zoho books purchase-orders update-by-custom-field` — Update a purchase order by custom field
+- `zoho books purchase-orders list` — List purchase orders
+- `zoho books purchase-orders update` — Update a purchase order
+- `zoho books purchase-orders get` — Get a purchase order
+- `zoho books purchase-orders delete` — Delete a purchase order
+- `zoho books purchase-orders update-custom-fields` — Update custom fields of a purchase order
+- `zoho books purchase-orders mark-open` — Mark a purchase order as open
+- `zoho books purchase-orders mark-billed` — Mark a purchase order as billed
+- `zoho books purchase-orders cancel` — Cancel a purchase order
+- `zoho books purchase-orders submit-for-approval` — Submit a purchase order for approval
+- `zoho books purchase-orders approve` — Approve a purchase order
+- `zoho books purchase-orders email` — Email a purchase order
+- `zoho books purchase-orders get-email-content` — Get email content of a purchase order
+- `zoho books purchase-orders update-billing-address` — Update billing address of a purchase order
+- `zoho books purchase-orders list-templates` — List purchase order templates
+- `zoho books purchase-orders update-template` — Update template of a purchase order
+- `zoho books purchase-orders add-attachment` — Add attachment to a purchase order
+- `zoho books purchase-orders update-attachment-preference` — Update attachment preference of a purchase order
+- `zoho books purchase-orders get-attachment` — Get attachment of a purchase order
+- `zoho books purchase-orders delete-attachment` — Delete attachment of a purchase order
+- `zoho books purchase-orders add-comment` — Add a comment to a purchase order
+- `zoho books purchase-orders list-comments` — List comments of a purchase order
+- `zoho books purchase-orders update-comment` — Update a comment on a purchase order
+- `zoho books purchase-orders delete-comment` — Delete a comment on a purchase order
+- `zoho books purchase-orders reject` — Reject a purchase order
+- `zoho books bills` — Bill operations
+- `zoho books bills create` — Create a bill
+- `zoho books bills update-by-custom-field` — Update a bill by custom field
+- `zoho books bills list` — List bills
+- `zoho books bills update` — Update a bill
+- `zoho books bills get` — Get a bill
+- `zoho books bills delete` — Delete a bill
+- `zoho books bills update-custom-fields` — Update custom fields of a bill
+- `zoho books bills void` — Void a bill
+- `zoho books bills mark-open` — Mark a bill as open
+- `zoho books bills submit-for-approval` — Submit a bill for approval
+- `zoho books bills approve` — Approve a bill
+- `zoho books bills update-billing-address` — Update billing address of a bill
+- `zoho books bills list-payments` — List payments of a bill
+- `zoho books bills apply-credits` — Apply credits to a bill
+- `zoho books bills delete-payment` — Delete a payment from a bill
+- `zoho books bills add-attachment` — Add attachment to a bill
+- `zoho books bills get-attachment` — Get attachment of a bill
+- `zoho books bills delete-attachment` — Delete attachment of a bill
+- `zoho books bills add-comment` — Add a comment to a bill
+- `zoho books bills list-comments` — List comments of a bill
+- `zoho books bills delete-comment` — Delete a comment on a bill
+- `zoho books recurring-bills` — Recurring bill operations
+- `zoho books recurring-bills create` — Create a recurring bill
+- `zoho books recurring-bills update-by-custom-field` — Update a recurring bill by custom field
+- `zoho books recurring-bills list` — List recurring bills
+- `zoho books recurring-bills update` — Update a recurring bill
+- `zoho books recurring-bills get` — Get a recurring bill
+- `zoho books recurring-bills delete` — Delete a recurring bill
+- `zoho books recurring-bills stop` — Stop a recurring bill
+- `zoho books recurring-bills resume` — Resume a recurring bill
+- `zoho books recurring-bills list-history` — List history of a recurring bill
+- `zoho books vendor-credits` — Vendor credit operations
+- `zoho books vendor-credits create` — Create a vendor credit
+- `zoho books vendor-credits list` — List vendor credits
+- `zoho books vendor-credits update` — Update a vendor credit
+- `zoho books vendor-credits get` — Get a vendor credit
+- `zoho books vendor-credits delete` — Delete a vendor credit
+- `zoho books vendor-credits convert-to-open` — Convert a vendor credit to open
+- `zoho books vendor-credits void` — Void a vendor credit
+- `zoho books vendor-credits submit-for-approval` — Submit a vendor credit for approval
+- `zoho books vendor-credits approve` — Approve a vendor credit
+- `zoho books vendor-credits apply-credits-to-bill` — Apply vendor credit to bills
+- `zoho books vendor-credits list-bills-credited` — List bills credited
+- `zoho books vendor-credits delete-bills-credited` — Delete bills credited
+- `zoho books vendor-credits refund` — Refund a vendor credit
+- `zoho books vendor-credits list-refunds` — List refunds of a vendor credit
+- `zoho books vendor-credits update-refund` — Update a refund of a vendor credit
+- `zoho books vendor-credits get-refund` — Get a refund of a vendor credit
+- `zoho books vendor-credits delete-refund` — Delete a refund of a vendor credit
+- `zoho books vendor-credits list-all-refunds` — List all vendor credit refunds
+- `zoho books vendor-credits add-comment` — Add a comment to a vendor credit
+- `zoho books vendor-credits list-comments` — List comments of a vendor credit
+- `zoho books vendor-credits delete-comment` — Delete a comment on a vendor credit
+- `zoho books vendor-payments` — Vendor payment operations
+- `zoho books vendor-payments create` — Create a vendor payment
+- `zoho books vendor-payments update-by-custom-field` — Update a vendor payment by custom field
+- `zoho books vendor-payments list` — List vendor payments
+- `zoho books vendor-payments update` — Update a vendor payment
+- `zoho books vendor-payments get` — Get a vendor payment
+- `zoho books vendor-payments delete` — Delete a vendor payment
+- `zoho books vendor-payments refund-excess` — Refund excess of a vendor payment
+- `zoho books vendor-payments list-refunds` — List refunds of a vendor payment
+- `zoho books vendor-payments update-refund` — Update a refund of a vendor payment
+- `zoho books vendor-payments get-refund` — Get a refund of a vendor payment
+- `zoho books vendor-payments delete-refund` — Delete a refund of a vendor payment
+- `zoho books vendor-payments email` — Email a vendor payment
+- `zoho books vendor-payments get-email-content` — Get email content of a vendor payment
+- `zoho books custom-modules` — Custom module operations
+- `zoho books custom-modules create` — Create a custom module record
+- `zoho books custom-modules bulk-update` — Bulk update custom module records
+- `zoho books custom-modules list` — List custom module records
+- `zoho books custom-modules update-record` — Update a custom module record
+- `zoho books custom-modules get-record` — Get a custom module record
+- `zoho books custom-modules delete-record` — Delete a custom module record
+- `zoho books bank-accounts` — Bank account operations
+- `zoho books bank-accounts create` — Create a bank account
+- `zoho books bank-accounts list` — List bank accounts
+- `zoho books bank-accounts update` — Update a bank account
+- `zoho books bank-accounts get` — Get a bank account
+- `zoho books bank-accounts delete` — Delete a bank account
+- `zoho books bank-accounts deactivate` — Deactivate a bank account
+- `zoho books bank-accounts activate` — Activate a bank account
+- `zoho books bank-accounts import-statement` — Import a bank statement
+- `zoho books bank-accounts get-last-statement` — Get last imported statement
+- `zoho books bank-accounts delete-last-statement` — Delete last imported statement
+- `zoho books bank-transactions` — Bank transaction operations
+- `zoho books bank-transactions create` — Create a bank transaction
+- `zoho books bank-transactions list` — List bank transactions
+- `zoho books bank-transactions update` — Update a bank transaction
+- `zoho books bank-transactions get` — Get a bank transaction
+- `zoho books bank-transactions delete` — Delete a bank transaction
+- `zoho books bank-transactions match` — Match a bank transaction
+- `zoho books bank-transactions get-matching` — Get matching transactions
+- `zoho books bank-transactions unmatch` — Unmatch a bank transaction
+- `zoho books bank-transactions exclude` — Exclude a bank transaction
+- `zoho books bank-transactions restore` — Restore a bank transaction
+- `zoho books bank-transactions categorize` — Categorize a bank transaction
+- `zoho books bank-transactions categorize-as-expense` — Categorize as expense
+- `zoho books bank-transactions uncategorize` — Uncategorize a bank transaction
+- `zoho books bank-transactions categorize-vendor-payment` — Categorize as vendor payment
+- `zoho books bank-transactions categorize-customer-payment` — Categorize as customer payment
+- `zoho books bank-transactions categorize-credit-note-refund` — Categorize as credit note refund
+- `zoho books bank-transactions categorize-vendor-credit-refund` — Categorize as vendor credit refund
+- `zoho books bank-transactions categorize-customer-payment-refund` — Categorize as customer payment refund
+- `zoho books bank-transactions categorize-vendor-payment-refund` — Categorize as vendor payment refund
+- `zoho books bank-rules` — Bank rule operations
+- `zoho books bank-rules create` — Create a bank rule
+- `zoho books bank-rules list` — List bank rules
+- `zoho books bank-rules update` — Update a bank rule
+- `zoho books bank-rules get` — Get a bank rule
+- `zoho books bank-rules delete` — Delete a bank rule
+- `zoho books chart-of-accounts` — Chart of accounts operations
+- `zoho books chart-of-accounts create` — Create a chart of account
+- `zoho books chart-of-accounts list` — List chart of accounts
+- `zoho books chart-of-accounts update` — Update a chart of account
+- `zoho books chart-of-accounts get` — Get a chart of account
+- `zoho books chart-of-accounts delete` — Delete a chart of account
+- `zoho books chart-of-accounts mark-active` — Mark a chart of account as active
+- `zoho books chart-of-accounts mark-inactive` — Mark a chart of account as inactive
+- `zoho books chart-of-accounts list-transactions` — List transactions of a chart of account
+- `zoho books chart-of-accounts delete-transaction` — Delete a transaction
+- `zoho books journals` — Journal operations
+- `zoho books journals create` — Create a journal
+- `zoho books journals list` — List journals
+- `zoho books journals update` — Update a journal
+- `zoho books journals get` — Get a journal
+- `zoho books journals delete` — Delete a journal
+- `zoho books journals mark-published` — Mark a journal as published
+- `zoho books journals add-attachment` — Add attachment to a journal
+- `zoho books journals add-comment` — Add a comment to a journal
+- `zoho books journals delete-comment` — Delete a comment on a journal
+- `zoho books fixed-assets` — Fixed asset operations
+- `zoho books fixed-assets create` — Create a fixed asset
+- `zoho books fixed-assets list` — List fixed assets
+- `zoho books fixed-assets update` — Update a fixed asset
+- `zoho books fixed-assets get` — Get a fixed asset
+- `zoho books fixed-assets delete` — Delete a fixed asset
+- `zoho books fixed-assets get-history` — Get history of a fixed asset
+- `zoho books fixed-assets get-forecast-depreciation` — Get forecast depreciation
+- `zoho books fixed-assets mark-active` — Mark a fixed asset as active
+- `zoho books fixed-assets cancel` — Cancel a fixed asset
+- `zoho books fixed-assets mark-draft` — Mark a fixed asset as draft
+- `zoho books fixed-assets write-off` — Write off a fixed asset
+- `zoho books fixed-assets sell` — Sell a fixed asset
+- `zoho books fixed-assets add-comment` — Add a comment to a fixed asset
+- `zoho books fixed-assets delete-comment` — Delete a comment on a fixed asset
+- `zoho books fixed-assets create-type` — Create a fixed asset type
+- `zoho books fixed-assets list-types` — List fixed asset types
+- `zoho books fixed-assets update-type` — Update a fixed asset type
+- `zoho books fixed-assets delete-type` — Delete a fixed asset type
+- `zoho books base-currency-adjustment` — Base currency adjustment operations
+- `zoho books base-currency-adjustment create` — Create a base currency adjustment
+- `zoho books base-currency-adjustment list` — List base currency adjustments
+- `zoho books base-currency-adjustment get` — Get a base currency adjustment
+- `zoho books base-currency-adjustment delete` — Delete a base currency adjustment
+- `zoho books base-currency-adjustment list-account-details` — List account details for adjustment
+- `zoho books projects` — Project operations
+- `zoho books projects create` — Create a project
+- `zoho books projects update-by-custom-field` — Update a project by custom field
+- `zoho books projects list` — List projects
+- `zoho books projects update` — Update a project
+- `zoho books projects get` — Get a project
+- `zoho books projects delete` — Delete a project
+- `zoho books projects activate` — Activate a project
+- `zoho books projects inactivate` — Inactivate a project
+- `zoho books projects clone` — Clone a project
+- `zoho books projects assign-users` — Assign users to a project
+- `zoho books projects list-users` — List users of a project
+- `zoho books projects invite-user` — Invite a user to a project
+- `zoho books projects update-user` — Update a user in a project
+- `zoho books projects get-user` — Get a user in a project
+- `zoho books projects delete-user` — Delete a user from a project
+- `zoho books projects post-comment` — Post a comment on a project
+- `zoho books projects list-comments` — List comments of a project
+- `zoho books projects delete-comment` — Delete a comment on a project
+- `zoho books projects list-invoices` — List invoices of a project
+- `zoho books tasks` — Task operations
+- `zoho books tasks create` — Create a task
+- `zoho books tasks list` — List tasks
+- `zoho books tasks update` — Update a task
+- `zoho books tasks get` — Get a task
+- `zoho books tasks delete` — Delete a task
+- `zoho books time-entries` — Time entry operations
+- `zoho books time-entries log` — Log a time entry
+- `zoho books time-entries list` — List time entries
+- `zoho books time-entries update` — Update a time entry
+- `zoho books time-entries get` — Get a time entry
+- `zoho books time-entries delete` — Delete a time entry
+- `zoho books time-entries start-timer` — Start a timer for a time entry
+- `zoho books time-entries stop-timer` — Stop a timer for a time entry
+- `zoho books time-entries get-timer` — Get current running timer
+- `zoho books users` — User operations
+- `zoho books users create` — Create a user
+- `zoho books users list` — List users
+- `zoho books users update` — Update a user
+- `zoho books users get` — Get a user
+- `zoho books users delete` — Delete a user
+- `zoho books users get-current` — Get current user
+- `zoho books users invite` — Invite a user
+- `zoho books users mark-active` — Mark a user as active
+- `zoho books users mark-inactive` — Mark a user as inactive
+- `zoho books items` — Item operations
+- `zoho books items create` — Create an item
+- `zoho books items update-by-custom-field` — Update an item by custom field
+- `zoho books items list` — List items
+- `zoho books items update` — Update an item
+- `zoho books items get` — Get an item
+- `zoho books items delete` — Delete an item
+- `zoho books items update-custom-fields` — Update custom fields of an item
+- `zoho books items mark-active` — Mark an item as active
+- `zoho books items mark-inactive` — Mark an item as inactive
+- `zoho books locations` — Location operations
+- `zoho books locations enable` — Enable locations
+- `zoho books locations create` — Create a location
+- `zoho books locations list` — List locations
+- `zoho books locations update` — Update a location
+- `zoho books locations delete` — Delete a location
+- `zoho books locations mark-active` — Mark a location as active
+- `zoho books locations mark-inactive` — Mark a location as inactive
+- `zoho books locations mark-primary` — Mark a location as primary
+- `zoho books currencies` — Currency operations
+- `zoho books currencies create` — Create a currency
+- `zoho books currencies list` — List currencies
+- `zoho books currencies update` — Update a currency
+- `zoho books currencies get` — Get a currency
+- `zoho books currencies delete` — Delete a currency
+- `zoho books currencies create-exchange-rate` — Create an exchange rate
+- `zoho books currencies list-exchange-rates` — List exchange rates
+- `zoho books currencies update-exchange-rate` — Update an exchange rate
+- `zoho books currencies get-exchange-rate` — Get an exchange rate
+- `zoho books currencies delete-exchange-rate` — Delete an exchange rate
+- `zoho books taxes` — Tax operations
+- `zoho books taxes create` — Create a tax
+- `zoho books taxes list` — List taxes
+- `zoho books taxes update` — Update a tax
+- `zoho books taxes get` — Get a tax
+- `zoho books taxes delete` — Delete a tax
+- `zoho books taxes create-group` — Create a tax group
+- `zoho books taxes list-groups` — List tax groups
+- `zoho books taxes update-group` — Update a tax group
+- `zoho books taxes get-group` — Get a tax group
+- `zoho books taxes delete-group` — Delete a tax group
+- `zoho books taxes create-authority` — Create a tax authority
+- `zoho books taxes list-authorities` — List tax authorities
+- `zoho books taxes update-authority` — Update a tax authority
+- `zoho books taxes get-authority` — Get a tax authority
+- `zoho books taxes delete-authority` — Delete a tax authority
+- `zoho books taxes create-exemption` — Create a tax exemption
+- `zoho books taxes list-exemptions` — List tax exemptions
+- `zoho books taxes update-exemption` — Update a tax exemption
+- `zoho books taxes get-exemption` — Get a tax exemption
+- `zoho books taxes delete-exemption` — Delete a tax exemption
+- `zoho books opening-balance` — Opening balance operations
+- `zoho books opening-balance create` — Create opening balance
+- `zoho books opening-balance update` — Update opening balance
+- `zoho books opening-balance get` — Get opening balance
+- `zoho books opening-balance delete` — Delete opening balance
+- `zoho books crm-integration` — CRM integration operations
+- `zoho books crm-integration import-contact` — Import contact from CRM
+- `zoho books crm-integration import-item` — Import item from CRM
+- `zoho books reporting-tags` — Reporting tag operations
+- `zoho books reporting-tags create` — Create a reporting tag
+- `zoho books reporting-tags list` — List reporting tags
+- `zoho books reporting-tags update` — Update a reporting tag
+- `zoho books reporting-tags delete` — Delete a reporting tag
+- `zoho books reporting-tags mark-default-option` — Mark default option for a reporting tag
+- `zoho books reporting-tags update-options` — Update options of a reporting tag
+- `zoho books reporting-tags update-visibility` — Update visibility of a reporting tag
+- `zoho books reporting-tags mark-active` — Mark a reporting tag as active
+- `zoho books reporting-tags mark-inactive` — Mark a reporting tag as inactive
+- `zoho books reporting-tags mark-option-active` — Mark a reporting tag option as active
+- `zoho books reporting-tags mark-option-inactive` — Mark a reporting tag option as inactive
+- `zoho books reporting-tags get-options-detail` — Get options detail of a reporting tag
+- `zoho books reporting-tags get-all-options` — Get all reporting tag options
+- `zoho books reporting-tags reorder` — Reorder reporting tags
 
 ## cliq
 
-### zoho cliq channels list
+- `zoho cliq` — Zoho Cliq operations
+- `zoho cliq channels` — Cliq channel operations
+- `zoho cliq channels list` — List channels
+- `zoho cliq channels get` — Get channel info
+- `zoho cliq channels create` — Create a channel
+- `zoho cliq channels message` — Send a message to a channel
+- `zoho cliq channels members` — List channel members
+- `zoho cliq channels delete` — Delete a channel
+- `zoho cliq chats` — Cliq chat operations
+- `zoho cliq chats message` — Send a direct message
+- `zoho cliq buddies` — Cliq buddy/DM operations
+- `zoho cliq buddies message` — Send a DM by email address
+- `zoho cliq messages` — Cliq message operations
+- `zoho cliq messages list` — List messages in a chat
+- `zoho cliq messages edit` — Edit a message
+- `zoho cliq messages delete` — Delete a message
+- `zoho cliq users` — Cliq user operations
+- `zoho cliq users list` — List users in the organization
+- `zoho cliq users get` — Get user details
 
-```
-zoho cliq channels list
-```
+## creator
 
-### zoho cliq channels get
+- `zoho creator` — Zoho Creator operations
+- `zoho creator applications` — Application operations
+- `zoho creator applications list` — List applications
+- `zoho creator records` — Record operations
+- `zoho creator records list` — List records from a report
+- `zoho creator records get` — Get a record by ID
+- `zoho creator records add` — Add records to a form
+- `zoho creator records update` — Update a record by ID
+- `zoho creator records delete` — Delete a record by ID
+- `zoho creator reports` — Report operations
+- `zoho creator reports list` — List reports in an application
+- `zoho creator forms` — Form operations
+- `zoho creator forms list` — List forms in an application
+- `zoho creator fields` — Field operations
+- `zoho creator fields list` — List fields of a form
+- `zoho creator pages` — Page operations
+- `zoho creator pages list` — List pages in an application
+- `zoho creator sections` — Section operations
+- `zoho creator sections list` — List sections in an application
+- `zoho creator bulk-read` — Bulk read operations
+- `zoho creator bulk-read create` — Create a bulk read job
+- `zoho creator bulk-read status` — Get bulk read job status
+- `zoho creator bulk-write` — Bulk write operations
+- `zoho creator bulk-write create` — Create a bulk write job
+- `zoho creator bulk-write status` — Get bulk write job status
 
-```
-zoho cliq channels get <channel-name>
-```
+## crm
 
-### zoho cliq channels create
+- `zoho crm` — Zoho CRM operations
+- `zoho crm modules` — CRM module operations
+- `zoho crm modules list` — List available CRM modules
+- `zoho crm modules fields` — List fields for a CRM module
+- `zoho crm modules related-lists` — List related lists for a module
+- `zoho crm modules layouts` — List layouts for a module
+- `zoho crm modules custom-views` — List custom views for a module
+- `zoho crm records` — CRM record operations
+- `zoho crm records list` — List records in a module
+- `zoho crm records get` — Get a single record
+- `zoho crm records create` — Create a record
+- `zoho crm records update` — Update a record
+- `zoho crm records delete` — Delete a record
+- `zoho crm records search` — Search records in a module
+- `zoho crm records upsert` — Upsert a record (insert or update)
+- `zoho crm records bulk-delete` — Delete multiple records
+- `zoho crm notes` — CRM record notes
+- `zoho crm notes list` — List notes on a record
+- `zoho crm notes add` — Add a note to a record
+- `zoho crm notes update` — Update a note
+- `zoho crm notes delete` — Delete a note
+- `zoho crm related` — CRM related records
+- `zoho crm related list` — List related records
+- `zoho crm users` — CRM users
+- `zoho crm users list` — List CRM users
+- `zoho crm owner` — Change record owner
+- `zoho crm owner change` — Change record owner
+- `zoho crm coql` — Run a COQL query
+- `zoho crm search-global` — Search across all CRM modules
+- `zoho crm attachments` — CRM record attachments
+- `zoho crm attachments list` — List attachments on a record
+- `zoho crm attachments upload` — Upload an attachment to a record
+- `zoho crm attachments download` — Download an attachment
+- `zoho crm attachments delete` — Delete an attachment
+- `zoho crm convert` — Convert a lead to contact/account/deal
+- `zoho crm tags` — CRM tag operations
+- `zoho crm tags add` — Add tags to records
+- `zoho crm tags remove` — Remove tags from records
 
-```
-zoho cliq channels create --name "channel-name" [--description "..."]
-```
+## desk
 
-### zoho cliq channels message
+- `zoho desk` — Zoho Desk operations
+- `zoho desk tickets` — Ticket operations
+- `zoho desk tickets list` — List tickets
+- `zoho desk tickets get` — Get a ticket
+- `zoho desk tickets create` — Create a ticket
+- `zoho desk tickets update` — Update a ticket
+- `zoho desk tickets delete` — Delete a ticket
+- `zoho desk tickets search` — Search tickets
+- `zoho desk tickets threads` — List ticket threads
+- `zoho desk tickets reply` — Send a ticket reply
+- `zoho desk tickets comments` — List ticket comments
+- `zoho desk tickets add-comment` — Add a ticket comment
+- `zoho desk tickets attachments` — List ticket attachments
+- `zoho desk tickets history` — List ticket history
+- `zoho desk contacts` — Contact operations
+- `zoho desk contacts list` — List contacts
+- `zoho desk contacts get` — Get a contact
+- `zoho desk contacts create` — Create a contact
+- `zoho desk contacts update` — Update a contact
+- `zoho desk contacts delete` — Delete a contact
+- `zoho desk contacts search` — Search contacts
+- `zoho desk accounts` — Account operations
+- `zoho desk accounts list` — List accounts
+- `zoho desk accounts get` — Get an account
+- `zoho desk accounts create` — Create an account
+- `zoho desk accounts update` — Update an account
+- `zoho desk accounts delete` — Delete an account
+- `zoho desk agents` — Agent operations
+- `zoho desk agents list` — List agents
+- `zoho desk agents get` — Get an agent
+- `zoho desk departments` — Department operations
+- `zoho desk departments list` — List departments
+- `zoho desk departments get` — Get a department
+- `zoho desk search` — Global desk search
 
-```
-zoho cliq channels message <channel-name> --text "message" [--bot BOT_NAME]
-```
+## drive
 
-### zoho cliq channels members
+- `zoho drive` — Zoho WorkDrive operations
+- `zoho drive files` — WorkDrive file operations
+- `zoho drive files list` — List folder contents
+- `zoho drive files get` — Get file info
+- `zoho drive files search` — Search files
+- `zoho drive files rename` — Rename a file
+- `zoho drive files copy` — Copy a file
+- `zoho drive files move` — Move a file to a different folder
+- `zoho drive files trash` — Move a file to trash
+- `zoho drive files delete` — Permanently delete a file
+- `zoho drive files restore` — Restore a file from trash
+- `zoho drive files trash-list` — List trashed files in a team folder
+- `zoho drive files versions` — List file versions
+- `zoho drive folders` — WorkDrive folder operations
+- `zoho drive folders list` — List team folders
+- `zoho drive folders create` — Create a folder or document
+- `zoho drive folders breadcrumb` — Show folder path
+- `zoho drive download` — Download a file
+- `zoho drive upload` — Upload a file
+- `zoho drive share` — File sharing operations
+- `zoho drive share permissions` — List file permissions
+- `zoho drive share add` — Share a file
+- `zoho drive share revoke` — Revoke file access
+- `zoho drive share links` — List share links for a file
+- `zoho drive share link` — Create/get share link
+- `zoho drive share unlink` — Delete a share link
+- `zoho drive teams` — WorkDrive team operations
+- `zoho drive teams me` — Get current user info
+- `zoho drive teams members` — List team members
 
-```
-zoho cliq channels members <channel-name>
-```
+## expense
 
-### zoho cliq chats message
+- `zoho expense` — Zoho Expense operations
+- `zoho expense organizations` — Organization operations
+- `zoho expense organizations list` — List organizations
+- `zoho expense organizations get` — Get an organization
+- `zoho expense organizations create` — Create an organization
+- `zoho expense organizations update` — Update an organization
+- `zoho expense expenses` — Expense operations
+- `zoho expense expenses list` — List expenses
+- `zoho expense expenses get` — Get an expense
+- `zoho expense expenses create` — Create an expense
+- `zoho expense expenses update` — Update an expense
+- `zoho expense expenses delete` — Delete an expense
+- `zoho expense expenses merge` — Merge a duplicate expense
+- `zoho expense reports` — Expense report operations
+- `zoho expense reports list` — List expense reports
+- `zoho expense reports get` — Get an expense report
+- `zoho expense reports create` — Create an expense report
+- `zoho expense reports update` — Update an expense report
+- `zoho expense reports approve` — Approve an expense report
+- `zoho expense reports reject` — Reject an expense report
+- `zoho expense reports reimburse` — Reimburse an expense report
+- `zoho expense reports approval-history` — Get approval history of an expense report
+- `zoho expense reports delete` — Delete an expense report
+- `zoho expense categories` — Expense category operations
+- `zoho expense categories list` — List expense categories
+- `zoho expense categories get` — Get an expense category
+- `zoho expense categories create` — Create an expense category
+- `zoho expense categories update` — Update an expense category
+- `zoho expense categories delete` — Delete an expense category
+- `zoho expense categories enable` — Enable an expense category
+- `zoho expense categories disable` — Disable an expense category
+- `zoho expense users` — User operations
+- `zoho expense users list` — List users
+- `zoho expense users get` — Get a user
+- `zoho expense users create` — Create a user
+- `zoho expense users update` — Update a user
+- `zoho expense users delete` — Delete a user
+- `zoho expense users activate` — Activate a user
+- `zoho expense users deactivate` — Deactivate a user
+- `zoho expense users assign-role` — Assign a role to a user
+- `zoho expense customers` — Customer (contact) operations
+- `zoho expense customers list` — List customers
+- `zoho expense customers get` — Get a customer
+- `zoho expense customers create` — Create a customer
+- `zoho expense customers update` — Update a customer
+- `zoho expense customers delete` — Delete a customer
+- `zoho expense projects` — Expense project operations
+- `zoho expense projects list` — List projects
+- `zoho expense projects get` — Get a project
+- `zoho expense projects create` — Create a project
+- `zoho expense projects update` — Update a project
+- `zoho expense projects delete` — Delete a project
+- `zoho expense projects activate` — Activate a project
+- `zoho expense projects deactivate` — Deactivate a project
+- `zoho expense trips` — Trip operations
+- `zoho expense trips list` — List trips
+- `zoho expense trips get` — Get a trip
+- `zoho expense trips create` — Create a trip
+- `zoho expense trips update` — Update a trip
+- `zoho expense trips delete` — Delete a trip
+- `zoho expense trips approve` — Approve a trip
+- `zoho expense trips reject` — Reject a trip
+- `zoho expense trips cancel` — Cancel a trip
+- `zoho expense trips close` — Close a trip
+- `zoho expense currencies` — Currency settings operations
+- `zoho expense currencies list` — List currencies
+- `zoho expense currencies get` — Get a currency
+- `zoho expense currencies create` — Create a currency
+- `zoho expense currencies update` — Update a currency
+- `zoho expense currencies delete` — Delete a currency
+- `zoho expense taxes` — Tax settings operations
+- `zoho expense taxes list` — List taxes
+- `zoho expense taxes get` — Get a tax
+- `zoho expense taxes create` — Create a tax
+- `zoho expense taxes update` — Update a tax
+- `zoho expense taxes delete` — Delete a tax
+- `zoho expense taxes get-group` — Get a tax group
+- `zoho expense receipts` — Receipt operations
+- `zoho expense receipts upload` — Upload a receipt for an expense
+- `zoho expense tags` — Reporting tag operations (V3 API)
+- `zoho expense tags list` — List reporting tags
+- `zoho expense tags create` — Create a reporting tag
+- `zoho expense tags get` — Get a reporting tag
+- `zoho expense tags update` — Update a reporting tag
+- `zoho expense tags delete` — Delete a reporting tag
+- `zoho expense tags update-options` — Update reporting tag options
+- `zoho expense tags update-criteria` — Update reporting tag criteria
+- `zoho expense tags activate` — Activate a reporting tag
+- `zoho expense tags deactivate` — Deactivate a reporting tag
+- `zoho expense tags activate-option` — Activate a reporting tag option
+- `zoho expense tags deactivate-option` — Deactivate a reporting tag option
+- `zoho expense tags list-options` — List all reporting tag options across tags
+- `zoho expense tags list-tag-options` — List options for a specific reporting tag
+- `zoho expense tags reorder` — Reorder reporting tags
 
-Send a message to a chat by ID.
+## inventory
 
-```
-zoho cliq chats message <chat-id> --text "message"
-```
+- `zoho inventory` — Zoho Inventory operations
+- `zoho inventory items` — Item operations
+- `zoho inventory items list` — List items
+- `zoho inventory items get` — Get an item
+- `zoho inventory items create` — Create an item
+- `zoho inventory items update` — Update an item
+- `zoho inventory items delete` — Delete an item
+- `zoho inventory items mark-active` — Mark an item as active
+- `zoho inventory items mark-inactive` — Mark an item as inactive
+- `zoho inventory composite-items` — Composite item operations
+- `zoho inventory composite-items list` — List composite items
+- `zoho inventory composite-items get` — Get a composite item
+- `zoho inventory composite-items create` — Create a composite item
+- `zoho inventory composite-items update` — Update a composite item
+- `zoho inventory composite-items delete` — Delete a composite item
+- `zoho inventory item-groups` — Item group operations
+- `zoho inventory item-groups list` — List item groups
+- `zoho inventory item-groups get` — Get an item group
+- `zoho inventory item-groups create` — Create an item group
+- `zoho inventory item-groups update` — Update an item group
+- `zoho inventory item-groups delete` — Delete an item group
+- `zoho inventory contacts` — Contact operations
+- `zoho inventory contacts list` — List contacts
+- `zoho inventory contacts get` — Get a contact
+- `zoho inventory contacts create` — Create a contact
+- `zoho inventory contacts update` — Update a contact
+- `zoho inventory contacts delete` — Delete a contact
+- `zoho inventory contacts mark-active` — Mark a contact as active
+- `zoho inventory contacts mark-inactive` — Mark a contact as inactive
+- `zoho inventory sales-orders` — Sales order operations
+- `zoho inventory sales-orders list` — List sales orders
+- `zoho inventory sales-orders get` — Get a sales order
+- `zoho inventory sales-orders create` — Create a sales order
+- `zoho inventory sales-orders update` — Update a sales order
+- `zoho inventory sales-orders delete` — Delete a sales order
+- `zoho inventory sales-orders mark-confirmed` — Mark a sales order as confirmed
+- `zoho inventory sales-orders mark-void` — Mark a sales order as void
+- `zoho inventory invoices` — Invoice operations
+- `zoho inventory invoices list` — List invoices
+- `zoho inventory invoices get` — Get an invoice
+- `zoho inventory invoices create` — Create an invoice
+- `zoho inventory invoices update` — Update an invoice
+- `zoho inventory invoices delete` — Delete an invoice
+- `zoho inventory invoices mark-sent` — Mark an invoice as sent
+- `zoho inventory invoices mark-void` — Mark an invoice as void
+- `zoho inventory invoices mark-draft` — Mark an invoice as draft
+- `zoho inventory packages` — Package operations
+- `zoho inventory packages list` — List packages
+- `zoho inventory packages get` — Get a package
+- `zoho inventory packages create` — Create a package
+- `zoho inventory packages update` — Update a package
+- `zoho inventory packages delete` — Delete a package
+- `zoho inventory shipment-orders` — Shipment order operations
+- `zoho inventory shipment-orders list` — List shipment orders
+- `zoho inventory shipment-orders get` — Get a shipment order
+- `zoho inventory shipment-orders create` — Create a shipment order
+- `zoho inventory shipment-orders delete` — Delete a shipment order
+- `zoho inventory purchase-orders` — Purchase order operations
+- `zoho inventory purchase-orders list` — List purchase orders
+- `zoho inventory purchase-orders get` — Get a purchase order
+- `zoho inventory purchase-orders create` — Create a purchase order
+- `zoho inventory purchase-orders update` — Update a purchase order
+- `zoho inventory purchase-orders delete` — Delete a purchase order
+- `zoho inventory purchase-orders mark-issued` — Mark a purchase order as issued
+- `zoho inventory purchase-orders mark-cancelled` — Mark a purchase order as cancelled
+- `zoho inventory bills` — Bill operations
+- `zoho inventory bills list` — List bills
+- `zoho inventory bills get` — Get a bill
+- `zoho inventory bills create` — Create a bill
+- `zoho inventory bills update` — Update a bill
+- `zoho inventory bills delete` — Delete a bill
+- `zoho inventory bills mark-open` — Mark a bill as open
+- `zoho inventory bills mark-void` — Mark a bill as void
+- `zoho inventory vendor-credits` — Vendor credit operations
+- `zoho inventory vendor-credits list` — List vendor credits
+- `zoho inventory vendor-credits get` — Get a vendor credit
+- `zoho inventory vendor-credits create` — Create a vendor credit
+- `zoho inventory vendor-credits update` — Update a vendor credit
+- `zoho inventory vendor-credits delete` — Delete a vendor credit
+- `zoho inventory vendor-credits mark-open` — Convert a vendor credit to open
+- `zoho inventory vendor-credits mark-void` — Void a vendor credit
+- `zoho inventory price-lists` — Price list operations
+- `zoho inventory price-lists list` — List price lists
+- `zoho inventory price-lists get` — Get a price list
+- `zoho inventory price-lists create` — Create a price list
+- `zoho inventory price-lists update` — Update a price list
+- `zoho inventory price-lists delete` — Delete a price list
+- `zoho inventory price-lists mark-active` — Mark a price list as active
+- `zoho inventory price-lists mark-inactive` — Mark a price list as inactive
+- `zoho inventory warehouses` — Warehouse operations
+- `zoho inventory warehouses list` — List warehouses
+- `zoho inventory warehouses get` — Get a warehouse
+- `zoho inventory warehouses create` — Create a warehouse
+- `zoho inventory warehouses update` — Update a warehouse
+- `zoho inventory warehouses delete` — Delete a warehouse
+- `zoho inventory warehouses mark-active` — Mark a warehouse as active
+- `zoho inventory warehouses mark-inactive` — Mark a warehouse as inactive
+- `zoho inventory transfer-orders` — Transfer order operations
+- `zoho inventory transfer-orders list` — List transfer orders
+- `zoho inventory transfer-orders get` — Get a transfer order
+- `zoho inventory transfer-orders create` — Create a transfer order
+- `zoho inventory transfer-orders update` — Update a transfer order
+- `zoho inventory transfer-orders delete` — Delete a transfer order
+- `zoho inventory transfer-orders mark-received` — Mark a transfer order as received
+- `zoho inventory adjustments` — Inventory adjustment operations
+- `zoho inventory adjustments list` — List inventory adjustments
+- `zoho inventory adjustments get` — Get an inventory adjustment
+- `zoho inventory adjustments create` — Create an inventory adjustment
+- `zoho inventory adjustments delete` — Delete an inventory adjustment
+- `zoho inventory organizations` — Organization operations
+- `zoho inventory organizations list` — List organizations
+- `zoho inventory organizations get` — Get an organization
+- `zoho inventory currencies` — Currency operations
+- `zoho inventory currencies list` — List currencies
+- `zoho inventory currencies get` — Get a currency
+- `zoho inventory currencies create` — Create a currency
+- `zoho inventory currencies update` — Update a currency
+- `zoho inventory currencies delete` — Delete a currency
+- `zoho inventory taxes` — Tax operations
+- `zoho inventory taxes list` — List taxes
+- `zoho inventory taxes get` — Get a tax
+- `zoho inventory taxes create` — Create a tax
+- `zoho inventory taxes update` — Update a tax
+- `zoho inventory taxes delete` — Delete a tax
+- `zoho inventory users` — User operations
+- `zoho inventory users list` — List users
+- `zoho inventory users get` — Get a user
+- `zoho inventory users get-current` — Get current user
 
-### zoho cliq buddies message
+## invoice
 
-Send a DM by email.
+- `zoho invoice` — Zoho Invoice operations
+- `zoho invoice organizations` — Organization operations
+- `zoho invoice organizations list` — List organizations
+- `zoho invoice organizations get` — Get an organization
+- `zoho invoice contacts` — Contact operations
+- `zoho invoice contacts list` — List contacts
+- `zoho invoice contacts create` — Create a contact
+- `zoho invoice contacts get` — Get a contact
+- `zoho invoice contacts update` — Update a contact
+- `zoho invoice contacts delete` — Delete a contact
+- `zoho invoice contacts mark-active` — Mark a contact as active
+- `zoho invoice contacts mark-inactive` — Mark a contact as inactive
+- `zoho invoice estimates` — Estimate operations
+- `zoho invoice estimates list` — List estimates
+- `zoho invoice estimates create` — Create an estimate
+- `zoho invoice estimates get` — Get an estimate
+- `zoho invoice estimates update` — Update an estimate
+- `zoho invoice estimates delete` — Delete an estimate
+- `zoho invoice estimates mark-sent` — Mark an estimate as sent
+- `zoho invoice estimates mark-accepted` — Mark an estimate as accepted
+- `zoho invoice estimates mark-declined` — Mark an estimate as declined
+- `zoho invoice estimates list-comments` — List comments of an estimate
+- `zoho invoice invoices` — Invoice operations
+- `zoho invoice invoices list` — List invoices
+- `zoho invoice invoices create` — Create an invoice
+- `zoho invoice invoices get` — Get an invoice
+- `zoho invoice invoices update` — Update an invoice
+- `zoho invoice invoices delete` — Delete an invoice
+- `zoho invoice invoices mark-sent` — Mark an invoice as sent
+- `zoho invoice invoices void` — Void an invoice
+- `zoho invoice invoices mark-draft` — Mark an invoice as draft
+- `zoho invoice invoices list-payments` — List payments of an invoice
+- `zoho invoice invoices list-comments` — List comments of an invoice
+- `zoho invoice invoices write-off` — Write off an invoice
+- `zoho invoice invoices cancel-write-off` — Cancel write-off of an invoice
+- `zoho invoice recurring-invoices` — Recurring invoice operations
+- `zoho invoice recurring-invoices list` — List recurring invoices
+- `zoho invoice recurring-invoices create` — Create a recurring invoice
+- `zoho invoice recurring-invoices get` — Get a recurring invoice
+- `zoho invoice recurring-invoices update` — Update a recurring invoice
+- `zoho invoice recurring-invoices delete` — Delete a recurring invoice
+- `zoho invoice recurring-invoices stop` — Stop a recurring invoice
+- `zoho invoice recurring-invoices resume` — Resume a recurring invoice
+- `zoho invoice credit-notes` — Credit note operations
+- `zoho invoice credit-notes list` — List credit notes
+- `zoho invoice credit-notes create` — Create a credit note
+- `zoho invoice credit-notes get` — Get a credit note
+- `zoho invoice credit-notes update` — Update a credit note
+- `zoho invoice credit-notes delete` — Delete a credit note
+- `zoho invoice credit-notes void` — Void a credit note
+- `zoho invoice credit-notes convert-to-draft` — Convert a credit note to draft
+- `zoho invoice credit-notes convert-to-open` — Convert a credit note to open
+- `zoho invoice customer-payments` — Customer payment operations
+- `zoho invoice customer-payments list` — List customer payments
+- `zoho invoice customer-payments create` — Create a customer payment
+- `zoho invoice customer-payments get` — Get a customer payment
+- `zoho invoice customer-payments update` — Update a customer payment
+- `zoho invoice customer-payments delete` — Delete a customer payment
+- `zoho invoice expenses` — Expense operations
+- `zoho invoice expenses list` — List expenses
+- `zoho invoice expenses create` — Create an expense
+- `zoho invoice expenses get` — Get an expense
+- `zoho invoice expenses update` — Update an expense
+- `zoho invoice expenses delete` — Delete an expense
+- `zoho invoice expenses list-history` — List expense history and comments
+- `zoho invoice recurring-expenses` — Recurring expense operations
+- `zoho invoice recurring-expenses list` — List recurring expenses
+- `zoho invoice recurring-expenses create` — Create a recurring expense
+- `zoho invoice recurring-expenses get` — Get a recurring expense
+- `zoho invoice recurring-expenses update` — Update a recurring expense
+- `zoho invoice recurring-expenses delete` — Delete a recurring expense
+- `zoho invoice recurring-expenses stop` — Stop a recurring expense
+- `zoho invoice recurring-expenses resume` — Resume a recurring expense
+- `zoho invoice recurring-expenses list-child-expenses` — List child expenses of a recurring expense
+- `zoho invoice recurring-expenses list-history` — List recurring expense history
+- `zoho invoice retainer-invoices` — Retainer invoice operations
+- `zoho invoice retainer-invoices list` — List retainer invoices
+- `zoho invoice retainer-invoices create` — Create a retainer invoice
+- `zoho invoice retainer-invoices get` — Get a retainer invoice
+- `zoho invoice retainer-invoices update` — Update a retainer invoice
+- `zoho invoice retainer-invoices delete` — Delete a retainer invoice
+- `zoho invoice retainer-invoices mark-sent` — Mark a retainer invoice as sent
+- `zoho invoice retainer-invoices void` — Void a retainer invoice
+- `zoho invoice retainer-invoices mark-draft` — Mark a retainer invoice as draft
+- `zoho invoice projects` — Project operations
+- `zoho invoice projects list` — List projects
+- `zoho invoice projects create` — Create a project
+- `zoho invoice projects get` — Get a project
+- `zoho invoice projects update` — Update a project
+- `zoho invoice projects delete` — Delete a project
+- `zoho invoice projects activate` — Activate a project
+- `zoho invoice projects deactivate` — Deactivate a project
+- `zoho invoice projects clone` — Clone a project
+- `zoho invoice projects list-comments` — List comments of a project
+- `zoho invoice projects list-invoices` — List invoices of a project
+- `zoho invoice items` — Item operations
+- `zoho invoice items list` — List items
+- `zoho invoice items create` — Create an item
+- `zoho invoice items get` — Get an item
+- `zoho invoice items update` — Update an item
+- `zoho invoice items delete` — Delete an item
+- `zoho invoice items mark-active` — Mark an item as active
+- `zoho invoice items mark-inactive` — Mark an item as inactive
+- `zoho invoice currencies` — Currency operations
+- `zoho invoice currencies list` — List currencies
+- `zoho invoice currencies create` — Create a currency
+- `zoho invoice currencies get` — Get a currency
+- `zoho invoice currencies update` — Update a currency
+- `zoho invoice currencies delete` — Delete a currency
+- `zoho invoice taxes` — Tax operations
+- `zoho invoice taxes list` — List taxes
+- `zoho invoice taxes create` — Create a tax
+- `zoho invoice taxes get` — Get a tax
+- `zoho invoice taxes update` — Update a tax
+- `zoho invoice taxes delete` — Delete a tax
+- `zoho invoice users` — User operations
+- `zoho invoice users list` — List users
+- `zoho invoice users get` — Get a user
+- `zoho invoice users get-current` — Get current user
 
-```
-zoho cliq buddies message <email> --text "message"
-```
+## mail
 
-### zoho cliq messages list
+- `zoho mail` — Zoho Mail operations
+- `zoho mail accounts` — Mail account operations
+- `zoho mail accounts list` — List all mail accounts
+- `zoho mail accounts get` — Get a mail account
+- `zoho mail folders` — Mail folder operations
+- `zoho mail folders list` — List all folders
+- `zoho mail folders get` — Get a folder
+- `zoho mail folders create` — Create a folder
+- `zoho mail folders update` — Update a folder
+- `zoho mail folders delete` — Delete a folder
+- `zoho mail labels` — Mail label operations
+- `zoho mail labels list` — List all labels
+- `zoho mail labels get` — Get a label
+- `zoho mail labels create` — Create a label
+- `zoho mail labels update` — Update a label
+- `zoho mail labels delete` — Delete a label
+- `zoho mail messages` — Mail message operations
+- `zoho mail messages list` — List emails in a folder
+- `zoho mail messages search` — Search emails
+- `zoho mail messages get` — Get email details
+- `zoho mail messages content` — Get email body content
+- `zoho mail messages headers` — Get email headers
+- `zoho mail messages original` — Get original email message
+- `zoho mail messages attachment-info` — Get attachment info for a message
+- `zoho mail messages attachment` — Download a message attachment
+- `zoho mail messages send` — Send an email
+- `zoho mail messages reply` — Reply to an email
+- `zoho mail messages update` — Update message status (read/unread, move, flag, label, archive, spam)
+- `zoho mail messages upload-attachment` — Upload an attachment for composing
+- `zoho mail messages delete` — Delete an email
+- `zoho mail threads` — Mail thread operations
+- `zoho mail threads update` — Update thread status (read/unread, move, flag, label, spam)
+- `zoho mail tasks` — Mail task operations
+- `zoho mail tasks list-assigned` — List tasks assigned to me
+- `zoho mail tasks list-created` — List tasks created by me
+- `zoho mail tasks list-personal` — List personal tasks
+- `zoho mail tasks list-group` — List group tasks
+- `zoho mail tasks get-personal` — Get a personal task
+- `zoho mail tasks get-group` — Get a group task
+- `zoho mail tasks create-personal` — Create a personal task
+- `zoho mail tasks create-group` — Create a group task
+- `zoho mail tasks update-personal` — Update a personal task
+- `zoho mail tasks update-group` — Update a group task
+- `zoho mail tasks delete-personal` — Delete a personal task
+- `zoho mail tasks delete-group` — Delete a group task
+- `zoho mail tasks subtasks-personal` — List subtasks of a personal task
+- `zoho mail tasks subtasks-group` — List subtasks of a group task
+- `zoho mail tasks task-groups` — List task groups
+- `zoho mail tasks group-members` — List members of a task group
+- `zoho mail tasks projects` — List projects in a task group
+- `zoho mail tasks project-tasks` — List tasks in a project
+- `zoho mail tasks create-project` — Create a project in a task group
+- `zoho mail tasks update-project` — Update a project in a task group
+- `zoho mail tasks delete-project` — Delete a project from a task group
+- `zoho mail bookmarks` — Mail bookmark operations
+- `zoho mail bookmarks list-personal` — List personal bookmarks
+- `zoho mail bookmarks list-group` — List group bookmarks
+- `zoho mail bookmarks get-personal` — Get a personal bookmark
+- `zoho mail bookmarks get-group` — Get a group bookmark
+- `zoho mail bookmarks create-personal` — Create a personal bookmark
+- `zoho mail bookmarks create-group` — Create a group bookmark
+- `zoho mail bookmarks update-personal` — Update a personal bookmark
+- `zoho mail bookmarks update-group` — Update a group bookmark
+- `zoho mail bookmarks delete-personal` — Delete a personal bookmark
+- `zoho mail bookmarks delete-group` — Delete a group bookmark
+- `zoho mail bookmarks favorites` — List favorite bookmarks
+- `zoho mail bookmarks shared` — List shared bookmarks
+- `zoho mail bookmarks trash-personal` — List trashed personal bookmarks
+- `zoho mail bookmarks trash-group` — List trashed group bookmarks
+- `zoho mail bookmarks restore-group` — Restore a trashed group bookmark
+- `zoho mail bookmarks favorite-personal` — Favorite a personal bookmark
+- `zoho mail bookmarks favorite-group` — Favorite a group bookmark
+- `zoho mail bookmarks unfavorite-personal` — Unfavorite a personal bookmark
+- `zoho mail bookmarks unfavorite-group` — Unfavorite a group bookmark
+- `zoho mail bookmarks link-groups` — List bookmark groups
+- `zoho mail bookmarks collections-personal` — List personal bookmark collections
+- `zoho mail bookmarks collections-group` — List group bookmark collections
+- `zoho mail bookmarks collection-bookmarks-personal` — List bookmarks in a personal collection
+- `zoho mail bookmarks collection-bookmarks-group` — List bookmarks in a group collection
+- `zoho mail bookmarks create-collection-personal` — Create a personal bookmark collection
+- `zoho mail bookmarks create-collection-group` — Create a group bookmark collection
+- `zoho mail bookmarks update-collection-personal` — Update a personal bookmark collection
+- `zoho mail bookmarks update-collection-group` — Update a group bookmark collection
+- `zoho mail bookmarks delete-collection-personal` — Delete a personal bookmark collection
+- `zoho mail bookmarks delete-collection-group` — Delete a group bookmark collection
+- `zoho mail bookmarks all-group-collections` — List all group bookmark collections
+- `zoho mail notes` — Mail notes operations
+- `zoho mail notes list-personal` — List personal notes
+- `zoho mail notes list-group` — List group notes
+- `zoho mail notes get-personal` — Get a personal note
+- `zoho mail notes get-group` — Get a group note
+- `zoho mail notes create-personal` — Create a personal note
+- `zoho mail notes create-group` — Create a group note
+- `zoho mail notes update-personal` — Update a personal note
+- `zoho mail notes update-group` — Update a group note
+- `zoho mail notes delete-personal` — Delete a personal note
+- `zoho mail notes delete-group` — Delete a group note
+- `zoho mail notes favorites` — List favorite notes
+- `zoho mail notes shared` — List notes shared to me
+- `zoho mail notes note-groups` — List note groups
+- `zoho mail notes books-personal` — List personal notebooks
+- `zoho mail notes books-group` — List group notebooks
+- `zoho mail notes book-notes-personal` — List notes in a personal notebook
+- `zoho mail notes book-notes-group` — List notes in a group notebook
+- `zoho mail notes create-book-personal` — Create a personal notebook
+- `zoho mail notes create-book-group` — Create a group notebook
+- `zoho mail notes update-book-personal` — Update a personal notebook
+- `zoho mail notes update-book-group` — Update a group notebook
+- `zoho mail notes delete-book-personal` — Delete a personal notebook
+- `zoho mail notes delete-book-group` — Delete a group notebook
+- `zoho mail notes attachments-personal` — List attachments of a personal note
+- `zoho mail notes attachments-group` — List attachments of a group note
+- `zoho mail notes attachment-personal` — Download a personal note attachment
+- `zoho mail notes attachment-group` — Download a group note attachment
+- `zoho mail notes upload-attachment-personal` — Upload an attachment to a personal note
+- `zoho mail notes upload-attachment-group` — Upload an attachment to a group note
+- `zoho mail notes delete-attachment-personal` — Delete a personal note attachment
+- `zoho mail notes delete-attachment-group` — Delete a group note attachment
+- `zoho mail notes favorite-personal` — Favorite a personal note
+- `zoho mail notes favorite-group` — Favorite a group note
+- `zoho mail notes unfavorite-personal` — Unfavorite a personal note
+- `zoho mail notes unfavorite-group` — Unfavorite a group note
+- `zoho mail organization` — Organization admin operations
+- `zoho mail organization get` — Get organization details
+- `zoho mail organization storage` — Get organization storage info
+- `zoho mail organization user-storage` — Get storage info for a user
+- `zoho mail organization update-user-storage` — Update storage for a user
+- `zoho mail organization spam-listing` — Get organization spam listing data
+- `zoho mail organization update-spam-listing` — Update organization spam listing data
+- `zoho mail organization delete-spam-listing` — Delete organization spam listing data
+- `zoho mail organization allowed-ips` — Get allowed IPs
+- `zoho mail organization add-allowed-ips` — Add allowed IPs
+- `zoho mail organization delete-allowed-ips` — Delete allowed IPs
+- `zoho mail domains` — Domain admin operations
+- `zoho mail domains list` — List domains
+- `zoho mail domains get` — Get a domain
+- `zoho mail domains add` — Add a domain
+- `zoho mail domains update` — Update a domain
+- `zoho mail domains delete` — Delete a domain
+- `zoho mail groups` — Mail group admin operations
+- `zoho mail groups list` — List groups
+- `zoho mail groups get` — Get a group
+- `zoho mail groups create` — Create a group
+- `zoho mail groups update` — Update a group
+- `zoho mail groups delete` — Delete a group
+- `zoho mail groups moderation-emails` — Get moderation emails for a group
+- `zoho mail groups moderation-email-content` — Get content of a moderation email
+- `zoho mail groups moderate` — Moderate group messages
+- `zoho mail users` — Organization user admin operations
+- `zoho mail users list` — List organization users
+- `zoho mail users get` — Get a user
+- `zoho mail users add` — Add a user
+- `zoho mail users update` — Update a user
+- `zoho mail users delete` — Delete users
+- `zoho mail policy` — Mail policy operations
+- `zoho mail policy list` — List policies
+- `zoho mail policy email-restrictions` — Get email restriction policy
+- `zoho mail policy account-restrictions` — Get account restriction policy
+- `zoho mail policy access-restrictions` — Get access restriction policy
+- `zoho mail policy forward-restrictions` — Get mail forward policy
+- `zoho mail policy users` — Get users assigned to a policy
+- `zoho mail policy groups` — Get groups assigned to a policy
+- `zoho mail policy create` — Create a policy
+- `zoho mail policy update` — Update a policy
+- `zoho mail logs` — Mail log operations
+- `zoho mail logs login-history` — Get login history
+- `zoho mail logs audit` — Get audit logs
+- `zoho mail logs smtp` — Get SMTP logs
+- `zoho mail antispam` — Anti-spam operations
+- `zoho mail antispam options` — Get anti-spam options
+- `zoho mail antispam update` — Update anti-spam options
+- `zoho mail signatures` — Mail signature operations
+- `zoho mail signatures get` — Get signatures
+- `zoho mail signatures create` — Create a signature
+- `zoho mail signatures update` — Update a signature
+- `zoho mail signatures delete` — Delete a signature
 
-```
-zoho cliq messages list <chat-id> [--limit N]
-```
+## people
 
-### zoho cliq messages edit
+- `zoho people` — Zoho People operations
+- `zoho people forms` — Form operations
+- `zoho people forms list` — List all forms
+- `zoho people forms get-fields` — Get fields for a form
+- `zoho people records` — Form record operations
+- `zoho people records list` — List records from a form
+- `zoho people records get` — Get a single record by ID
+- `zoho people records add` — Add a record to a form
+- `zoho people records update` — Update a record in a form
+- `zoho people records delete` — Delete a record from a form
+- `zoho people attendance` — Attendance operations
+- `zoho people attendance checkin` — Record attendance check-in/check-out
+- `zoho people attendance get-report` — Get attendance report for an employee
+- `zoho people attendance bulk-import` — Bulk import attendance records
+- `zoho people leave` — Leave operations
+- `zoho people leave list` — List leave records
+- `zoho people leave get` — Get a leave record by ID
+- `zoho people leave add` — Add a leave record
+- `zoho people leave get-types` — Get leave types
+- `zoho people leave get-balance` — Get leave balance for an employee
+- `zoho people departments` — Department operations
+- `zoho people departments list` — List all departments
+- `zoho people departments get-members` — Get department members
+- `zoho people designations` — Designation operations
+- `zoho people designations list` — List all designations
 
-```
-zoho cliq messages edit <chat-id> <message-id> --text "new text"
-```
+## projects
 
-### zoho cliq messages delete
+- `zoho projects` — Zoho Projects operations
+- `zoho projects core` — Project CRUD operations
+- `zoho projects core list` — List all projects
+- `zoho projects core get` — Get a single project
+- `zoho projects core search` — Search projects
+- `zoho projects core create` — Create a project
+- `zoho projects core update` — Update a project
+- `zoho projects core delete` — Delete a project
+- `zoho projects core trash` — Move a project to trash
+- `zoho projects core restore` — Restore a project from trash
+- `zoho projects tasks` — Project task operations
+- `zoho projects tasks list` — List tasks in a project
+- `zoho projects tasks my` — List my tasks across all projects
+- `zoho projects tasks get` — Get a single task
+- `zoho projects tasks create` — Create a task
+- `zoho projects tasks update` — Update a task
+- `zoho projects tasks delete` — Delete a task
+- `zoho projects tasks subtasks` — List subtasks of a task
+- `zoho projects tasks add-subtask` — Create a subtask
+- `zoho projects tasks clone` — Clone a task
+- `zoho projects tasks move` — Move a task
+- `zoho projects task-comments` — Task comment operations
+- `zoho projects task-comments list` — List task comments
+- `zoho projects task-comments add` — Add a task comment
+- `zoho projects task-comments update` — Update a task comment
+- `zoho projects task-comments delete` — Delete a task comment
+- `zoho projects task-followers` — Task follower operations
+- `zoho projects task-followers list` — List task followers
+- `zoho projects task-followers follow` — Follow a task
+- `zoho projects task-followers add` — Add followers to a task
+- `zoho projects task-followers unfollow` — Unfollow a task
+- `zoho projects task-customviews` — Task custom view operations
+- `zoho projects task-customviews list` — List task custom views (portal-level)
+- `zoho projects task-customviews project-list` — List task custom views (project-level)
+- `zoho projects task-customviews get` — Get a task custom view
+- `zoho projects task-statustimeline` — Task status timeline operations
+- `zoho projects task-statustimeline get` — Get status timeline for a task
+- `zoho projects task-statustimeline project` — Get status timeline for project tasks
+- `zoho projects task-statustimeline portal` — Get status timeline for portal tasks
+- `zoho projects issues` — Project issue operations
+- `zoho projects issues list` — List issues in a project
+- `zoho projects issues get` — Get a single issue
+- `zoho projects issues create` — Create an issue
+- `zoho projects issues update` — Update an issue
+- `zoho projects issues delete` — Delete an issue
+- `zoho projects issues description` — Get issue description
+- `zoho projects issues move` — Move an issue
+- `zoho projects issues clone` — Clone an issue
+- `zoho projects issues activities` — Get issue activities
+- `zoho projects issue-comments` — Issue comment operations
+- `zoho projects issue-comments list` — List issue comments
+- `zoho projects issue-comments get` — Get an issue comment
+- `zoho projects issue-comments add` — Add an issue comment
+- `zoho projects issue-comments update` — Update an issue comment
+- `zoho projects issue-comments delete` — Delete an issue comment
+- `zoho projects issue-followers` — Issue follower operations
+- `zoho projects issue-followers list` — List issue followers
+- `zoho projects issue-followers follow` — Follow an issue
+- `zoho projects issue-followers remove` — Remove issue followers
+- `zoho projects issue-linking` — Issue linking operations
+- `zoho projects issue-linking list` — List linked issues
+- `zoho projects issue-linking link` — Link an issue
+- `zoho projects issue-linking bulk-link` — Bulk link issues
+- `zoho projects issue-linking change-type` — Change link type
+- `zoho projects issue-linking unlink` — Unlink an issue
+- `zoho projects issue-resolution` — Issue resolution operations
+- `zoho projects issue-resolution get` — Get issue resolution
+- `zoho projects issue-resolution add` — Add issue resolution
+- `zoho projects issue-resolution update` — Update issue resolution
+- `zoho projects issue-resolution delete` — Delete issue resolution
+- `zoho projects issue-attachments` — Issue attachment operations
+- `zoho projects issue-attachments list` — List issue attachments
+- `zoho projects issue-attachments associate` — Associate attachments to an issue
+- `zoho projects issue-attachments dissociate` — Dissociate an attachment from an issue
+- `zoho projects issue-customviews` — Issue custom view operations
+- `zoho projects issue-customviews list` — List issue custom views (portal-level)
+- `zoho projects issue-customviews project-list` — List issue custom views (project-level)
+- `zoho projects issue-customviews get` — Get an issue custom view
+- `zoho projects tasklists` — Project tasklist operations
+- `zoho projects tasklists list` — List tasklists
+- `zoho projects tasklists get` — Get a tasklist
+- `zoho projects tasklists create` — Create a tasklist
+- `zoho projects tasklists update` — Update a tasklist
+- `zoho projects tasklists delete` — Delete a tasklist
+- `zoho projects tasklist-comments` — Tasklist comment operations
+- `zoho projects tasklist-comments list` — List tasklist comments
+- `zoho projects tasklist-comments get` — Get a tasklist comment
+- `zoho projects tasklist-comments add` — Add a tasklist comment
+- `zoho projects tasklist-comments update` — Update a tasklist comment
+- `zoho projects tasklist-comments delete` — Delete a tasklist comment
+- `zoho projects tasklist-followers` — Tasklist follower operations
+- `zoho projects tasklist-followers list` — List tasklist followers
+- `zoho projects tasklist-followers follow` — Follow a tasklist
+- `zoho projects tasklist-followers unfollow` — Unfollow a tasklist
+- `zoho projects timelogs` — Project timelog operations
+- `zoho projects timelogs list` — List project timelogs
+- `zoho projects timelogs add` — Add a timelog
+- `zoho projects timelogs get` — Get a timelog
+- `zoho projects timelogs update` — Update a timelog
+- `zoho projects timelogs delete` — Delete a timelog
+- `zoho projects timelog-bulk` — Bulk timelog operations
+- `zoho projects timelog-bulk list` — List timelogs (portal-level)
+- `zoho projects timelog-bulk project-list` — List timelogs (project-level)
+- `zoho projects timelog-bulk add` — Bulk add timelogs
+- `zoho projects timelog-bulk delete` — Bulk delete timelogs
+- `zoho projects timelog-timers` — Timer operations
+- `zoho projects timelog-timers running` — Get running timers
+- `zoho projects timelog-timers start` — Start a timer
+- `zoho projects timelog-timers get` — Get a timer
+- `zoho projects timelog-timers pause` — Pause a timer
+- `zoho projects timelog-timers resume` — Resume a timer
+- `zoho projects timelog-timers stop` — Stop a timer
+- `zoho projects timelog-timers delete` — Delete a timer
+- `zoho projects timelog-pins` — Timelog pin operations
+- `zoho projects timelog-pins list` — List timelog pins
+- `zoho projects timelog-pins create` — Pin a timelog
+- `zoho projects timelog-pins update` — Update a timelog pin
+- `zoho projects timelog-pins delete` — Unpin a timelog
+- `zoho projects users` — Portal user operations
+- `zoho projects users list` — List portal users
+- `zoho projects users get` — Get a user
+- `zoho projects users add` — Add a user to portal
+- `zoho projects users activate` — Activate a user
+- `zoho projects users deactivate` — Deactivate a user
+- `zoho projects users delete` — Delete a user from portal
+- `zoho projects project-users` — Project-scoped user operations
+- `zoho projects project-users list` — List project users
+- `zoho projects project-users get` — Get a project user
+- `zoho projects project-users add` — Add a user to project
+- `zoho projects project-users update` — Update a project user
+- `zoho projects project-users delete` — Remove a user from project
+- `zoho projects milestones` — Project milestone operations
+- `zoho projects milestones list` — List milestones
+- `zoho projects milestones get` — Get a milestone
+- `zoho projects milestones create` — Create a milestone
+- `zoho projects milestones update` — Update a milestone
+- `zoho projects milestones delete` — Delete a milestone
+- `zoho projects phases` — Phase operations
+- `zoho projects phases list` — List phases (portal-level)
+- `zoho projects phases list-project` — List phases (project-level)
+- `zoho projects phases get` — Get a phase
+- `zoho projects phases create` — Create a phase
+- `zoho projects phases update` — Update a phase
+- `zoho projects phases delete` — Delete a phase
+- `zoho projects phases move` — Move a phase
+- `zoho projects phases clone` — Clone a phase
+- `zoho projects phases activities` — Get phase activities
+- `zoho projects phase-followers` — Phase follower operations
+- `zoho projects phase-followers list` — List phase followers
+- `zoho projects phase-followers add` — Add phase followers
+- `zoho projects phase-followers remove` — Remove phase followers
+- `zoho projects phase-comments` — Phase comment operations
+- `zoho projects phase-comments list` — List phase comments
+- `zoho projects phase-comments add` — Add a phase comment
+- `zoho projects phase-comments update` — Update a phase comment
+- `zoho projects phase-comments delete` — Delete a phase comment
+- `zoho projects dependencies` — Task dependency operations
+- `zoho projects dependencies add` — Add a task dependency
+- `zoho projects dependencies remove` — Remove a task dependency
+- `zoho projects forums` — Forum operations
+- `zoho projects forums list` — List forums
+- `zoho projects forums get` — Get a forum
+- `zoho projects forums create` — Create a forum
+- `zoho projects forums update` — Update a forum
+- `zoho projects forums delete` — Delete a forum
+- `zoho projects forum-comments` — Forum comment operations
+- `zoho projects forum-comments list` — List forum comments
+- `zoho projects forum-comments get` — Get a forum comment
+- `zoho projects forum-comments add` — Add a forum comment
+- `zoho projects forum-comments update` — Update a forum comment
+- `zoho projects forum-comments delete` — Delete a forum comment
+- `zoho projects forum-comments best-answer` — Mark as best answer
+- `zoho projects forum-comments unbest-answer` — Unmark best answer
+- `zoho projects forum-categories` — Forum category operations
+- `zoho projects forum-categories list` — List forum categories
+- `zoho projects forum-categories create` — Create a forum category
+- `zoho projects forum-categories update` — Update a forum category
+- `zoho projects forum-categories delete` — Delete a forum category
+- `zoho projects forum-followers` — Forum follower operations
+- `zoho projects forum-followers list` — List forum followers
+- `zoho projects forum-followers follow` — Follow a forum
+- `zoho projects forum-followers unfollow` — Unfollow a forum
+- `zoho projects events` — Event operations
+- `zoho projects events list` — List events
+- `zoho projects events get` — Get an event
+- `zoho projects events create` — Create an event
+- `zoho projects events update` — Update an event
+- `zoho projects events delete` — Delete an event
+- `zoho projects event-comments` — Event comment operations
+- `zoho projects event-comments list` — List event comments
+- `zoho projects event-comments get` — Get an event comment
+- `zoho projects event-comments add` — Add an event comment
+- `zoho projects event-comments update` — Update an event comment
+- `zoho projects event-comments delete` — Delete an event comment
+- `zoho projects attachments` — Project attachment operations
+- `zoho projects attachments list` — List project attachments
+- `zoho projects attachments get` — Get a project attachment
+- `zoho projects attachments upload` — Upload a file attachment
+- `zoho projects attachments associate` — Associate an attachment to an entity
+- `zoho projects attachments dissociate` — Dissociate an attachment from a project
+- `zoho projects leaves` — Leave operations
+- `zoho projects leaves list` — List leaves
+- `zoho projects leaves get` — Get a leave
+- `zoho projects leaves create` — Create a leave
+- `zoho projects leaves update` — Update a leave
+- `zoho projects leaves delete` — Delete a leave
+- `zoho projects tags` — Tag operations
+- `zoho projects tags list` — List tags (portal-level)
+- `zoho projects tags project-list` — List tags (project-level)
+- `zoho projects tags create` — Create a tag
+- `zoho projects tags update` — Update a tag
+- `zoho projects tags delete` — Delete a tag
+- `zoho projects tags associate` — Associate a tag to entities
+- `zoho projects tags dissociate` — Dissociate a tag from entities
+- `zoho projects portals` — Portal operations
+- `zoho projects portals get` — Get a portal
+- `zoho projects trash` — Trash operations
+- `zoho projects trash list` — List trash items
+- `zoho projects trash delete` — Permanently delete trash items
+- `zoho projects trash restore` — Restore trash items
+- `zoho projects trash empty` — Empty all trash
+- `zoho projects search` — Search operations
+- `zoho projects search portal` — Search across portal
+- `zoho projects search project` — Search within a project
+- `zoho projects feed` — Feed/status operations
+- `zoho projects feed status` — Get project status feed
+- `zoho projects feed post` — Post a status update
+- `zoho projects project-comments` — Project comment operations
+- `zoho projects project-comments list` — List project comments
+- `zoho projects project-comments get` — Get a project comment
+- `zoho projects project-comments add` — Add a project comment
+- `zoho projects project-comments update` — Update a project comment
+- `zoho projects project-comments delete` — Delete a project comment
+- `zoho projects project-groups` — Project group operations
+- `zoho projects project-groups list` — List project groups
+- `zoho projects project-groups my` — List my project groups
+- `zoho projects project-groups create` — Create a project group
+- `zoho projects project-groups update` — Update a project group
+- `zoho projects project-groups delete` — Delete a project group
+- `zoho projects teams` — Team operations
+- `zoho projects teams list` — List all teams
+- `zoho projects teams get` — Get a team
+- `zoho projects teams project-list` — List teams in a project
+- `zoho projects teams users` — List team users
+- `zoho projects teams projects` — List team projects
+- `zoho projects teams create` — Create a team
+- `zoho projects teams update` — Update a team
+- `zoho projects teams delete` — Delete a team
+- `zoho projects teams add-to-project` — Add a team to a project
+- `zoho projects teams remove-from-project` — Remove a team from a project
+- `zoho projects profiles` — Profile operations
+- `zoho projects profiles list` — List profiles
+- `zoho projects profiles get` — Get a profile
+- `zoho projects profiles create` — Create a profile
+- `zoho projects profiles update` — Update a profile
+- `zoho projects profiles set-default` — Set a profile as default
+- `zoho projects profiles delete` — Delete a profile
+- `zoho projects roles` — Role operations
+- `zoho projects roles list` — List roles
+- `zoho projects roles get` — Get a role
+- `zoho projects roles create` — Create a role
+- `zoho projects roles update` — Update a role
+- `zoho projects roles set-default` — Set a role as default
+- `zoho projects roles delete` — Delete a role
+- `zoho projects custom-records` — Custom module record operations
+- `zoho projects custom-records list` — List custom records
+- `zoho projects custom-records get` — Get a custom record
+- `zoho projects custom-records create` — Create a custom record
+- `zoho projects custom-records update` — Update a custom record
+- `zoho projects custom-records trash` — Move a custom record to trash
+- `zoho projects custom-records restore` — Restore a custom record from trash
+- `zoho projects custom-records delete` — Delete a custom record
+- `zoho projects reports` — Report and dashboard operations
+- `zoho projects reports workload-meta` — Get workload report metadata
+- `zoho projects reports workload` — Get workload report
+- `zoho projects reports dashboards` — List dashboards
+- `zoho projects reports dashboard-get` — Get a dashboard
+- `zoho projects reports dashboard-create` — Create a dashboard
+- `zoho projects reports dashboard-update` — Update a dashboard
+- `zoho projects reports dashboard-delete` — Delete a dashboard
 
-```
-zoho cliq messages delete <chat-id> <message-id>
-```
+## recruit
 
-### zoho cliq users list
+- `zoho recruit` — Zoho Recruit operations
+- `zoho recruit modules` — Recruit module metadata
+- `zoho recruit modules list` — List available modules
+- `zoho recruit modules fields` — List fields for a module
+- `zoho recruit modules layouts` — List layouts for a module
+- `zoho recruit records` — Recruit record operations
+- `zoho recruit records list` — List records in a module
+- `zoho recruit records get` — Get a single record
+- `zoho recruit records create` — Create a record
+- `zoho recruit records update` — Update a record
+- `zoho recruit records delete` — Delete a record
+- `zoho recruit records search` — Search records in a module
+- `zoho recruit notes` — Recruit record notes
+- `zoho recruit notes list` — List notes on a record
+- `zoho recruit notes create` — Create a note
+- `zoho recruit notes delete` — Delete a note
+- `zoho recruit attachments` — Recruit record attachments
+- `zoho recruit attachments list` — List attachments on a record
+- `zoho recruit attachments upload` — Upload an attachment to a record
+- `zoho recruit attachments download` — Download an attachment
+- `zoho recruit attachments delete` — Delete an attachment
+- `zoho recruit tags` — Recruit tag operations
+- `zoho recruit tags list` — List tags for a module
+- `zoho recruit tags create` — Create tags for a module
+- `zoho recruit tags add` — Add tags to records
+- `zoho recruit tags remove` — Remove tags from records
+- `zoho recruit associate` — Recruit record association
+- `zoho recruit associate list` — List associated records
+- `zoho recruit related` — Recruit related records
+- `zoho recruit related list` — List related records
+- `zoho recruit users` — Recruit users
+- `zoho recruit users list` — List Recruit users
 
-```
-zoho cliq users list
-```
+## sheet
 
-### zoho cliq users get
+- `zoho sheet` — Zoho Sheet operations
+- `zoho sheet workbooks` — Workbook operations
+- `zoho sheet workbooks list` — List all workbooks
+- `zoho sheet workbooks templates` — List all templates
+- `zoho sheet workbooks versions` — List all versions
+- `zoho sheet workbooks create` — Create workbook
+- `zoho sheet workbooks create-from-template` — Create workbook from template
+- `zoho sheet workbooks upload` — Upload workbook
+- `zoho sheet workbooks download` — Download workbook
+- `zoho sheet workbooks insert-images` — Insert images into workbook
+- `zoho sheet workbooks copy` — Copy workbook
+- `zoho sheet workbooks share` — Share workbook
+- `zoho sheet workbooks create-version` — Create a version
+- `zoho sheet workbooks revert-version` — Revert to a version
+- `zoho sheet workbooks trash` — Trash workbook
+- `zoho sheet workbooks restore` — Restore workbook
+- `zoho sheet workbooks delete` — Delete workbook
+- `zoho sheet workbooks publish` — Publish workbook
+- `zoho sheet workbooks unpublish` — Remove publish from workbook
+- `zoho sheet workbooks lock` — Lock workbook
+- `zoho sheet workbooks unlock` — Unlock workbook
+- `zoho sheet worksheets` — Worksheet operations
+- `zoho sheet worksheets list` — List all worksheets
+- `zoho sheet worksheets create` — Create worksheet
+- `zoho sheet worksheets copy` — Copy worksheet within same workbook
+- `zoho sheet worksheets copy-to` — Copy worksheet to another workbook
+- `zoho sheet worksheets rename` — Rename worksheet
+- `zoho sheet worksheets delete` — Delete worksheet
+- `zoho sheet worksheets delete-multiple` — Delete multiple worksheets
+- `zoho sheet tables` — Table operations
+- `zoho sheet tables list` — List all tables
+- `zoho sheet tables create` — Create table
+- `zoho sheet tables remove` — Remove table
+- `zoho sheet tables rename-headers` — Rename headers of table
+- `zoho sheet tables fetch-records` — Fetch records from table
+- `zoho sheet tables add-records` — Add records to table
+- `zoho sheet tables update-records` — Update records in table
+- `zoho sheet tables delete-records` — Delete records from table
+- `zoho sheet tables insert-columns` — Insert columns to table
+- `zoho sheet tables delete-columns` — Delete columns from table
+- `zoho sheet records` — Worksheet record operations
+- `zoho sheet records fetch` — Fetch records from worksheet
+- `zoho sheet records add` — Add records to worksheet
+- `zoho sheet records update` — Update records in worksheet
+- `zoho sheet records delete` — Delete records from worksheet
+- `zoho sheet records insert-columns` — Insert columns to worksheet records
+- `zoho sheet cells` — Cell and range content operations
+- `zoho sheet cells get` — Get content of cell
+- `zoho sheet cells get-range` — Get content of range
+- `zoho sheet cells get-named-range` — Get content of named range
+- `zoho sheet cells get-worksheet` — Get content of worksheet area
+- `zoho sheet cells get-used-area` — Get used area of worksheet
+- `zoho sheet cells set` — Set content to cell
+- `zoho sheet cells set-multiple` — Set content to multiple cells
+- `zoho sheet cells set-row` — Set content to row
+- `zoho sheet cells set-range` — Set content to range
+- `zoho sheet content` — Content operations
+- `zoho sheet content append-csv` — Append rows with CSV data
+- `zoho sheet content append-json` — Append rows with JSON data
+- `zoho sheet content update-json` — Update rows with JSON data
+- `zoho sheet content insert-json` — Insert row with JSON data
+- `zoho sheet content clear-contents` — Clear contents of range
+- `zoho sheet content clear-range` — Clear range
+- `zoho sheet content clear-filters` — Clear filters
+- `zoho sheet content find` — Find content
+- `zoho sheet content find-replace` — Find and replace content
+- `zoho sheet content recalculate` — Recalculate workbook
+- `zoho sheet format` — Formatting and structure operations
+- `zoho sheet format ranges` — Format ranges
+- `zoho sheet format image-fit` — Image fit options
+- `zoho sheet format row-height` — Set row height
+- `zoho sheet format column-width` — Set column width
+- `zoho sheet format insert-row` — Insert row
+- `zoho sheet format insert-column` — Insert column
+- `zoho sheet format delete-row` — Delete row
+- `zoho sheet format delete-rows` — Delete multiple rows
+- `zoho sheet format delete-column` — Delete column
+- `zoho sheet format set-note` — Set note to cell
+- `zoho sheet named-ranges` — Named range operations
+- `zoho sheet named-ranges list` — List all named ranges
+- `zoho sheet named-ranges create` — Create named range
+- `zoho sheet named-ranges update` — Update named range
+- `zoho sheet named-ranges delete` — Delete named range
+- `zoho sheet merge` — Merge template operations
+- `zoho sheet merge templates` — Get merge templates
+- `zoho sheet merge fields` — Get merge fields
+- `zoho sheet merge jobs` — Get merge jobs
+- `zoho sheet merge job-detail` — Get merge job details
+- `zoho sheet merge save` — Merge and save
+- `zoho sheet merge email` — Merge and email
+- `zoho sheet premium` — Premium API operations
+- `zoho sheet premium fetch-records` — Fetch records (premium)
+- `zoho sheet premium add-records` — Add records (premium)
+- `zoho sheet premium update-records` — Update records (premium)
+- `zoho sheet utility` — Utility operations
+- `zoho sheet utility range-to-index` — Convert range to index
+- `zoho sheet utility index-to-range` — Convert index to range
 
-```
-zoho cliq users get <user-id>
-```
+## sign
+
+- `zoho sign` — Zoho Sign operations
+- `zoho sign requests` — Document request operations
+- `zoho sign requests list` — List sign requests
+- `zoho sign requests get` — Get a sign request
+- `zoho sign requests create` — Create a sign request
+- `zoho sign requests update` — Update a sign request
+- `zoho sign requests submit` — Submit a sign request for signature
+- `zoho sign requests delete` — Delete a sign request
+- `zoho sign requests recall` — Recall a sign request
+- `zoho sign requests remind` — Send reminder for a sign request
+- `zoho sign requests extend` — Extend expiration of a sign request
+- `zoho sign requests correct` — Mark a sign request for correction
+- `zoho sign requests download` — Download sign request PDF
+- `zoho sign requests download-document` — Download a particular document PDF from a sign request
+- `zoho sign requests download-certificate` — Download completion certificate for a sign request
+- `zoho sign requests field-data` — Get form field data for a sign request
+- `zoho sign templates` — Template operations
+- `zoho sign templates list` — List templates
+- `zoho sign templates get` — Get a template
+- `zoho sign templates create` — Create a template
+- `zoho sign templates send` — Send document for signature using template
+- `zoho sign templates delete` — Delete a template
+- `zoho sign folders` — Folder operations
+- `zoho sign folders list` — List folders
+- `zoho sign folders create` — Create a folder
+- `zoho sign field-types` — List available field types
+- `zoho sign request-types` — Document type operations
+- `zoho sign request-types list` — List request types
+- `zoho sign request-types create` — Create a request type
+
+## sprints
+
+- `zoho sprints` — Zoho Sprints operations
+- `zoho sprints teams` — Team operations
+- `zoho sprints teams list` — List teams
+- `zoho sprints projects` — Project operations
+- `zoho sprints projects list` — List projects
+- `zoho sprints projects get` — Get a project
+- `zoho sprints projects create` — Create a project
+- `zoho sprints projects update` — Update a project
+- `zoho sprints projects delete` — Delete a project
+- `zoho sprints sprints` — Sprint operations
+- `zoho sprints sprints list` — List sprints in a project
+- `zoho sprints sprints get` — Get a sprint
+- `zoho sprints sprints create` — Create a sprint
+- `zoho sprints sprints update` — Update a sprint
+- `zoho sprints sprints delete` — Delete a sprint
+- `zoho sprints items` — Work item operations
+- `zoho sprints items list` — List items in a sprint or backlog
+- `zoho sprints items get` — Get a specific item
+- `zoho sprints items create` — Create an item in a sprint or backlog
+- `zoho sprints items update` — Update an item
+- `zoho sprints items delete` — Delete an item
+- `zoho sprints epics` — Epic operations
+- `zoho sprints epics list` — List epics in a project
+- `zoho sprints epics create` — Create an epic
+- `zoho sprints epics update` — Update an epic
+- `zoho sprints epics delete` — Delete an epic
+- `zoho sprints statuses` — Item status operations
+- `zoho sprints statuses list` — List item statuses in a project
+- `zoho sprints item-types` — Item type operations
+- `zoho sprints item-types list` — List item types in a project
+- `zoho sprints priorities` — Priority operations
+- `zoho sprints priorities list` — List priorities in a project
+- `zoho sprints members` — Team member operations
+- `zoho sprints members list` — List members of the team
+
+## writer
+
+- `zoho writer` — Zoho Writer operations
+- `zoho writer create` — Create a new Writer document
+- `zoho writer details` — Get document metadata
+- `zoho writer fields` — List merge fields in a document
+- `zoho writer merge` — Merge data into a document template
+- `zoho writer trash` — Move a document to trash
+- `zoho writer delete` — Permanently delete a trashed document
+- `zoho writer read` — Read document content as text
+- `zoho writer download` — Download a document
+
